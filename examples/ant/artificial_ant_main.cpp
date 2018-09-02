@@ -7,65 +7,13 @@
  */
 #include <iostream>
 
-#include <gpm/gpm.hpp>
+
 #include "santa_fe_board.hpp"
 #include "ant_simulation.hpp"
+#include "nodes.hpp"
 
 
-namespace ant
-{
-    
-struct move;
-struct right;
-struct left;
-struct if_food_ahead;
-template<int nodeCount, typename CTString> struct prog;
-
-using prog2 = prog<2, gpm::NodeToken<'p','2'>>;
-using prog3 = prog<3, gpm::NodeToken<'p','3'>>;
-
-using ant_nodes = boost::variant<
-    boost::recursive_wrapper<move>, 
-    boost::recursive_wrapper<left>, 
-    boost::recursive_wrapper<right>, 
-    boost::recursive_wrapper<if_food_ahead>, 
-    boost::recursive_wrapper<prog2>, 
-    boost::recursive_wrapper<prog3>
->;
-
-
-
-
-template<int NodeCount, typename CTString>
-struct prog : public gpm::BaseNode<ant_nodes, NodeCount, CTString>
-{
-    using prog::BaseNode::BaseNode;
-};
-
-struct move : public gpm::BaseNode<ant_nodes, 0, gpm::NodeToken<'m'>> {};
-
-struct right : public gpm::BaseNode<ant_nodes, 0, gpm::NodeToken<'r'>>{};
-
-struct left : public gpm::BaseNode<ant_nodes, 0, gpm::NodeToken<'l'>>{};
-
-struct if_food_ahead : public gpm::BaseNode<ant_nodes, 2, gpm::NodeToken<'i', 'f'>>
-{
-    using if_food_ahead::BaseNode::BaseNode;
-
-    template<bool c>
-    constexpr ant_nodes const & get() const
-    {
-        return nodes[c ? 0 : 1];
-    }
-    constexpr ant_nodes const & get(bool b) const
-    {
-        return b ? get<true>() : get<false>();
-    }
-    
-
-};
-
-
+namespace ant {
 
 template<typename AntBoardSimType>
 class AntBoardSimulationVisitor : public boost::static_visitor<void>
@@ -121,7 +69,7 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char const **
             {
                 for(size_t y = 0; y < board[x].size(); ++y)
                 {
-                    board[x][y] = santa_fe::board1[x][y] == 'X' ? sim::BoardState::food : sim::BoardState::empty;
+                    board[x][y] = santa_fe::board[x][y] == 'X' ? sim::BoardState::food : sim::BoardState::empty;
                 }
             }
         }
