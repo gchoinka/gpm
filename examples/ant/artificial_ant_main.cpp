@@ -136,7 +136,7 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char const **
     {
         antBoardSimulation.get_board_as_str([&](std::string const & s){ std::cout << s << "\n"; } );
         boost::apply_visitor(antBoardSimVisitor, optAnt);
-        std::cout << "#####\n";
+        std::cout << "######\n";
     }
     antBoardSimulation.get_board_as_str([&](std::string const & s){ std::cout << s << "\n"; } );
     
