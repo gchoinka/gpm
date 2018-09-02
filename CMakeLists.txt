@@ -6,7 +6,7 @@
 #  copy at http://www.boost.org/LICENSE_1_0.txt)
 #
 
-cmake_minimum_required ( VERSION 3.9.2 )
+cmake_minimum_required(VERSION 3.9.2)
 
 include("cmake/HunterGate.cmake")
 HunterGate(
@@ -14,13 +14,14 @@ HunterGate(
     SHA1 "dffc6269efd60e79ea2e28a927cce94d3e4a6e03"
 )
 
-include("cmake/CompilerSettings.cmake")
+project(gpm CXX)
 
-project (gpm)
 
 option(GPM_BUILD_TESTS "Enable to build the tests" ON)
 option(GPM_CXX_COLORED_OUTPUT "Always produce ANSI-colored output (GNU/Clang only)." OFF)
 
+
+include("cmake/CompilerSettings.cmake")
 
 hunter_add_package(Boost COMPONENTS system program_options)
 set(BOOST_MIN_VERSION "1.68.0")
