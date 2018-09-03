@@ -22,7 +22,7 @@ namespace ant::sim
 
     Pos2d operator+(Pos2d const & lhs, Pos2d const & rhs)
     {
-        return Pos2d{std::array<int, 2>{lhs.x() + rhs.x(), lhs.y() + rhs.y()}};
+        return Pos2d{lhs.x() + rhs.x(), lhs.y() + rhs.y()};
     }
 
     bool operator==(Pos2d const & lhs, Pos2d const & rhs)
