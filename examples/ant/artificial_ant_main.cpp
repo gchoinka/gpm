@@ -57,6 +57,7 @@ private:
 int main(__attribute__((unused)) int argc, __attribute__((unused)) char const ** argv)
 {
     using namespace ant;
+    auto output = false;
     auto max_steps = 400;
     auto max_food = 89;
     auto antBoardSimulation = sim::AntBoardSimulationStaticSize<santa_fe::x_size, santa_fe::y_size>{
@@ -82,11 +83,17 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char const **
     
     while(!antBoardSimulation.is_finish())
     {
-        antBoardSimulation.get_board_as_str([&](std::string const & s){ std::cout << s << "\n"; } );
+        antBoardSimulation.get_board_as_str([&](std::string const & s){ output && std::cout << s << "\n"; } );
         boost::apply_visitor(antBoardSimVisitor, optAnt);
-        std::cout << "######\n";
+        output && std::cout << "######\n";
     }
-    antBoardSimulation.get_board_as_str([&](std::string const & s){ std::cout << s << "\n"; } );
+    antBoardSimulation.get_board_as_str([&](std::string const & s){ output && std::cout << s << "\n"; } );
+    
+    int minHeight = 1;
+    int maxHeight = 15;
+    std::random_device rd;
+    auto bgen = gpm::BasicGenerator<ant_nodes>{minHeight, maxHeight, rd()};
+    auto foo = bgen();
     
     return 0;
 }
