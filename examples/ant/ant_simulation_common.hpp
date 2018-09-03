@@ -6,6 +6,11 @@ namespace ant::sim
 {
     struct Pos2d
     {
+        Pos2d(int xval, int yval)
+            :pos{{xval, yval}}
+        {
+        }
+                                      
         std::array<int, 2> pos;
         
         int & x(){ return pos[0]; }
@@ -32,12 +37,12 @@ namespace ant::sim
         Pos2d{ 0, -1}
     };
 
-    constexpr std::array<char, 4> directionToChar{
+    constexpr std::array<char, 4> directionToChar{{
         'N',
         'E',
         'S',
         'W',
-    };
+    }};
 
     enum class Direction : size_t {
         north = 0,
