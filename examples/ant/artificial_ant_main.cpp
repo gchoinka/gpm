@@ -90,11 +90,14 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char const **
     antBoardSimulation.get_board_as_str([&](std::string const & s){ output && std::cout << s << "\n"; } );
     
     int minHeight = 1;
-    int maxHeight = 15;
+    int maxHeight = 7;
     std::random_device rd;
     auto bgen = gpm::BasicGenerator<ant_nodes>{minHeight, maxHeight, rd()};
     auto foo = bgen();
     
+
+    std::cout << boost::apply_visitor([](auto val) { return boost::typeindex::type_id_runtime(val).pretty_name(); }, foo)  << " " <<
+                 boost::apply_visitor(gpm::RPNPrinter<std::string>{}, foo) << "\n";
     return 0;
 }
 

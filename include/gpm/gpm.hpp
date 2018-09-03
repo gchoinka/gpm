@@ -93,9 +93,8 @@ namespace gpm
     struct Builder : public boost::static_visitor<void>
     { 
         Builder(int height, std::function<VariantType()> termialGen, std::function<VariantType()> noneTermialGen)
-        :height_{height}, termialGen_{termialGen}, noneTermialGen_{noneTermialGen}
+            :height_{height}, termialGen_{termialGen}, noneTermialGen_{noneTermialGen}
         {
-            
         }
         
         int height_ = 0;
@@ -105,10 +104,8 @@ namespace gpm
         template<typename T>
         void operator()(T & node) const
         {
-
-            if(height_ >= 0)
-            { 
-
+            if(height_ > 0)
+            {
                 for(auto & childNode: node.nodes)
                 {
                     childNode = noneTermialGen_();
@@ -117,7 +114,7 @@ namespace gpm
                 }
             }
             else
-            {
+            { 
                 for(auto & childNode: node.nodes)
                 {
                     childNode = termialGen_();
@@ -133,30 +130,13 @@ namespace gpm
         BasicGenerator(int minHeight, int maxHeight, unsigned int rndSeed = 5489u)
             :minHeight_{minHeight}, maxHeight_{maxHeight}, rnd_{rndSeed}
         {
-            boost::mpl::for_each<typename VariantType::types>([&, index = 0]([[gnu::unused]]auto arg) mutable{
-                if constexpr(std::tuple_size<decltype(arg.nodes)>::value == 0)
-                    terminalNodes_.push_back(std::move(arg));
+            boost::mpl::for_each<typename VariantType::types>([&, index = 0](auto node) mutable{
+                if constexpr(std::tuple_size<decltype(node.nodes)>::value == 0)
+                    terminalNodes_.push_back(std::move(node));
                 else
-                    noneTerminalNodes_.push_back(std::move(arg));
+                    noneTerminalNodes_.push_back(std::move(node));
             });
-            
-            
         }
-        
-//         void fill(VariantType & toFill, int hight, std::uniform_int_distribution<size_t> & dist)
-//         {
-//             if(hight > 0)
-//             {
-//                 toFill = noneTerminalNodes_[dist(rnd_)];
-//                 for(auto & childNode: toFill.nodes)
-//                     fill(childNode, hight-1, dist);
-//             }
-//             else
-//             {
-//                 toFill = terminalNodes_[dist(rnd_)];
-//             }
-//                 
-//         }
         
         VariantType operator()()
         {
@@ -164,35 +144,21 @@ namespace gpm
             std::uniform_int_distribution<size_t> randomNoneTermSelector{0, noneTerminalNodes_.size()-1};
             std::uniform_int_distribution<size_t> randomTermSelector{0, terminalNodes_.size()-1};
             
-            
             auto makeTermial = [&](){ return terminalNodes_[randomTermSelector(rnd_)]; };
             auto makeNoneTermial = [&](){ return noneTerminalNodes_[randomNoneTermSelector(rnd_)]; };
             
             VariantType rootNode = makeNoneTermial();
-            
-//             std::function<void(VariantType&, int)> fillerFunction = [&]( VariantType& toFill, int height){
-//                 if(height > 0)
-//                 {
-//                     toFill = makeNoneTermial();
-//                     
-//                 }
-//                 
-//             };
-            boost::apply_visitor( [&](auto rootNode)
+            boost::apply_visitor([&](auto & aNode)
                 {
-                    for(auto & childNode: rootNode.nodes)
+                    for(auto & childNode: aNode.nodes)
                     {
                         Builder<VariantType> b{height(rnd_)-1, makeTermial, makeNoneTermial};
                         childNode = makeNoneTermial();
-                        boost::apply_visitor( b, childNode );
+                        boost::apply_visitor(b, childNode);
                     }
                 },
                 rootNode
-                   );
-
-             std::cout << terminalNodes_.size() << " " << noneTerminalNodes_.size() << " " << height(rnd_) << " " << 
-                 boost::apply_visitor([](auto val) { return boost::typeindex::type_id_runtime(val).pretty_name(); }, rootNode)  << " " <<
-                 boost::apply_visitor(gpm::RPNPrinter<std::string>{}, rootNode) << "\n";
+            );
             return rootNode;
         }
         
@@ -203,7 +169,6 @@ namespace gpm
         std::vector<VariantType> terminalNodes_;
         std::vector<VariantType> noneTerminalNodes_;
         std::mt19937 rnd_;
-        //std::uniform_int_distribution<> rnd_dis_;
     };
 
 
