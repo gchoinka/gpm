@@ -2,14 +2,16 @@ dist: trusty
 sudo: false
 language: cpp
 
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - g++-7
+matrix:
+  include:
+      # GCC 7
+    - env: UNIT_TESTS=true COMPILER=g++-7 BOOST_VERSION=default ENABLE_MEMCHECK=true
+      addons: { apt: { packages: ["g++-7", "valgrind"], sources: ["ubuntu-toolchain-r-test"] } }
+      # Clang 5.0
+    - env: UNIT_TESTS=true COMPILER=clang++-5.0 BOOST_VERSION=default ENABLE_MEMCHECK=true
+      addons: &defaults { apt: { packages: ["clang-5.0", "valgrind"], sources: ["ubuntu-toolchain-r-test", "llvm-toolchain-trusty-5.0"] }
 
 script:
-  - CXX=/usr/bin/g++-7 CC=/usr/bin/gcc-7 cmake . 
+  - cmake . 
   - cmake --build . -- -j2 
   - ctest --output-on-failure -VV
