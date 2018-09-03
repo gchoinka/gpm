@@ -130,7 +130,7 @@ namespace gpm
         BasicGenerator(int minHeight, int maxHeight, unsigned int rndSeed = 5489u)
             :minHeight_{minHeight}, maxHeight_{maxHeight}, rnd_{rndSeed}
         {
-            boost::mpl::for_each<typename VariantType::types>([&, index = 0](auto node) mutable{
+            boost::mpl::for_each<typename VariantType::types>([&](auto node) mutable{
                 if constexpr(std::tuple_size<decltype(node.nodes)>::value == 0)
                     terminalNodes_.push_back(std::move(node));
                 else
