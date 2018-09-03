@@ -12,8 +12,10 @@ addons:
     packages:
       - clang-6.0
       - llvm-6.0-dev
+      - g++-8
+      - ninja-build
 
 script:
-  - CXX=clang++-6.0 CC=clang-6.0 cmake . 
+  - CXX=clang++-6.0 CC=clang-6.0 cmake . -GNinja
   - cmake --build . -- -j2 
   - ctest --output-on-failure -VV
