@@ -30,7 +30,7 @@ namespace ant::sim
         return lhs.pos == rhs.pos;
     }
 
-    constexpr std::array<Pos2d, 4> toPos{
+    inline std::array<Pos2d, 4> const toPos{
         Pos2d{-1,  0},
         Pos2d{ 0,  1},
         Pos2d{ 1,  0},
