@@ -12,12 +12,13 @@
 
 #include <array>
 #include <string>
+#include <iterator>
 
 namespace ant::sim {
 
 
 enum class BoardState { empty, food, hadFood };
-constexpr static std::array<char, 3> boardStateToChar{' ', 'O', '*'};
+constexpr static std::array<char, 3> boardStateToChar{{' ', 'O', '*'}};
 
 template<typename FieldT>
 class AntBoardSimulation
