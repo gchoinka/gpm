@@ -25,7 +25,7 @@ include("cmake/CompilerSettings.cmake")
 
 hunter_add_package(Boost COMPONENTS system program_options)
 set(BOOST_MIN_VERSION "1.68.0")
-find_package(Boost ${BOOST_MIN_VERSION} REQUIRED COMPONENTS system program_options)
+find_package(Boost ${BOOST_MIN_VERSION} REQUIRED)
 
 hunter_add_package(fmt)
 find_package(fmt CONFIG REQUIRED)
