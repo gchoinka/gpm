@@ -13,7 +13,7 @@ sudo: false
 
 matrix:
   include:
-    - env: CXX=clang++-6.0 CC=clang-6.0
+    - env: CXXCOMPILER=clang++-6.0 CCOMPILER=clang-6.0
       addons: &default_addons
         apt:
           sources:
@@ -21,16 +21,21 @@ matrix:
             - sourceline: 'deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-6.0 main'
               key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
           packages: [ "clang-6.0", "llvm-6.0-dev", "g++-8", "ninja-build"]
-      script:
-        - cmake . -GNinja -DCMAKE_CXX_COMPILER=clang++-6.0 -DCMAKE_C_COMPILER=clang-6.0
-        - cmake --build . -- -j2 
-        - ctest --output-on-failure -VV
-    - env: FOOBAR=g++-8 CC=gcc-8
+    - env: CXXCOMPILER=g++-8 CCOMPILER=gcc-8
       addons: *default_addons
+    - env: CXXCOMPILER=clang++-6.0 CCOMPILER=clang-6.0 CMAKE_CXX_FLAGS="-fsanitize=address -fno-omit-frame-pointer" CMAKE_EXE_LINKER_FLAGS="-fsanitize=address"
+      addons: *default_addons
+     
 
 script:
-  - echo "${FOOBAR}"
-  - cmake . -GNinja -DCMAKE_CXX_COMPILER=g++-8 -DCMAKE_C_COMPILER=gcc-8
+  - |
+  cmake . -GNinja \
+    -DCMAKE_CXX_COMPILER=${CXXCOMPILER} \
+    -DCMAKE_C_COMPILER=${CCCOMPILER} \
+    -DCMAKE_BUILD_TYPE=Debug \
+    -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} \
+    -DCMAKE_EXE_LINKER_FLAGS=${CMAKE_EXE_LINKER_FLAGS}
+
   - cmake --build . -- -j2 
   - ctest --output-on-failure -VV        
 
