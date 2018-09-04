@@ -21,43 +21,6 @@
 
 
 namespace ant { 
-// 
-// template<typename AntBoardSimType>
-// class AntBoardSimulationVisitor : public boost::static_visitor<void>
-// {
-// public:
-//     AntBoardSimulationVisitor(AntBoardSimType & sim):sim_{sim} {} 
-// 
-//     void operator()(move) const
-//     {
-//         sim_.move();
-//     }
-//     
-//     void operator()(left) const
-//     {
-//         sim_.left(); 
-//     }
-//     
-//     void operator()(right) const
-//     {
-//         sim_.right();
-//     }
-//     
-//     void operator()(if_food_ahead const & c) const
-//     {
-//         boost::apply_visitor( *this, c.get(sim_.is_food_in_front()));
-//     }
-// 
-//     template<int NodeCount, typename CTString>
-//     void operator()(prog<NodeCount, CTString> const & b) const
-//     {
-//         for(auto const & n: b.nodes)
-//             boost::apply_visitor( *this, n );
-//     }
-//     
-// private:
-//     AntBoardSimType & sim_;
-// };
 
 
 template<typename T>
@@ -118,6 +81,61 @@ public:
     
 };
 
+class VariantStylePrinter : public boost::static_visitor<void>
+{
+public:
+    std::ostream & out_;
+    int indent_ = 0;
+    int indentSize = 4;
+    
+    
+    VariantStylePrinter(std::ostream & out, int indent)
+        :out_{out}, indent_{indent}
+    {
+    }
+
+    void operator()(if_food_ahead const & c) const
+    {
+        
+        fmt::print(out_, "{:<{}}{}{{\n", "", indent_*indentSize, boost::typeindex::type_id_runtime(c).pretty_name());
+        out_ << " ";
+        boost::apply_visitor(VariantStylePrinter{out_, indent_+1}, c.get<true>());
+        out_ << ",";
+        boost::apply_visitor(VariantStylePrinter{out_, indent_+1}, c.get<false>());
+        fmt::print(out_, "{:<{}}}}\n", "", indent_*indentSize);
+    }
+    
+    template<typename T>
+    void operator()(T t) const
+    {
+        if constexpr(t.nodes.size() == 0)
+        {
+            fmt::print(out_, "{:<{}}{}{{}}\n", "", indent_*indentSize, boost::typeindex::type_id_runtime(t).pretty_name());
+        }
+        else
+        {
+            fmt::print(out_, "{:<{}}{}{{\n", "", indent_*indentSize, boost::typeindex::type_id_runtime(t).pretty_name());
+            auto delimi = " ";
+            for(auto & n: t.nodes)
+            {
+                out_ << delimi;
+                boost::apply_visitor(VariantStylePrinter{out_, indent_+1}, n);
+                delimi = ",";
+            }
+            fmt::print(out_, "{:<{}}}}\n", "", indent_*indentSize);
+        }
+    }    
+};
+
+
+std::ostream & toVariantStyle(std::ostream & out, ant_nodes const & ant)
+{
+    out << "ant::ant_nodes{\n";
+    boost::apply_visitor(VariantStylePrinter{out, 1}, ant);
+    out << "}\n";
+    return out;
+}
+
 }
 
 int dynamicTree()
@@ -125,8 +143,35 @@ int dynamicTree()
     using namespace ant;
     auto max_steps = 400;
     auto max_food = 89;
-    char const * optimalAntRPNdef = "m r m if l l p3 r m if if p2 r p2 m if";
-    auto optAnt = gpm::factory<ant_nodes>(gpm::RPNToken_iterator{optimalAntRPNdef});
+//     char const * optimalAntRPNdef = "m r m if l l p3 r m if if p2 r p2 m if";
+//     auto optAnt = gpm::factory<ant_nodes>(gpm::RPNToken_iterator{optimalAntRPNdef});
+//     toVariantStyle(std::cout, optAnt);
+    auto optAnt = ant::ant_nodes{
+        ant::if_food_ahead{
+            ant::move{}
+    ,        ant::prog<2, gpm::NodeToken<(char)112, (char)50> >{
+                ant::right{}
+    ,            ant::prog<2, gpm::NodeToken<(char)112, (char)50> >{
+                    ant::if_food_ahead{
+                        ant::if_food_ahead{
+                            ant::move{}
+    ,                        ant::right{}
+                        }
+    ,                    ant::prog<3, gpm::NodeToken<(char)112, (char)51> >{
+                            ant::left{}
+    ,                        ant::left{}
+    ,                        ant::if_food_ahead{
+                                ant::move{}
+    ,                            ant::right{}
+                            }
+                        }
+                    }
+    ,                ant::move{}
+                }
+            }
+        }
+    };
+
     auto antBoardSimulation = sim::AntBoardSimulationStaticSize<santa_fe::x_size, santa_fe::y_size>{
         max_steps,
         max_food,
@@ -213,11 +258,12 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char const **
     }
     
     int minHeight = 1;
-    int maxHeight = 16;
+    int maxHeight = 4;
     std::random_device rd;
     auto bgen = gpm::BasicGenerator<ant::ant_nodes>{minHeight, maxHeight, rd()};
     auto fooAnt = bgen();
     
+    //boost::apply_visitor(ant::VariantStylePrinter{std::cout, 0}, fooAnt);
                  
     std::ofstream fout("static_vs_dynamic_ant.cpp");
     fout << R"""(
@@ -314,5 +360,4 @@ int main()
 }
 )""";
 
-    
 }
