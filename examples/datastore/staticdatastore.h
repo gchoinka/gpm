@@ -67,8 +67,9 @@ enum class KeyTag : size_t
     AntDirection, 
     AntPos, 
     FoodEaten, 
-    StepsDone , 
-    
+    StepsDone,
+
+//
     KeyTagSize // do not remove this last value, the template meta function skiping the last element (this), 
                // if you remove this value you have to rewrite the conditions  
 };
@@ -94,14 +95,100 @@ static_assert( size_t(KeyTag::KeyTagSize) == ValueKeyStoreSize, "StaticDataStore
 #undef MACRO_GET_16
 #undef MACRO_GET_4
 #undef MACRO_GET_1
+
+
+namespace detail 
+{
+    template<typename Tuple, std::size_t N>
+    struct TupleCheckOrder 
+    {
+        static void checkOrder(const Tuple& t) 
+        {
+            constexpr size_t currentN = N-1;
+            //using CurrentType = typename std::tuple_element<currentN,typename std::decay<Tuple>::type>::type::Type;
+
+            static_assert( size_t(std::tuple_element<currentN,typename std::decay<Tuple>::type>::type::keyTag) == currentN, 
+                        "Order of StaticDataStore type arguments is not in sync with KeyTag order");
+            TupleCheckOrder<Tuple, N-1>::checkOrder(t);
+        }
+    };
+    
+    template<typename Tuple>
+    struct TupleCheckOrder<Tuple, 1>
+    {
+        static void checkOrder(const Tuple& ) 
+        {
+            constexpr size_t currentN = 0;
+            using CurrentType = typename std::tuple_element<currentN,typename std::decay<Tuple>::type>::type::Type;
+            (void)CurrentType();
+        }
+    };
+    
+    template<class... Args>
+    void checkOrder(const std::tuple<Args...>& t) 
+    {
+        TupleCheckOrder<decltype(t), sizeof...(Args)>::checkOrder(t);
+    }
+
+    [[gnu::unused]] static inline void doCheckOrderOnStaticDataStore()
+    {
+        StaticDataStore t;
+        checkOrder( t );
+    }
+    
+    
+    // helper function to print a tuple of any size
+    template<typename Tuple, typename CurrentType, std::size_t currentN>
+    void printHelper(const Tuple& t)
+    {
+        std::get<currentN>(t).keyStr();
+    }
         
+
+    template<typename Tuple, std::size_t N>
+    struct TuplePrinter 
+    {
+        static void print(const Tuple& t) 
+        {
+            constexpr size_t currentN = N-1;
+            using CurrentType = typename std::tuple_element<currentN,typename std::decay<Tuple>::type>::type::Type;
+            TuplePrinter<Tuple, N-1>::print( t );
+            printHelper<Tuple,CurrentType, currentN> ( t );
+        }
+    };
+    
+    template<typename Tuple>
+    struct TuplePrinter<Tuple, 1>
+    {
+        static void print(const Tuple& t) 
+        {
+            constexpr size_t currentN = 0;
+            using CurrentType = typename std::tuple_element<currentN,typename std::decay<Tuple>::type>::type::Type;
+            printHelper<Tuple, CurrentType, currentN> ( t );
+        }
+    };
+
+            
+    template<class... Args>
+    void printKeyValueStore(const std::tuple<Args...>& t) 
+    {
+        TuplePrinter<decltype(t), sizeof...(Args)>::print( t );
+    }
+    
+    [[gnu::unused]]static inline void doCheckHaveKeyStrStaticDataStore()
+    {
+        StaticDataStore t;
+        printKeyValueStore( t );
+    }
+}
+
 
 class StaticDataStoreException : public std::runtime_error { public: using std::runtime_error::runtime_error; };
 class StaticDataStoreKeyNotFound : public StaticDataStoreException { public: using StaticDataStoreException::StaticDataStoreException; };
 class StaticDataStoreTypIsNotConvertiable : public StaticDataStoreException , boost::bad_any_cast
 {
 public: 
-        using StaticDataStoreException::StaticDataStoreException;
+    using StaticDataStoreException::StaticDataStoreException;
 };
 
 namespace detail
@@ -253,3 +340,6 @@ auto get([[gnu::unused]]std::tuple<Args...>& t) -> boost::optional<typename std:
 }
 
 }
+
+
+

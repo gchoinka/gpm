@@ -80,8 +80,6 @@ int main()
     constexpr char newl = '\n';
     using namespace sds;
     StaticDataStore ds;
-    
-
 
     std::cout << "hasAntDirection(std::get):" << bool(std::get<size_t(KeyTag::AntDirection)>( ds ).value) << "\n";
     std::cout << "\nEmpty Store\n"; 
