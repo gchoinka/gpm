@@ -37,6 +37,7 @@ matrix:
 script:
   - export PATH=/usr/lib/llvm-${CLANG_VERS}/bin/:${PATH}
   - export ASAN_OPTIONS=symbolize=1
+  - export LSAN_OPTIONS=verbosity=1:log_threads=1
   - |
     cmake . -GNinja \
       -DCMAKE_CXX_COMPILER="${CXXCOMPILER}" \
