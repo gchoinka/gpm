@@ -274,18 +274,18 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char const **
 #include <chrono>
 #include <iostream>
 
-        
-        constexpr char const * optimalAntRPNdef = ")"""
-<< boost::apply_visitor(gpm::RPNPrinter<std::string>{}, fooAnt)
-<<
-R"""(";
+
 int dynamicTree()
 {
     using namespace ant;
     auto max_steps = 400;
     auto max_food = 89;
     
-    auto optAnt = gpm::factory<ant_nodes>(gpm::RPNToken_iterator{optimalAntRPNdef});
+    auto optAnt = )""";
+    
+    toVariantStyle(fout, fooAnt);
+
+    fout << R"""(;
     auto antBoardSimulation = sim::AntBoardSimulationStaticSize<santa_fe::x_size, santa_fe::y_size>{
         max_steps,
         max_food,
