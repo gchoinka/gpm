@@ -25,4 +25,11 @@ matrix:
         - cmake . -GNinja -DCMAKE_CXX_COMPILER=clang++-6.0 -DCMAKE_C_COMPILER=clang-6.0
         - cmake --build . -- -j2 
         - ctest --output-on-failure -VV
+    - env: CXX=g++-8 CC=gcc-8
+      addons: *default_addons
+      script:
+        - echo ${CXX}
+        - cmake . -GNinja -DCMAKE_CXX_COMPILER=g++-8 -DCMAKE_C_COMPILER=gcc-8
+        - cmake --build . -- -j2 
+        - ctest --output-on-failure -VV        
 
