@@ -13,7 +13,7 @@ sudo: false
 
 matrix:
   include:
-    - env: CXXCOMPILER=clang++-6.0 CCOMPILER=clang-6.0
+    - env: CLANG_VERS="6.0" CXXCOMPILER="clang++-6.0" CCOMPILER="clang-6.0"
       addons: &default_addons
         apt:
           sources:
@@ -35,11 +35,11 @@ matrix:
 #
 
 script:
-  - find / -iname "llvm-symbolizer*"
-  - which llvm-symbolizer
-  - export ASAN_SYMBOLIZER_PATH=$(which llvm-symbolizer)
+  - export ASAN_SYMBOLIZER_PATH=/usr/bin/llvm-symbolizer-${CLANG_VERS}
+  - export MSAN_SYMBOLIZER_PATH=/usr/bin/llvm-symbolizer-${CLANG_VERS}
+  - export USAN_SYMBOLIZER_PATH=/usr/bin/llvm-symbolizer-${CLANG_VERS}
+  - echo ${USAN_SYMBOLIZER_PATH}
   - export ASAN_OPTIONS=symbolize=1
-  - echo ${ASAN_OPTIONS}
   - |
     cmake . -GNinja \
       -DCMAKE_CXX_COMPILER="${CXXCOMPILER}" \
