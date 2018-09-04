@@ -8,6 +8,7 @@ It is heavily influenced by gpcxx but it useses boost::variant and std::array fo
 # Goals
 * use modern C++ futures to make it more easily accessible. 
 * use external compiler to converts runtime polymorphism to static compile-time polymorphism.
+  * first test suggests a significant performance improvements (ignoring the compile time overhead)
 
 # Notes
 At this stage I’m not sure if this library can deliver the promise “close to Metal”, so the M will maybe change meaning.
