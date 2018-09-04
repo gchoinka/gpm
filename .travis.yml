@@ -35,10 +35,7 @@ matrix:
 #
 
 script:
-  - export ASAN_SYMBOLIZER_PATH=/usr/bin/llvm-symbolizer-${CLANG_VERS}
-  - export MSAN_SYMBOLIZER_PATH=/usr/bin/llvm-symbolizer-${CLANG_VERS}
-  - export USAN_SYMBOLIZER_PATH=/usr/bin/llvm-symbolizer-${CLANG_VERS}
-  - echo ${USAN_SYMBOLIZER_PATH}
+  - export PATH=/usr/lib/llvm-${CLANG_VERS}/bin/:${PATH}
   - export ASAN_OPTIONS=symbolize=1
   - |
     cmake . -GNinja \
