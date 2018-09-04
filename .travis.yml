@@ -23,16 +23,12 @@ matrix:
           packages: [ "clang-6.0", "llvm-6.0-dev", "g++-8", "ninja-build"]
     - env: CXXCOMPILER=g++-8 CCOMPILER=gcc-8
       addons: *default_addons
-    - env: CLANG_VERS="6.0" CXXCOMPILER=clang++-6.0 CCOMPILER=clang-6.0 CMAKE_CXX_FLAGS="-fsanitize=address -fno-omit-frame-pointer" CMAKE_EXE_LINKER_FLAGS="-fsanitize=address"
-      addons: *default_addons
+    #- env: CLANG_VERS="6.0" CXXCOMPILER=clang++-6.0 CCOMPILER=clang-6.0 CMAKE_CXX_FLAGS="-fsanitize=address -fno-omit-frame-pointer" CMAKE_EXE_LINKER_FLAGS="-fsanitize=address"
+    #  addons: *default_addons
     #- env: CLANG_VERS="6.0" CXXCOMPILER=clang++-6.0 CCOMPILER=clang-6.0 CMAKE_CXX_FLAGS="-fsanitize=memory -fno-omit-frame-pointer" CMAKE_EXE_LINKER_FLAGS="-fsanitize=memory"
     #  addons: *default_addons
     - env: CLANG_VERS="6.0" CXXCOMPILER=clang++-6.0 CCOMPILER=clang-6.0 CMAKE_CXX_FLAGS="-fsanitize=undefined -fno-omit-frame-pointer" CMAKE_EXE_LINKER_FLAGS="-fsanitize=undefined"
       addons: *default_addons
-      
-#LSAN_OPTIONS=verbosity=1:log_threads=1
-#ASAN_OPTIONS=symbolize=1
-#
 
 script:
   - export PATH=/usr/lib/llvm-${CLANG_VERS}/bin/:${PATH}
