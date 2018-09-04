@@ -1,21 +1,28 @@
+#
+# Copyright: 2018 Gerard Choinka (gerard.choinka@gmail.com)
+#
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or
+# copy at http://www.boost.org/LICENSE_1_0.txt)
+#
 
+language: cpp
+os: linux
 dist: trusty
 sudo: false
-language: cpp
 
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-      - sourceline: 'deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-6.0 main'
-        key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
-    packages:
-      - clang-6.0
-      - llvm-6.0-dev
-      - g++-8
-      - ninja-build
+matrix:
+  include:
+    - env: CXX=clang++-6.0 CC=clang-6.0
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - sourceline: 'deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-6.0 main'
+              key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
+          packages: [ "clang-6.0", "llvm-6.0-dev", "g++-8", "ninja-build"]
 
 script:
-  - CXX=clang++-6.0 CC=clang-6.0 cmake . -GNinja
+  - cmake . -GNinja
   - cmake --build . -- -j2 
   - ctest --output-on-failure -VV
