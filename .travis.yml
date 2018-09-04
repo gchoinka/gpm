@@ -29,13 +29,12 @@ matrix:
 
 script:
   - |
-  cmake . -GNinja \
-    -DCMAKE_CXX_COMPILER=${CXXCOMPILER} \
-    -DCMAKE_C_COMPILER=${CCCOMPILER} \
-    -DCMAKE_BUILD_TYPE=Debug \
-    -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} \
-    -DCMAKE_EXE_LINKER_FLAGS=${CMAKE_EXE_LINKER_FLAGS}
-
+    cmake . -GNinja \
+      -DCMAKE_CXX_COMPILER=${CXXCOMPILER} \
+      -DCMAKE_C_COMPILER=${CCCOMPILER} \
+      -DCMAKE_BUILD_TYPE=Debug \
+      -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} \
+      -DCMAKE_EXE_LINKER_FLAGS=${CMAKE_EXE_LINKER_FLAGS} 
   - cmake --build . -- -j2 
   - ctest --output-on-failure -VV        
 
