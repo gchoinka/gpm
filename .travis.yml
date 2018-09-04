@@ -14,16 +14,15 @@ sudo: false
 matrix:
   include:
     - env: CXX=clang++-6.0 CC=clang-6.0
-      addons:
+      addons: &default_addons
         apt:
           sources:
             - ubuntu-toolchain-r-test
             - sourceline: 'deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-6.0 main'
               key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
           packages: [ "clang-6.0", "llvm-6.0-dev", "g++-8", "ninja-build"]
+      script:
+        - cmake . -GNinja -DCMAKE_CXX_COMPILER=clang++-6.0 -DCMAKE_C_COMPILER=clang-6.0
+        - cmake --build . -- -j2 
+        - ctest --output-on-failure -VV
 
-script:
-  - echo "Foobar ${CXX}"
-  - cmake . -GNinja -DCMAKE_CXX_COMPILER=clang++-6.0 -DCMAKE_C_COMPILER=clang-6.0
-  - cmake --build . -- -j2 
-  - ctest --output-on-failure -VV
