@@ -1,5 +1,5 @@
 add_executable(ant_simulation_generate ant_simulation_generate.cpp) 
-set_target_properties(artificial_ant_generate PROPERTIES
+set_target_properties(ant_simulation_generate PROPERTIES
             CXX_STANDARD 17
             CXX_EXTENSIONS OFF
 )
