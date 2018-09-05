@@ -8,7 +8,7 @@
 #include <iostream>
 
 #include "staticdatastore.h"
-#include "staticdatastoreaccesscontrol.h"
+//#include "staticdatastoreaccesscontrol.h"
 
 #include <boost/type_index.hpp>
 #include <tuple>
@@ -60,19 +60,19 @@ void printKeyValueStore(std::ostream & out, const std::tuple<Args...>& t)
 
 
 
-namespace MyLib{
-class MyClass
-{
-    using ClassT = MyClass;
-public:
-    void doSomething(sds::StaticDataStore & ds)
-    {
-        sds::ac::get<sds::KeyTag::AntDirection>(this, ds) = 1;
-    }
-        
-};
-    
-}
+// namespace MyLib{
+// class MyClass
+// {
+//     using ClassT = MyClass;
+// public:
+//     void doSomething(sds::StaticDataStore & ds)
+//     {
+//         sds::ac::get<sds::KeyTag::AntDirection>(this, ds) = 1;
+//     }
+//         
+// };
+//     
+// }
 
 
 int main()
