@@ -1,188 +1,191 @@
 
+#include <chrono>
+#include <iostream>
+        
 #include "santa_fe_board.hpp"
 #include "ant_simulation.hpp"
 #include "nodes.hpp"
 #include "visitor.hpp"
-#include <chrono>
-#include <iostream>
+#include "ant_board_simulation.hpp"
 
 
-int dynamicTree()
-{
-    using namespace ant;
-    auto max_steps = 400;
-    auto max_food = 89;
-    
+template<typename AntSimT>
+int dynamicTree(AntSimT antSim)
+{    
     auto optAnt = ant::ant_nodes{
     ant::prog<3, gpm::NodeToken<(char)112, (char)51> >{
-         ant::prog<2, gpm::NodeToken<(char)112, (char)50> >{
-             ant::prog<2, gpm::NodeToken<(char)112, (char)50> >{
-                 ant::if_food_ahead{
-                     ant::prog<2, gpm::NodeToken<(char)112, (char)50> >{
-                         ant::left{}
-,                        ant::left{}
-                    }
-,                    ant::prog<2, gpm::NodeToken<(char)112, (char)50> >{
-                         ant::move{}
-,                        ant::left{}
-                    }
+         ant::if_food_ahead{
+             ant::if_food_ahead{
+                 ant::prog<3, gpm::NodeToken<(char)112, (char)51> >{
+                     ant::move{}
+,                    ant::move{}
+,                    ant::left{}
                 }
-,                ant::prog<2, gpm::NodeToken<(char)112, (char)50> >{
-                     ant::prog<2, gpm::NodeToken<(char)112, (char)50> >{
-                         ant::left{}
-,                        ant::move{}
-                    }
-,                    ant::if_food_ahead{
-                         ant::right{}
-,                        ant::left{}
-                    }
+,                ant::if_food_ahead{
+                     ant::right{}
+,                    ant::right{}
                 }
             }
 ,            ant::prog<2, gpm::NodeToken<(char)112, (char)50> >{
-                 ant::prog<2, gpm::NodeToken<(char)112, (char)50> >{
-                     ant::if_food_ahead{
-                         ant::right{}
-,                        ant::left{}
-                    }
-,                    ant::prog<2, gpm::NodeToken<(char)112, (char)50> >{
-                         ant::move{}
-,                        ant::right{}
-                    }
+                 ant::if_food_ahead{
+                     ant::left{}
+,                    ant::right{}
                 }
-,                ant::prog<2, gpm::NodeToken<(char)112, (char)50> >{
-                     ant::prog<2, gpm::NodeToken<(char)112, (char)50> >{
-                         ant::move{}
-,                        ant::move{}
-                    }
-,                    ant::if_food_ahead{
-                         ant::right{}
-,                        ant::left{}
-                    }
+,                ant::prog<3, gpm::NodeToken<(char)112, (char)51> >{
+                     ant::right{}
+,                    ant::move{}
+,                    ant::right{}
                 }
             }
         }
 ,        ant::prog<3, gpm::NodeToken<(char)112, (char)51> >{
-             ant::left{}
-,            ant::left{}
-,            ant::move{}
-        }
-,        ant::if_food_ahead{
-             ant::prog<3, gpm::NodeToken<(char)112, (char)51> >{
-                 ant::move{}
-,                ant::move{}
-,                ant::move{}
+             ant::prog<2, gpm::NodeToken<(char)112, (char)50> >{
+                 ant::prog<2, gpm::NodeToken<(char)112, (char)50> >{
+                     ant::left{}
+,                    ant::right{}
+                }
+,                ant::prog<2, gpm::NodeToken<(char)112, (char)50> >{
+                     ant::right{}
+,                    ant::move{}
+                }
+            }
+,            ant::if_food_ahead{
+                 ant::if_food_ahead{
+                     ant::move{}
+,                    ant::left{}
+                }
+,                ant::prog<2, gpm::NodeToken<(char)112, (char)50> >{
+                     ant::left{}
+,                    ant::right{}
+                }
             }
 ,            ant::prog<2, gpm::NodeToken<(char)112, (char)50> >{
-                 ant::move{}
-,                ant::move{}
+                 ant::prog<2, gpm::NodeToken<(char)112, (char)50> >{
+                     ant::move{}
+,                    ant::left{}
+                }
+,                ant::prog<2, gpm::NodeToken<(char)112, (char)50> >{
+                     ant::right{}
+,                    ant::left{}
+                }
+            }
+        }
+,        ant::prog<2, gpm::NodeToken<(char)112, (char)50> >{
+             ant::if_food_ahead{
+                 ant::prog<2, gpm::NodeToken<(char)112, (char)50> >{
+                     ant::right{}
+,                    ant::move{}
+                }
+,                ant::prog<3, gpm::NodeToken<(char)112, (char)51> >{
+                     ant::move{}
+,                    ant::right{}
+,                    ant::right{}
+                }
+            }
+,            ant::prog<2, gpm::NodeToken<(char)112, (char)50> >{
+                 ant::prog<2, gpm::NodeToken<(char)112, (char)50> >{
+                     ant::move{}
+,                    ant::move{}
+                }
+,                ant::prog<3, gpm::NodeToken<(char)112, (char)51> >{
+                     ant::right{}
+,                    ant::right{}
+,                    ant::right{}
+                }
             }
         }
     }
 }
 ;
-    auto antBoardSimulation = sim::AntBoardSimulationStaticSize<santa_fe::x_size, santa_fe::y_size>{
-        max_steps,
-        max_food,
-        sim::Pos2d{0,0}, 
-        sim::Direction::east,
-        [](sim::AntBoardSimulationStaticSize<santa_fe::x_size, santa_fe::y_size>::FieldType & board){
-            for(size_t x = 0; x < board.size(); ++x)
-            {
-                for(size_t y = 0; y < board[x].size(); ++y)
-                {
-                    board[x][y] = santa_fe::board[x][y] == 'X' ? sim::BoardState::food : sim::BoardState::empty;
-                }
-            }
-        }
-    };
             
-    auto antBoardSimVisitor = AntBoardSimulationVisitor{antBoardSimulation};
+    auto antBoardSimVisitor = ant::AntBoardSimulationVisitor{antSim};
             
-    while(!antBoardSimulation.is_finish())
+    while(!antSim.is_finish())
     {
         boost::apply_visitor(antBoardSimVisitor, optAnt);
     }
-    return antBoardSimulation.score(); 
+    return antSim.score(); 
 }
+ANT_ADD_TOBENCHMARK(dynamicTree<decltype(getAntSim())>)
         
-int staticTree()
+template<typename AntSimT>
+int staticTree(AntSimT antSim)
 {
-    using namespace ant;
-    auto max_steps = 400;
-    auto max_food = 89;
-    auto antSim = sim::AntBoardSimulationStaticSize<santa_fe::x_size, santa_fe::y_size>{
-        max_steps,
-        max_food,
-        sim::Pos2d{0,0}, 
-        sim::Direction::east,
-        [](sim::AntBoardSimulationStaticSize<santa_fe::x_size, santa_fe::y_size>::FieldType & board){
-            for(size_t x = 0; x < board.size(); ++x)
-            {
-                for(size_t y = 0; y < board[x].size(); ++y)
-                {
-                    board[x][y] = santa_fe::board[x][y] == 'X' ? sim::BoardState::food : sim::BoardState::empty;
-                }
-            }
-        }
-    };
     while(!antSim.is_finish()){
         if(antSim.is_food_in_front()){
-            antSim.left();
-            antSim.left();
+            if(antSim.is_food_in_front()){
+                antSim.move();
+                antSim.move();
+                antSim.left();
+            }else{
+                if(antSim.is_food_in_front()){
+                    antSim.right();
+                }else{
+                    antSim.right();
+                }
+            }
         }else{
+            if(antSim.is_food_in_front()){
+                antSim.left();
+            }else{
+                antSim.right();
+            }
+            antSim.right();
             antSim.move();
-            antSim.left();
+            antSim.right();
         }
         antSim.left();
-        antSim.move();
-        if(antSim.is_food_in_front()){
-            antSim.right();
-        }else{
-            antSim.left();
-        }
-        if(antSim.is_food_in_front()){
-            antSim.right();
-        }else{
-            antSim.left();
-        }
-        antSim.move();
+        antSim.right();
         antSim.right();
         antSim.move();
-        antSim.move();
         if(antSim.is_food_in_front()){
-            antSim.right();
+            if(antSim.is_food_in_front()){
+                antSim.move();
+            }else{
+                antSim.left();
+            }
         }else{
             antSim.left();
+            antSim.right();
         }
-        antSim.left();
-        antSim.left();
         antSim.move();
+        antSim.left();
+        antSim.right();
+        antSim.left();
         if(antSim.is_food_in_front()){
-            antSim.move();
-            antSim.move();
+            antSim.right();
             antSim.move();
         }else{
             antSim.move();
-            antSim.move();
+            antSim.right();
+            antSim.right();
         }
+        antSim.move();
+        antSim.move();
+        antSim.right();
+        antSim.right();
+        antSim.right();
     }
 return antSim.score();
 }
 
-        
+
+ANT_ADD_TOBENCHMARK(staticTree<decltype(getAntSim())>) 
+
 int main()
 {
     int result = 0;
-    for(auto fun:{dynamicTree, staticTree})
+    auto antSim = getAntSim();
+    for(auto fun:toBenchmark)
     {
         auto d8 = std::chrono::high_resolution_clock::now();
-        for(int i = 0; i < 10; ++i)
+        for(int i = 0; i < 1000; ++i)
         {
-            result += fun();
+            result += fun(antSim);
         }
         auto d9 = std::chrono::high_resolution_clock::now();
         std::cout << boost::typeindex::type_id_runtime(fun).pretty_name() <<  ": " << (d9 - d8).count() << "\n";
     }
         
-    return result;
+    return result == 0 ;
 }
