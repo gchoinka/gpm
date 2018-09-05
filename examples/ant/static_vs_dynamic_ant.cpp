@@ -106,7 +106,7 @@ int dynamicTree(AntSimT antSim)
     }
     return antSim.score(); 
 }
-ANT_ADD_TOBENCHMARK(dynamicTree<decltype(getAntSim())>)
+ANT_ADD_TO_BENCHMARK(dynamicTree<decltype(getAntBoardSim())>)
         
 template<typename AntSimT>
 int staticTree(AntSimT antSim)
@@ -170,12 +170,12 @@ return antSim.score();
 }
 
 
-ANT_ADD_TOBENCHMARK(staticTree<decltype(getAntSim())>) 
+ANT_ADD_TO_BENCHMARK(staticTree<decltype(getAntBoardSim())>) 
 
 int main()
 {
     int result = 0;
-    auto antSim = getAntSim();
+    auto antSim = getAntBoardSim();
     for(auto fun:toBenchmark)
     {
         auto d8 = std::chrono::high_resolution_clock::now();
