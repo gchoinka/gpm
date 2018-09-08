@@ -1,35 +1,46 @@
-add_executable(ant_simulation_generate ant_simulation_generate.cpp) 
+SET(targetName ant_simulation_generate)
+add_executable(${targetName} ant_simulation_generate.cpp) 
 set_target_properties(ant_simulation_generate PROPERTIES
             CXX_STANDARD 17
             CXX_EXTENSIONS OFF
 )
-target_compile_options(ant_simulation_generate PRIVATE -Wall -Wextra -pedantic -Werror)
-
-target_link_libraries(ant_simulation_generate fmt::fmt)
-
+target_compile_options(${targetName} PRIVATE -Wall -Wextra -pedantic -Werror)
+target_link_libraries(${targetName} fmt::fmt)
 
 
-add_executable(static_vs_dynamic_ant static_vs_dynamic_ant.cpp) 
-set_target_properties(static_vs_dynamic_ant PROPERTIES
+
+SET(targetName static_vs_dynamic_ant)
+add_executable(${targetName} static_vs_dynamic_ant.cpp) 
+set_target_properties(${targetName} PROPERTIES
            CXX_STANDARD 17
            CXX_EXTENSIONS OFF
 )
-target_compile_options(static_vs_dynamic_ant PRIVATE -Wall -Wextra -pedantic -Werror)
+target_compile_options(${targetName} PRIVATE -Wall -Wextra -pedantic -Werror)
+target_link_libraries(${targetName} fmt::fmt)
 
-target_link_libraries(static_vs_dynamic_ant fmt::fmt)
 
-add_executable(ant_simulation_benchmark ant_simulation_benchmark.cpp) 
-set_target_properties(ant_simulation_benchmark PROPERTIES
+
+SET(targetName ant_simulation_benchmark)
+add_executable(${targetName} ant_simulation_benchmark.cpp) 
+set_target_properties(${targetName} PROPERTIES
            CXX_STANDARD 17
            CXX_EXTENSIONS OFF
 )
-target_compile_options(ant_simulation_benchmark PRIVATE -Wall -Wextra -pedantic -Werror)
-
-target_link_libraries(ant_simulation_benchmark fmt::fmt)
-
+target_compile_options(${targetName} PRIVATE -Wall -Wextra -pedantic -Werror)
+target_link_libraries(${targetName} fmt::fmt)
 
 
 
-add_subdirectory(tests)
+add_custom_target(make_static_vs_dynamic 
+    COMMAND ant_simulation_generate > "${GeneratedIncludesDir}/ant_simulation_benchmark_generated_functions.cpp"
+    COMMAND ${CMAKE_COMMAND} -E touch_nocreate "${CMAKE_CURRENT_SOURCE_DIR}/ant_simulation_benchmark.cpp"
+    COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target ant_simulation_benchmark
+    DEPENDS ant_simulation_generate
+)
+
+
+if(${GPM_BUILD_TESTS})
+    add_subdirectory(tests)
+endif()
 
 

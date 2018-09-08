@@ -48,31 +48,31 @@ struct MethodName<ant::right>
 class CPPStypePrinter : public boost::static_visitor<std::string>
 {
 public:
-    std::string vistorName_;
+    std::string simulationName_;
     int indent_ = 0;
     int indentSize = 4;
+    std::string indentStr_;
     
     
-    CPPStypePrinter(std::string const & vistorName, int indent)
-        :vistorName_{vistorName}, indent_{indent}
+    CPPStypePrinter(std::string const & simulationName, int indent)
+        :simulationName_{simulationName}, indent_{indent}, indentStr_{fmt::format("{:<{}}", "", indent_*indentSize)}
     {
     }
 
     std::string operator()(if_food_ahead const & c) const
     {
-        auto indent = fmt::format("{:<{}}", "", indent_*indentSize);
         return gpm::utils::formatNamed(
 R"""(
-{indent}if({vistorName}.is_food_in_front()){{
+{indent}if({simulationName}.is_food_in_front()){{
 {true_branch}
 {indent}}}else{{
 {false_branch}
 {indent}}}
 )"""
-            , "vistorName", vistorName_
-            , "true_branch", boost::apply_visitor(CPPStypePrinter{vistorName_, indent_+1}, c.get<true>())
-            , "false_branch", boost::apply_visitor(CPPStypePrinter{vistorName_, indent_+1}, c.get<false>())
-            , "indent", indent
+            , "simulationName", simulationName_
+            , "true_branch", boost::apply_visitor(CPPStypePrinter{simulationName_, indent_+1}, c.get<true>())
+            , "false_branch", boost::apply_visitor(CPPStypePrinter{simulationName_, indent_+1}, c.get<false>())
+            , "indent", indentStr_
         );
     }
     
@@ -82,7 +82,11 @@ R"""(
         std::string res;
         if constexpr(t.nodes.size() == 0)
         {
-            res += fmt::format( "{:<{}}{}.{}();\n", "", indent_*indentSize, vistorName_, MethodName<T>::name);
+            res += gpm::utils::formatNamed("{indent}{simulationName}.{methodName}();\n" 
+                                             , "simulationName", simulationName_
+                                             , "methodName", MethodName<T>::name
+                                             , "indent", indentStr_
+            );
         }
         for(auto & n: t.nodes)
             res += boost::apply_visitor(*this, n);
@@ -145,19 +149,20 @@ R"""(
 };
 
 
-std::ostream & toVariantStyle(std::ostream & out, ant_nodes const & ant)
+std::string toVariantStyle(ant_nodes const & ant)
 {
-    out << "ant::ant_nodes{\n";
-    out << boost::apply_visitor(VariantStylePrinter{1}, ant);
-    out << "}\n";
-    return out;
+    std::string res;
+    res += "ant::ant_nodes{\n";
+    res += boost::apply_visitor(VariantStylePrinter{1}, ant);
+    res += "}\n";
+    return res;
 }
 
 }
 
 
 
-int main(__attribute__((unused)) int argc, __attribute__((unused)) char const ** argv)
+int main()
 {
 //     int result = 0;
 //     for(auto fun:{dynamicTree, staticTree})
@@ -170,26 +175,20 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char const **
 //         auto d9 = std::chrono::high_resolution_clock::now();
 //         std::cout << boost::typeindex::type_id_runtime(fun).pretty_name() <<  ": " << (d9 - d8).count() << std::endl;
 //     }
-    
+        
     int minHeight = 1;
-    int maxHeight = 11;
+    int maxHeight = 7;
     std::random_device rd;
     auto bgen = gpm::BasicGenerator<ant::ant_nodes>{minHeight, maxHeight, rd()};
     auto randomAnt = bgen();
     
-    //boost::apply_visitor(ant::VariantStylePrinter{std::cout, 0}, fooAnt);
-                 
-    std::ofstream fout("ant_simulation_benchmark_generated_functions.cpp");
-    std::ostringstream vairantStyleStream;
-    toVariantStyle(vairantStyleStream, randomAnt);
-    
 
+    auto vairantStyle = toVariantStyle(randomAnt);
     auto antBoardSimName = "antBoardSim";
-    auto randomAntFlatStyle =
-    boost::apply_visitor(ant::CPPStypePrinter{ antBoardSimName, 2}, randomAnt);
+    auto randomAntFlatStyle = boost::apply_visitor(ant::CPPStypePrinter{ antBoardSimName, 2}, randomAnt);
 
     
-    fmt::print(fout, 
+    fmt::print(std::cout, 
 R"""(
 template<typename AntBoardSimT>
 int dynamicTree(AntBoardSimT {0})
@@ -219,16 +218,7 @@ ANT_ADD_TO_BENCHMARK(staticTree<decltype(getAntBoardSim())>)
 
 )"""
         , antBoardSimName
-        , vairantStyleStream.str()
+        , vairantStyle
         , randomAntFlatStyle
     );
-
-/*
-touch ../examples/ant/ant_simulation_generate.cpp
-ninja examples/ant/ant_simulation_generate && examples/ant/ant_simulation_generate
-cp ant_simulation_benchmark_generated_functions.cpp ../examples/ant/
-touch ../examples/ant/ant_simulation_benchmark.cpp
-ninja ant_simulation_benchmark && examples/ant/ant_simulation_benchmark
-
- */
 }

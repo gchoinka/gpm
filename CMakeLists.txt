@@ -25,6 +25,11 @@ option(GPM_CXX_COLORED_OUTPUT "Always produce ANSI-colored output (GNU/Clang onl
 
 include("cmake/CompilerSettings.cmake")
 
+set(GeneratedIncludesDir "${CMAKE_BINARY_DIR}/generated_includes")
+file(MAKE_DIRECTORY "${GeneratedIncludesDir}")
+include_directories("${GeneratedIncludesDir}")
+
+
 hunter_add_package(Boost)
 set(BOOST_MIN_VERSION "1.68.0")
 find_package(Boost ${BOOST_MIN_VERSION} REQUIRED)
