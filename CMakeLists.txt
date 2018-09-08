@@ -43,6 +43,14 @@ if (${GPM_BUILD_TESTS})
     enable_testing()
 endif()
 
+find_program(CLANG_FORMAT NAMES "clang-format" "clang-format-9.0" "clang-format-8.0" "clang-format-7.0" "clang-format-6.0" "clang-format-5.0" "clang-format-4.0" "clang-format-3.0" DOC "Path to clang-format executable")
+
+if(NOT CLANG_FORMAT)
+  message(STATUS "clang-format not found.")
+else()
+  message(STATUS "clang-format found: ${CLANG_FORMAT}")
+endif()
+
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
