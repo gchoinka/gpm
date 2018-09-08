@@ -7,7 +7,7 @@
  */
 #pragma once
 
-#include "ant_simulation.hpp"
+#include "ant_board_simulation.hpp"
 #include "nodes.hpp"
 
 namespace ant { 
@@ -48,5 +48,7 @@ public:
 private:
     AntBoardSimType & sim_;
 };
+
+
 
 }

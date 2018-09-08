@@ -13,7 +13,7 @@
 #include <benchmark/benchmark.h>
 
 #include "common/santa_fe_board.hpp"
-#include "common/ant_simulation.hpp"
+#include "common/ant_board_simulation.hpp"
 #include "common/nodes.hpp"
 #include "common/visitor.hpp"
 

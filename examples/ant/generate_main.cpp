@@ -16,7 +16,7 @@
 
 
 #include "common/santa_fe_board.hpp"
-#include "common/ant_simulation.hpp"
+#include "common/ant_board_simulation.hpp"
 #include "common/nodes.hpp"
 #include "common/visitor.hpp"
 
@@ -208,12 +208,11 @@ R"""(
 int main()
 {        
     int minHeight = 1;
-    int maxHeight = 7;
+    int maxHeight = 5;
     std::random_device rd;
     auto bgen = gpm::BasicGenerator<ant::ant_nodes>{minHeight, maxHeight, rd()};
     auto randomAnt = bgen();
     
-
     auto randomAntVairantNotation = boost::apply_visitor(ant::VariantStylePrinter{1}, randomAnt);
     auto antBoardSimName = "antBoardSim";
     auto randomAntCPPNotation = boost::apply_visitor(ant::CPPStypePrinter{antBoardSimName, 2}, randomAnt);
@@ -238,7 +237,7 @@ static int dynamicTree(AntBoardSimT {antBoardSimName})
 
 static void BM_dynamicTree(benchmark::State& state) 
 {{
-    for (auto _ : state) {{dynamicTree(getAntBoardSim());}}
+    for (auto _ : state) {{state.counters["score"] = dynamicTree(getAntBoardSim());}}
 }}
 BENCHMARK(BM_dynamicTree); 
     
@@ -253,7 +252,7 @@ int staticTree(AntBoardSimT {antBoardSimName})
     
 static void BM_staticTree(benchmark::State& state) 
 {{
-    for (auto _ : state) {{staticTree(getAntBoardSim());}}
+    for (auto _ : state) {{state.counters["score"] = staticTree(getAntBoardSim());}}
 }}
 BENCHMARK(BM_staticTree);  
  
@@ -272,7 +271,7 @@ int staticWithVistorTree(AntBoardSimT {antBoardSimName})
 
 static void BM_staticWithVistorTree(benchmark::State& state) 
 {{
-    for (auto _ : state) {{staticWithVistorTree(getAntBoardSim());}}
+    for (auto _ : state) {{state.counters["score"] = staticWithVistorTree(getAntBoardSim());}}
 }}
 BENCHMARK(BM_staticWithVistorTree);    
     
