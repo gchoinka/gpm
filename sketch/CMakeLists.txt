@@ -7,3 +7,5 @@ set_target_properties(mapfmt PROPERTIES
 target_compile_options(mapfmt PRIVATE -Wall -Wextra -pedantic -Werror)
 
 target_link_libraries(mapfmt fmt::fmt)
+
+add_subdirectory(datastore)
