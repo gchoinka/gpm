@@ -6,19 +6,19 @@
  * copy at http://www.boost.org/LICENSE_1_0.txt)
  */
 #include <iostream>
-
-
-#include "santa_fe_board.hpp"
-#include "ant_simulation.hpp"
-#include "nodes.hpp"
-#include "visitor.hpp"
-
 #include <chrono>
 #include <fstream>
 
 #include <fmt/format.h>
 #include <fmt/ostream.h>
+
 #include <gpm/utils/fmtutils.hpp>
+
+
+#include "common/santa_fe_board.hpp"
+#include "common/ant_simulation.hpp"
+#include "common/nodes.hpp"
+#include "common/visitor.hpp"
 
 
 namespace ant { 

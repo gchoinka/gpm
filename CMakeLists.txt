@@ -19,6 +19,7 @@ project(gpm CXX)
 
 option(GPM_BUILD_TESTS "Enable to build the tests" ON)
 option(GPM_BUILD_EXAMPLES "Enable to build the tests" ON)
+option(GPM_BUILD_BENCHMARK "Enable to build benchmarks" ON)
 option(GPM_BUILD_SKETCH "Enable to build the sketch" OFF)
 option(GPM_CXX_COLORED_OUTPUT "Always produce ANSI-colored output (GNU/Clang only)." OFF)
 
@@ -37,10 +38,15 @@ find_package(Boost ${BOOST_MIN_VERSION} REQUIRED)
 hunter_add_package(fmt)
 find_package(fmt CONFIG REQUIRED)
 
-if (${GPM_BUILD_TESTS})
+if(${GPM_BUILD_TESTS})
     hunter_add_package(Catch)
     find_package(Catch2 CONFIG REQUIRED)
     enable_testing()
+endif()
+
+if(${GPM_BUILD_BENCHMARK})
+    hunter_add_package(benchmark)
+    find_package(benchmark CONFIG REQUIRED)
 endif()
 
 find_program(CLANG_FORMAT NAMES "clang-format" "clang-format-9.0" "clang-format-8.0" "clang-format-7.0" "clang-format-6.0" "clang-format-5.0" "clang-format-4.0" "clang-format-3.0" DOC "Path to clang-format executable")
