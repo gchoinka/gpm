@@ -10,6 +10,8 @@
 #include <functional>
 #include <vector>
 
+#include <benchmark/benchmark.h>
+
 #include "common/santa_fe_board.hpp"
 #include "common/ant_simulation.hpp"
 #include "common/nodes.hpp"
@@ -65,20 +67,23 @@ int addToBenchmark(T t)
 #endif
 
 
-int main()
-{
-    int result = 0;
-    auto antBoardSim = getAntBoardSim();
-    for(auto antBoardFunction:toBenchmark)
-    {
-        auto d8 = std::chrono::high_resolution_clock::now();
-        for(int i = 0; i < 1000; ++i)
-        {
-            result += antBoardFunction(antBoardSim);
-        }
-        auto d9 = std::chrono::high_resolution_clock::now();
-        std::cout << boost::typeindex::type_id_runtime(antBoardFunction).pretty_name() <<  ": " << (d9 - d8).count() << "\n";
-    }
-        
-    return result == 0 ;
-}
+
+BENCHMARK_MAIN();
+
+// int main()
+// {
+//     int result = 0;
+//     auto antBoardSim = getAntBoardSim();
+//     for(auto antBoardFunction:toBenchmark)
+//     {
+//         auto d8 = std::chrono::high_resolution_clock::now();
+//         for(int i = 0; i < 1000; ++i)
+//         {
+//             result += antBoardFunction(antBoardSim);
+//         }
+//         auto d9 = std::chrono::high_resolution_clock::now();
+//         std::cout << boost::typeindex::type_id_runtime(antBoardFunction).pretty_name() <<  ": " << (d9 - d8).count() << "\n";
+//     }
+//         
+//     return result == 0 ;
+// }

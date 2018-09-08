@@ -219,12 +219,11 @@ int main()
     auto randomAntCPPNotation = boost::apply_visitor(ant::CPPStypePrinter{antBoardSimName, 2}, randomAnt);
     auto antBoardSimVisitorName = "antBoardSimVisitor";
     auto randomAntCPPVisitorNotation = boost::apply_visitor(ant::CPPVistorNotationPrinter{antBoardSimName, antBoardSimVisitorName, 2}, randomAnt);
-
     
     std::cout << gpm::utils::formatNamed( 
 R"""(
 template<typename AntBoardSimT>
-int dynamicTree(AntBoardSimT {antBoardSimName})
+static int dynamicTree(AntBoardSimT {antBoardSimName})
 {{    
     auto optAnt = ant::ant_nodes{{{VairantNotation}}};
             
@@ -236,8 +235,12 @@ int dynamicTree(AntBoardSimT {antBoardSimName})
     }}
     return {antBoardSimName}.score(); 
 }}
-ANT_ADD_TO_BENCHMARK(dynamicTree<decltype(getAntBoardSim())>)
-  
+
+static void BM_dynamicTree(benchmark::State& state) 
+{{
+    for (auto _ : state) {{dynamicTree(getAntBoardSim());}}
+}}
+BENCHMARK(BM_dynamicTree); 
     
 template<typename AntBoardSimT>
 int staticTree(AntBoardSimT {antBoardSimName})
@@ -247,7 +250,12 @@ int staticTree(AntBoardSimT {antBoardSimName})
     }}
     return {antBoardSimName}.score();
 }}
-ANT_ADD_TO_BENCHMARK(staticTree<decltype(getAntBoardSim())>) 
+    
+static void BM_staticTree(benchmark::State& state) 
+{{
+    for (auto _ : state) {{staticTree(getAntBoardSim());}}
+}}
+BENCHMARK(BM_staticTree);  
  
     
 template<typename AntBoardSimT>
@@ -261,8 +269,13 @@ int staticWithVistorTree(AntBoardSimT {antBoardSimName})
     }}
     return {antBoardSimName}.score(); 
 }}
-ANT_ADD_TO_BENCHMARK(staticWithVistorTree<decltype(getAntBoardSim())>)
 
+static void BM_staticWithVistorTree(benchmark::State& state) 
+{{
+    for (auto _ : state) {{staticWithVistorTree(getAntBoardSim());}}
+}}
+BENCHMARK(BM_staticWithVistorTree);    
+    
 )"""
         , "antBoardSimName", antBoardSimName
         , "VairantNotation", randomAntVairantNotation
