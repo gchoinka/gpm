@@ -6,6 +6,7 @@
 #include <initializer_list>
 #include <tuple>
 
+#include <gpm/utils/fmtutils.hpp>
 
 
 /* IMPLEMENTATION */
@@ -99,13 +100,18 @@ decltype(auto) mapformat(StrT && fstr, T ... args)
 }
 
 
-// template<typename ...T>
-// decltype(auto)  fmt::format(std::string fstr, T ... args)
+// template<typename StrT, typename Tuple, size_t...Idx>
+// decltype(auto) formatNamed_imp(StrT && fstr, Tuple&& args, std::integer_sequence<size_t, Idx...>) 
 // {
-//   return fmtinvoke(fstr, std::tuple<T const &...>{args...}, std::make_integer_sequence<size_t, sizeof...(args)/2>() );
+//     return fmt::format(std::forward<StrT>(fstr), fmt::arg(std::get<Idx*2>(std::forward<Tuple>(args)), std::get<Idx*2+1>(std::forward<Tuple>(args)))...);
 // }
-
-
+// 
+// 
+// template<typename StrT, typename ...T>
+// decltype(auto) formatNamed(StrT && fstr, T && ... args)
+// {
+//   return formatNamed_imp(std::forward<StrT>(fstr), std::tuple<T...>{std::forward<T>(args)...}, std::make_integer_sequence<size_t, sizeof...(args)/2>() );
+// }
 
 
 int main() {
@@ -125,6 +131,23 @@ int main() {
     , "false_case", "Nope"
     , "indent", "    "
   ); 
+  std::cout << gpm::utils::formatNamed(R"""(
+{indent}if({cond})
+{indent}{{
+{indent}    {true_case}
+{indent}}}
+{indent}else
+{indent}{{
+{indent}    {false_case}
+{indent}}}
+)""" 
+    , "cond", 42 
+    , "true_case", "p3"
+    , "false_case", "Nope"
+    , "indent", "    "
+    , "su"
+  ); 
+  
   
   std::cout << fmt::format("Hello, {name}! The answer is {number}. Goodbye, {name}.",
            fmt::arg("name", "World"), fmt::arg("number", 42)) << "\n";

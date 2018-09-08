@@ -18,6 +18,8 @@ project(gpm CXX)
 
 
 option(GPM_BUILD_TESTS "Enable to build the tests" ON)
+option(GPM_BUILD_EXAMPLES "Enable to build the tests" ON)
+option(GPM_BUILD_SKETCH "Enable to build the sketch" OFF)
 option(GPM_CXX_COLORED_OUTPUT "Always produce ANSI-colored output (GNU/Clang only)." OFF)
 
 
@@ -39,5 +41,15 @@ endif()
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-add_subdirectory(examples)
-add_subdirectory(tests)
+if(${GPM_BUILD_TESTS})
+    add_subdirectory(tests)
+endif()
+
+if(${GPM_BUILD_EXAMPLES})
+    add_subdirectory(examples)
+endif()
+
+
+if(${GPM_BUILD_SKETCH})
+    add_subdirectory(sketch)
+endif()    
