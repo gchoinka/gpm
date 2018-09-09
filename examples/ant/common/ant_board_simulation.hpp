@@ -193,4 +193,7 @@ private:
 template<int XSize, int YSize>
 using AntBoardSimulationStaticSize = AntBoardSimulation<std::array<std::array<BoardState, YSize>, XSize>>;
 
+
+
+
 } // namespace ant
