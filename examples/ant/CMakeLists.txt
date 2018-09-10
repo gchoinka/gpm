@@ -9,7 +9,7 @@
 if(MSVC)
   set(warning_flags "-Wall")
 else ()
-  set(warning_flags "-Wall -Wextra -pedantic -Werror")
+  set(warning_flags -Wall -Wextra -pedantic -Werror)
 endif()
 
 set(targetName generate_tree_for_benchmark)
