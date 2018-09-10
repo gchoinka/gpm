@@ -6,3 +6,7 @@ if(${GPM_CXX_COLORED_OUTPUT})
        add_compile_options (-fcolor-diagnostics)
     endif ()
 endif ()
+
+if(MSVC)
+    add_compile_options(/EHsc)
+endif()
