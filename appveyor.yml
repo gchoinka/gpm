@@ -4,9 +4,11 @@ environment:
   matrix:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       platform: x64
-      FLAGS: "/permissive- /std:c++latest /utf-8"
+      FLAGS: "/permissive- /std:c++latest /utf-8 /F 16777216"
       GENERATOR: Visual Studio 15 2017
-      cache: "C:\.hunter\"
+
+cache:
+  - "C:\.hunter\"
   
 init:
   - cmake --version
