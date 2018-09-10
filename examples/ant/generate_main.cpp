@@ -8,6 +8,7 @@
 #include <iostream>
 #include <chrono>
 #include <fstream>
+#include <memory>
 
 #include <fmt/format.h>
 #include <fmt/ostream.h>
@@ -20,46 +21,94 @@
 #include "common/nodes.hpp"
 #include "common/visitor.hpp"
 
-
-namespace ant { 
-
-
-template<typename T>
-struct MethodName
-{
-};
-template<>
-struct MethodName<ant::move>
-{
-    constexpr static char const * name = "move";
-};
-template<>
-struct MethodName<ant::left>
-{
-    constexpr static char const * name = "left";
-};
-template<>
-struct MethodName<ant::right>
-{
-    constexpr static char const * name = "right";
-};
+#include "nodes_opp.hpp"
 
 
-class CPPStypePrinter : public boost::static_visitor<std::string>
+
+  
+
+
+class AsOOPNotation : public boost::static_visitor<std::string>
 {
-public:
     std::string simulationName_;
     int indent_ = 0;
     int const indentSize = 4;
     std::string indentStr_;
     
-    
-    CPPStypePrinter(std::string const & simulationName, int indent)
+public:    
+    AsOOPNotation(std::string const & simulationName, int indent)
         :simulationName_{simulationName}, indent_{indent}, indentStr_{fmt::format("{:<{}}", "", indent_*indentSize)}
     {
     }
 
-    std::string operator()(if_food_ahead const & c) const
+    std::string operator()(ant::if_food_ahead const & c) const
+    {
+        return gpm::utils::formatNamed(
+R"""(
+{indent}std::make_unique<antoop::IfFoodAhead<decltype({simulationName})>>(
+{indent}  {true_branch}
+{indent}, {false_branch}
+{indent})
+)"""
+    , "simulationName", simulationName_
+    , "true_branch", boost::apply_visitor(AsOOPNotation{simulationName_, indent_+1}, c.get<true>())
+    , "false_branch", boost::apply_visitor(AsOOPNotation{simulationName_, indent_+1}, c.get<false>())
+    , "indent", indentStr_  
+    
+        );
+    }
+    
+    struct AntNodeToClassName
+    {
+        static char const * name(ant::move) { return "Move"; }
+        static char const * name(ant::left) { return "Left"; }
+        static char const * name(ant::right) { return "Right"; }
+        static char const * name(ant::prog2) { return "Prog2"; }
+        static char const * name(ant::prog3) { return "Prog3"; }
+    };  
+    
+    template<typename T>
+    std::string operator()(T t) const
+    {
+        std::string res;
+        if constexpr(t.nodes.size() != 0)
+        {
+            auto delimi = "\n";
+            for(auto & n: t.nodes)
+            {
+                (res += delimi) += boost::apply_visitor(AsOOPNotation{simulationName_, indent_+1}, n);
+                delimi = ",";
+            }
+            res += "\n";
+        }
+        
+        res = gpm::utils::formatNamed("{indent}std::make_unique<antoop::{nodeName}<decltype({simulationName})>>({nodeChildren})\n"
+                , "indent", indentStr_  
+                , "nodeName", AntNodeToClassName::name(t)
+                , "nodeChildren", res
+                , "simulationName", simulationName_
+        );
+        return res;
+    }    
+};
+
+ 
+
+class AsCPPFixedNotation : public boost::static_visitor<std::string>
+{
+
+    std::string simulationName_;
+    int indent_ = 0;
+    int const indentSize = 4;
+    std::string indentStr_;
+    
+ public:   
+    AsCPPFixedNotation(std::string const & simulationName, int indent)
+        :simulationName_{simulationName}, indent_{indent}, indentStr_{fmt::format("{:<{}}", "", indent_*indentSize)}
+    {
+    }
+
+    std::string operator()(ant::if_food_ahead const & c) const
     {
         return gpm::utils::formatNamed(
 R"""(
@@ -70,11 +119,19 @@ R"""(
 {indent}}}
 )"""
             , "simulationName", simulationName_
-            , "true_branch", boost::apply_visitor(CPPStypePrinter{simulationName_, indent_+1}, c.get<true>())
-            , "false_branch", boost::apply_visitor(CPPStypePrinter{simulationName_, indent_+1}, c.get<false>())
+            , "true_branch", boost::apply_visitor(AsCPPFixedNotation{simulationName_, indent_+1}, c.get<true>())
+            , "false_branch", boost::apply_visitor(AsCPPFixedNotation{simulationName_, indent_+1}, c.get<false>())
             , "indent", indentStr_
         );
     }
+    
+    struct AntNodeToSimulationMethodName
+    {
+        static char const * name(ant::move) { return "move"; }
+        static char const * name(ant::left) { return "left"; }
+        static char const * name(ant::right) { return "right"; }
+    };    
+
     
     template<typename T>
     std::string operator()(T t) const
@@ -84,32 +141,34 @@ R"""(
         {
             res += gpm::utils::formatNamed("{indent}{simulationName}.{methodName}();\n" 
                                              , "simulationName", simulationName_
-                                             , "methodName", MethodName<T>::name
+                                             , "methodName", AntNodeToSimulationMethodName::name(t)
                                              , "indent", indentStr_
             );
         }
         for(auto & n: t.nodes)
-            res += boost::apply_visitor(*this, n);
+            res += boost::apply_visitor(AsCPPFixedNotation{simulationName_, indent_+1}, n);
         return res;
     }
 };
 
-class CPPVistorNotationPrinter : public boost::static_visitor<std::string>
+
+
+class AsCPPFixedWithVisitorNotation : public boost::static_visitor<std::string>
 {
-public:
+
     std::string simulationName_;
     std::string visitorName_;
     int indent_ = 0;
     int const indentSize = 4;
     std::string indentStr_;
+public:    
     
-    
-    CPPVistorNotationPrinter(std::string const & simulationName, std::string const & visitorName, int indent)
+    AsCPPFixedWithVisitorNotation(std::string const & simulationName, std::string const & visitorName, int indent)
         :simulationName_{simulationName}, visitorName_{visitorName}, indent_{indent}, indentStr_{fmt::format("{:<{}}", "", indent_*indentSize)}
     {
     }
 
-    std::string operator()(if_food_ahead const & c) const
+    std::string operator()(ant::if_food_ahead const & c) const
     {
         return gpm::utils::formatNamed(
 R"""(
@@ -120,8 +179,8 @@ R"""(
 {indent}}}
 )"""
             , "simulationName", simulationName_
-            , "true_branch", boost::apply_visitor(CPPVistorNotationPrinter{simulationName_, visitorName_, indent_+1}, c.get<true>())
-            , "false_branch", boost::apply_visitor(CPPVistorNotationPrinter{simulationName_, visitorName_, indent_+1}, c.get<false>())
+            , "true_branch", boost::apply_visitor(AsCPPFixedWithVisitorNotation{simulationName_, visitorName_, indent_+1}, c.get<true>())
+            , "false_branch", boost::apply_visitor(AsCPPFixedWithVisitorNotation{simulationName_, visitorName_, indent_+1}, c.get<false>())
             , "indent", indentStr_
         );
     }
@@ -140,13 +199,14 @@ R"""(
             );
         }
         for(auto & n: t.nodes)
-            res += boost::apply_visitor(*this, n);
+            res += boost::apply_visitor(AsCPPFixedWithVisitorNotation{simulationName_, visitorName_, indent_+1}, n);
         return res;
     }
     
 };
 
-class VariantStylePrinter : public boost::static_visitor<std::string>
+
+class AsRecursiveVariantNotation : public boost::static_visitor<std::string>
 {
 public:
     int indent_ = 0;
@@ -154,12 +214,12 @@ public:
     std::string indentStr_;
     
     
-    VariantStylePrinter(int indent)
+    AsRecursiveVariantNotation(int indent)
         :indent_{indent}, indentStr_{fmt::format("{:<{}}", "", indent_*indentSize)}
     {
     }
 
-    std::string operator()(if_food_ahead const & c) const
+    std::string operator()(ant::if_food_ahead const & c) const
     {
         return gpm::utils::formatNamed(
 R"""(
@@ -169,8 +229,8 @@ R"""(
 {indent}}}
 )"""
     , "nodeName", boost::typeindex::type_id_runtime(c).pretty_name()
-    , "true_branch", boost::apply_visitor(VariantStylePrinter{indent_+1}, c.get<true>())
-    , "false_branch", boost::apply_visitor(VariantStylePrinter{indent_+1}, c.get<true>())
+    , "true_branch", boost::apply_visitor(AsRecursiveVariantNotation{indent_+1}, c.get<true>())
+    , "false_branch", boost::apply_visitor(AsRecursiveVariantNotation{indent_+1}, c.get<false>())
     , "indent", indentStr_  
     
         );
@@ -185,7 +245,7 @@ R"""(
             auto delimi = "\n";
             for(auto & n: t.nodes)
             {
-                (res += delimi) += boost::apply_visitor(VariantStylePrinter{indent_+1}, n);
+                (res += delimi) += boost::apply_visitor(AsRecursiveVariantNotation{indent_+1}, n);
                 delimi = ",";
             }
             res += "\n";
@@ -201,30 +261,38 @@ R"""(
 };
 
 
-}
+
 
 
 
 int main()
 {        
     int minHeight = 1;
-    int maxHeight = 5;
+    int maxHeight = 7;
     std::random_device rd;
-    auto bgen = gpm::BasicGenerator<ant::ant_nodes>{minHeight, maxHeight, rd()};
-    auto randomAnt = bgen();
+
+    auto ant = gpm::BasicGenerator<ant::ant_nodes>{minHeight, maxHeight, rd()}();
     
-    auto randomAntVairantNotation = boost::apply_visitor(ant::VariantStylePrinter{1}, randomAnt);
     auto antBoardSimName = "antBoardSim";
-    auto randomAntCPPNotation = boost::apply_visitor(ant::CPPStypePrinter{antBoardSimName, 2}, randomAnt);
     auto antBoardSimVisitorName = "antBoardSimVisitor";
-    auto randomAntCPPVisitorNotation = boost::apply_visitor(ant::CPPVistorNotationPrinter{antBoardSimName, antBoardSimVisitorName, 2}, randomAnt);
+    
+    
+    auto recursiveVariantNotation = boost::apply_visitor(AsRecursiveVariantNotation{1}, ant);
+    auto cppFixedNotation = boost::apply_visitor(AsCPPFixedNotation{antBoardSimName, 2}, ant);
+    auto cppFixedWithVisitorNotation = boost::apply_visitor(AsCPPFixedWithVisitorNotation{antBoardSimName, antBoardSimVisitorName, 2}, ant);
+    auto oopNotation = boost::apply_visitor(AsOOPNotation{antBoardSimName, 2}, ant);
+    
+    auto antRPN = boost::apply_visitor(gpm::RPNPrinter<std::string>{}, ant);
     
     std::cout << gpm::utils::formatNamed( 
 R"""(
+
+static char const antRPNString[] = {{"{antRPN}"}};    
+
 template<typename AntBoardSimT>
-static int dynamicTree(AntBoardSimT {antBoardSimName})
+static int recursiveVariantTreeFromString(AntBoardSimT {antBoardSimName})
 {{    
-    auto optAnt = ant::ant_nodes{{{VairantNotation}}};
+    auto optAnt = gpm::factory<ant::ant_nodes>(gpm::RPNToken_iterator{{antRPNString}});
             
     auto antBoardSimVisitor = ant::AntBoardSimulationVisitor{{{antBoardSimName}}};
             
@@ -235,50 +303,91 @@ static int dynamicTree(AntBoardSimT {antBoardSimName})
     return {antBoardSimName}.score(); 
 }}
 
-static void BM_dynamicTree(benchmark::State& state) 
+static void BM_recursiveVariantTreeFromString(benchmark::State& state) 
 {{
-    for (auto _ : state) {{state.counters["score"] = dynamicTree(getAntBoardSim());}}
+    for (auto _ : state) {{state.counters["score"] = recursiveVariantTreeFromString(getAntBoardSim());}}
 }}
-BENCHMARK(BM_dynamicTree); 
+BENCHMARK(BM_recursiveVariantTreeFromString); 
+    
+
+template<typename AntBoardSimT>
+static int recursiveVariantTree(AntBoardSimT {antBoardSimName})
+{{    
+    auto optAnt = ant::ant_nodes{{{recursiveVariantNotation}}};
+            
+    auto antBoardSimVisitor = ant::AntBoardSimulationVisitor{{{antBoardSimName}}};
+            
+    while(!{antBoardSimName}.is_finish())
+    {{
+        boost::apply_visitor(antBoardSimVisitor, optAnt);
+    }}
+    return {antBoardSimName}.score(); 
+}}
+
+static void BM_recursiveVariantTree(benchmark::State& state) 
+{{
+    for (auto _ : state) {{state.counters["score"] = recursiveVariantTree(getAntBoardSim());}}
+}}
+BENCHMARK(BM_recursiveVariantTree); 
     
 template<typename AntBoardSimT>
-int staticTree(AntBoardSimT {antBoardSimName})
+int cppFixedTree(AntBoardSimT {antBoardSimName})
 {{
     while(!{antBoardSimName}.is_finish()){{
-    {CPPNotation}
+    {cppFixedNotation}
     }}
     return {antBoardSimName}.score();
 }}
     
-static void BM_staticTree(benchmark::State& state) 
+static void BM_cppFixedTree(benchmark::State& state) 
 {{
-    for (auto _ : state) {{state.counters["score"] = staticTree(getAntBoardSim());}}
+    for (auto _ : state) {{state.counters["score"] = cppFixedTree(getAntBoardSim());}}
 }}
-BENCHMARK(BM_staticTree);  
+BENCHMARK(BM_cppFixedTree);  
  
     
 template<typename AntBoardSimT>
-int staticWithVistorTree(AntBoardSimT {antBoardSimName})
+int cppFixedWithVisitor(AntBoardSimT {antBoardSimName})
 {{                
     auto antBoardSimVisitor = ant::AntBoardSimulationVisitor{{{antBoardSimName}}};
             
     while(!{antBoardSimName}.is_finish())
     {{
-        {CPPVisitorNotation}
+        {cppFixedWithVisitorNotation}
     }}
     return {antBoardSimName}.score(); 
 }}
 
-static void BM_staticWithVistorTree(benchmark::State& state) 
+static void BM_cppFixedWithVisitor(benchmark::State& state) 
 {{
-    for (auto _ : state) {{state.counters["score"] = staticWithVistorTree(getAntBoardSim());}}
+    for (auto _ : state) {{state.counters["score"] = cppFixedWithVisitor(getAntBoardSim());}}
 }}
-BENCHMARK(BM_staticWithVistorTree);    
+BENCHMARK(BM_cppFixedWithVisitor);  
+
+template<typename AntBoardSimT>
+int oopTree(AntBoardSimT {antBoardSimName})
+{{                
+    auto oopTree = {oopNotation};
+            
+    while(!{antBoardSimName}.is_finish())
+    {{
+        (*oopTree)({antBoardSimName});
+    }}
+    return {antBoardSimName}.score(); 
+}}
+
+static void BM_oopTree(benchmark::State& state) 
+{{
+    for (auto _ : state) {{state.counters["score"] = oopTree(getAntBoardSim());}}
+}}
+BENCHMARK(BM_oopTree);  
     
 )"""
+        , "antRPN", antRPN
         , "antBoardSimName", antBoardSimName
-        , "VairantNotation", randomAntVairantNotation
-        , "CPPNotation", randomAntCPPNotation
-        , "CPPVisitorNotation", randomAntCPPVisitorNotation
+        , "recursiveVariantNotation", recursiveVariantNotation
+        , "cppFixedNotation", cppFixedNotation
+        , "cppFixedWithVisitorNotation", cppFixedWithVisitorNotation
+        , "oopNotation", oopNotation
     );
 }

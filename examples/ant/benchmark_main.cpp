@@ -12,14 +12,19 @@
 
 #include <benchmark/benchmark.h>
 
+#include <gpm/gpm.hpp>
+#include <gpm/io.hpp>
+
+
 #include "common/santa_fe_board.hpp"
 #include "common/ant_board_simulation.hpp"
 #include "common/nodes.hpp"
 #include "common/visitor.hpp"
 
+#include "nodes_opp.hpp"
 
 
-ant::sim::AntBoardSimulationStaticSize<ant::santa_fe::x_size, ant::santa_fe::y_size> getAntBoardSim()
+decltype(auto) getAntBoardSim()
 {
     using namespace ant;
     auto max_steps = 400;
@@ -42,23 +47,6 @@ ant::sim::AntBoardSimulationStaticSize<ant::santa_fe::x_size, ant::santa_fe::y_s
     return antSim;
 }
 
-namespace 
-{
-std::vector<std::function<int(decltype(getAntBoardSim()))>> toBenchmark;
-
-template<typename T>
-int addToBenchmark(T t)
-{
-   toBenchmark.push_back(t); 
-   return 0;
-}
-
-}
-#define ANT_ADD_TO_BENCHMARK_CONCAT_IMP( x, y ) x##y
-#define ANT_ADD_TO_BENCHMARK_CONCAT( x, y ) ANT_ADD_TO_BENCHMARK_CONCAT_IMP( x, y)
-#define ANT_ADD_TO_BENCHMARK(functionName) namespace { int ANT_ADD_TO_BENCHMARK_CONCAT(ANT_ADD_TO_BENCHMARK_CONCAT(FOOBAR,__LINE__), __COUNTER__) = addToBenchmark(functionName); }
-
-
 
 #if __has_include("ant_simulation_benchmark_generated_functions.cpp")
     #include "ant_simulation_benchmark_generated_functions.cpp"
@@ -70,20 +58,3 @@ int addToBenchmark(T t)
 
 BENCHMARK_MAIN();
 
-// int main()
-// {
-//     int result = 0;
-//     auto antBoardSim = getAntBoardSim();
-//     for(auto antBoardFunction:toBenchmark)
-//     {
-//         auto d8 = std::chrono::high_resolution_clock::now();
-//         for(int i = 0; i < 1000; ++i)
-//         {
-//             result += antBoardFunction(antBoardSim);
-//         }
-//         auto d9 = std::chrono::high_resolution_clock::now();
-//         std::cout << boost::typeindex::type_id_runtime(antBoardFunction).pretty_name() <<  ": " << (d9 - d8).count() << "\n";
-//     }
-//         
-//     return result == 0 ;
-// }
