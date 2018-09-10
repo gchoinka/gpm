@@ -6,9 +6,10 @@ environment:
       platform: x64
       FLAGS: "/permissive- /std:c++latest /utf-8 /F 16777216"
       GENERATOR: Visual Studio 15 2017
+      APPVEYOR_SAVE_CACHE_ON_ERROR: true
 
-cache:
-  - "C:\.hunter\"
+cache: 
+  - C:\.hunter
   
 init:
   - cmake --version
