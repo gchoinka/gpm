@@ -44,8 +44,7 @@ class Prog3 : public BaseNodeWithChildren<ContexType, 3, 'p', '3'>
 {
 public:
     using SuperClass = BaseNodeWithChildren<ContexType, 3, 'p', '3'>;
-    
-    using SuperClass::BaseNodeWithChildren;
+    using typename SuperClass::BaseNodeWithChildren;
     
     virtual void operator()(ContexType & contex) const override
     {
@@ -59,8 +58,7 @@ class Prog2 : public BaseNodeWithChildren<ContexType, 2, 'p', '2'>
 {
 public:
     using SuperClass = BaseNodeWithChildren<ContexType, 2, 'p', '2'>;
-    
-    using SuperClass::BaseNodeWithChildren;
+    using typename SuperClass::BaseNodeWithChildren;
     
     virtual void operator()(ContexType & contex) const override
     {
@@ -74,7 +72,7 @@ class IfFoodAhead : public BaseNodeWithChildren<ContexType, 2, 'i', 'f'>
 {
 public:
     using SuperClass = BaseNodeWithChildren<ContexType, 2, 'i', 'f'>;
-    using SuperClass::BaseNodeWithChildren;
+    using typename SuperClass::BaseNodeWithChildren;
     
     virtual void operator()(ContexType & contex) const override
     {

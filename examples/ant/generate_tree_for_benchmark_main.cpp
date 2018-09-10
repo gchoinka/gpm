@@ -40,15 +40,15 @@ public:
     std::string operator()(ant::if_food_ahead const & c) const
     {
         return gpm::utils::formatNamed(
-R"""(
-std::make_unique<antoop::IfFoodAhead<decltype({simulationName})>>(
-  {true_branch}
-, {false_branch}
-)
-)"""
-    , "simulationName", simulationName_
-    , "true_branch", boost::apply_visitor(AsOOPNotation{simulationName_}, c.get<true>())
-    , "false_branch", boost::apply_visitor(AsOOPNotation{simulationName_}, c.get<false>())
+            R"""(
+            std::make_unique<antoop::IfFoodAhead<decltype({simulationName})>>(
+                {true_branch}
+                , {false_branch}
+            )
+            )"""
+            , "simulationName", simulationName_
+            , "true_branch", boost::apply_visitor(AsOOPNotation{simulationName_}, c.get<true>())
+            , "false_branch", boost::apply_visitor(AsOOPNotation{simulationName_}, c.get<false>())
         );
     }
     
@@ -99,13 +99,13 @@ public:
     std::string operator()(ant::if_food_ahead const & c) const
     {
         return gpm::utils::formatNamed(
-R"""(
-if({simulationName}.is_food_in_front()){{
-{true_branch}
-}}else{{
-{false_branch}
-}}
-)"""
+            R"""(
+                if({simulationName}.is_food_in_front()){{
+                    {true_branch}
+                }}else{{
+                    {false_branch}
+                }}
+            )"""
             , "simulationName", simulationName_
             , "true_branch", boost::apply_visitor(*this, c.get<true>())
             , "false_branch", boost::apply_visitor(*this, c.get<false>())
@@ -153,13 +153,13 @@ public:
     std::string operator()(ant::if_food_ahead const & c) const
     {
         return gpm::utils::formatNamed(
-R"""(
-if({simulationName}.is_food_in_front()){{
-{true_branch}
-}}else{{
-{false_branch}
-}}
-)"""
+            R"""(
+                if({simulationName}.is_food_in_front()){{
+                    {true_branch}
+                }}else{{
+                    {false_branch}
+                }}
+            )"""
             , "simulationName", simulationName_
             , "true_branch", boost::apply_visitor(*this, c.get<true>())
             , "false_branch", boost::apply_visitor(*this, c.get<false>())
@@ -196,12 +196,12 @@ public:
     std::string operator()(ant::if_food_ahead const & c) const
     {
         return gpm::utils::formatNamed(
-R"""(
-{nodeName}{{{true_branch}, {false_branch}}}
-)"""
-    , "nodeName", boost::typeindex::type_id_runtime(c).pretty_name()
-    , "true_branch", boost::apply_visitor(*this, c.get<true>())
-    , "false_branch", boost::apply_visitor(*this, c.get<false>())
+            R"""(
+                {nodeName}{{{true_branch}, {false_branch}}}
+            )"""
+            , "nodeName", boost::typeindex::type_id_runtime(c).pretty_name()
+            , "true_branch", boost::apply_visitor(*this, c.get<true>())
+            , "false_branch", boost::apply_visitor(*this, c.get<false>())
         );
     }
     
