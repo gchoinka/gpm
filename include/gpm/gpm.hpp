@@ -12,6 +12,7 @@
 #include <unordered_map>
 #include <random>
 #include <vector>
+#include <functional>
 
 #include <boost/variant.hpp>
 #include <boost/mpl/for_each.hpp>
