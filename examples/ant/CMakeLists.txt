@@ -7,7 +7,7 @@
 #
 
 if(MSVC)
-  set(warning_flags "-Wall -pedantic -Werror")
+  set(warning_flags "-Wall")
 else ()
   set(warning_flags "-Wall -Wextra -pedantic -Werror")
 endif()
