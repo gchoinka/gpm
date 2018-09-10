@@ -32,7 +32,7 @@ include_directories("${GeneratedIncludesDir}")
 
 
 hunter_add_package(Boost)
-set(BOOST_MIN_VERSION "1.68.0")
+set(BOOST_MIN_VERSION "1.66.0") # hunter on windows does not have 1.68
 find_package(Boost ${BOOST_MIN_VERSION} REQUIRED)
 
 hunter_add_package(fmt)
@@ -57,7 +57,6 @@ else()
   message(STATUS "clang-format found: ${CLANG_FORMAT}")
 endif()
 
-include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 if(${GPM_BUILD_TESTS})
