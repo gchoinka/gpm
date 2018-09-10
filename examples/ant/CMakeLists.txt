@@ -6,24 +6,30 @@
 #  copy at http://www.boost.org/LICENSE_1_0.txt)
 #
 
-SET(targetName generate_tree_for_benchmark)
+if(MSVC)
+  set(warning_flags "-Wall -pedantic -Werror")
+else
+  set(warning_flags "-Wall -Wextra -pedantic -Werror")
+endif()
+
+set(targetName generate_tree_for_benchmark)
 add_executable(${targetName} generate_tree_for_benchmark_main.cpp) 
 set_target_properties(${targetName} PROPERTIES
             CXX_STANDARD 17
             CXX_EXTENSIONS OFF
 )
-target_compile_options(${targetName} PRIVATE -Wall -Wextra -pedantic -Werror)
+target_compile_options(${targetName} PRIVATE ${warning_flags})
 target_link_libraries(${targetName} fmt::fmt Boost::boost)
 
 
 
-SET(targetName tree_benchmark)
+set(targetName tree_benchmark)
 add_executable(${targetName} tree_benchmark_main.cpp) 
 set_target_properties(${targetName} PROPERTIES
            CXX_STANDARD 17
            CXX_EXTENSIONS OFF
 )
-target_compile_options(${targetName} PRIVATE -Wall -Wextra -pedantic -Werror)
+target_compile_options(${targetName} PRIVATE ${warning_flags})
 target_link_libraries(${targetName} fmt::fmt benchmark::benchmark Boost::boost)
 
 
