@@ -21,4 +21,4 @@ build_script:
   - cmake --build .
 
 test_script:
-  - ctest -C Debug .
+  - ctest  --output-on-failure -VV -C Debug .
