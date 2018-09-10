@@ -14,7 +14,7 @@ HunterGate(
     SHA1 "dffc6269efd60e79ea2e28a927cce94d3e4a6e03"
 )
 
-project(gpm CXX)
+project(gpm VERSION 0.1.0 LANGUAGES CXX)
 
 
 option(GPM_BUILD_TESTS "Enable to build the tests" ON)
