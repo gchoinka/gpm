@@ -45,4 +45,4 @@ script:
       -DCMAKE_EXE_LINKER_FLAGS="${CMAKE_EXE_LINKER_FLAGS}" 
   - cmake --build . -- -j2 
   - ctest --output-on-failure -VV        
-
+  - cmake --build . run_tree_benchmark

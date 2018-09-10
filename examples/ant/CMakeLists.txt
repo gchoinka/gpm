@@ -6,9 +6,9 @@
 #  copy at http://www.boost.org/LICENSE_1_0.txt)
 #
 
-SET(targetName ant_simulation_generate)
-add_executable(${targetName} generate_main.cpp) 
-set_target_properties(ant_simulation_generate PROPERTIES
+SET(targetName generate_tree_for_benchmark)
+add_executable(${targetName} generate_tree_for_benchmark_main.cpp) 
+set_target_properties(${targetName} PROPERTIES
             CXX_STANDARD 17
             CXX_EXTENSIONS OFF
 )
@@ -17,8 +17,8 @@ target_link_libraries(${targetName} fmt::fmt)
 
 
 
-SET(targetName ant_simulation_benchmark)
-add_executable(${targetName} benchmark_main.cpp) 
+SET(targetName tree_benchmark)
+add_executable(${targetName} tree_benchmark_main.cpp) 
 set_target_properties(${targetName} PROPERTIES
            CXX_STANDARD 17
            CXX_EXTENSIONS OFF
@@ -37,12 +37,18 @@ else()
 endif()
 
 
-add_custom_target(make_benchmark 
-    COMMAND ant_simulation_generate > "${GeneratedIncludesDir}/ant_simulation_benchmark_generated_functions.cpp"
+
+add_custom_target(make_tree_benchmark 
+    COMMAND generate_tree_for_benchmark > "${GeneratedIncludesDir}/ant_simulation_benchmark_generated_functions.cpp"
     COMMAND ${FORMAT_STEP}
-    COMMAND ${CMAKE_COMMAND} -E touch_nocreate "${CMAKE_CURRENT_SOURCE_DIR}/benchmark_main.cpp"
-    COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target ant_simulation_benchmark
-    DEPENDS ant_simulation_generate
+    COMMAND ${CMAKE_COMMAND} -E touch_nocreate "${CMAKE_CURRENT_SOURCE_DIR}/tree_benchmark_main.cpp"
+    COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target tree_benchmark
+    DEPENDS generate_tree_for_benchmark
+)
+
+add_custom_target(run_tree_benchmark 
+    COMMAND tree_benchmark
+    DEPENDS make_tree_benchmark
 )
 
 
