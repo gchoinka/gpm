@@ -9,4 +9,5 @@ endif ()
 
 if(MSVC)
     add_compile_options(/EHsc)
+    add_compile_options(/F 16777216)
 endif()

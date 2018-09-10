@@ -6,9 +6,7 @@ environment:
       platform: x64
       FLAGS: "/permissive- /std:c++latest /utf-8"
       GENERATOR: Visual Studio 15 2017
-
-cache:
-  - C:\.hunter
+      cache: "C:\.hunter\"
   
 init:
   - cmake --version
