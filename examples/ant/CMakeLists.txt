@@ -8,7 +8,7 @@
 
 if(MSVC)
   set(warning_flags "-Wall -pedantic -Werror")
-else
+else ()
   set(warning_flags "-Wall -Wextra -pedantic -Werror")
 endif()
 
