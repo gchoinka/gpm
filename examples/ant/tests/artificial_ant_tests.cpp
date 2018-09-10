@@ -1,6 +1,6 @@
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
-#include "../nodes.hpp"
+#include "../common/nodes.hpp"
 
 bool RPNDeserializationSerializationTest(char const * antRPNdefinition) 
 {
