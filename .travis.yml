@@ -30,7 +30,7 @@ matrix:
       addons: *default_addons
     - env: CMAKE_BUILD_TYPE=Release CXXCOMPILER=g++-8 CCOMPILER=gcc-8
       addons: *default_addons
-    - env: CMAKE_BUILD_TYPE=Debug CXXCOMPILER=g++-8 CMAKE_CXX_FLAGS="-fsanitize=address -fno-omit-frame-pointer" CMAKE_EXE_LINKER_FLAGS="-fsanitize=address" CCOMPILER=gcc-8
+    - env: CMAKE_BUILD_TYPE=Debug CXXCOMPILER=g++-8 CMAKE_CXX_FLAGS="-fsanitize=address -fno-omit-frame-pointer" CMAKE_EXE_LINKER_FLAGS="-fsanitize=address -fuse-ld=gold" CCOMPILER=gcc-8
       addons: *default_addons
     - env: CMAKE_BUILD_TYPE=Debug CXXCOMPILER=clang++-6.0 CMAKE_CXX_FLAGS="-fsanitize=undefined -fno-omit-frame-pointer" CMAKE_EXE_LINKER_FLAGS="-fsanitize=undefined" CLANG_VERS="6.0" CCOMPILER=clang-6.0 
       addons: *default_addons
