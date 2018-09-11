@@ -10,11 +10,12 @@ It is heavily influenced by gpcxx but it useses boost::variant and std::array fo
 * use external compiler to converts runtime polymorphism to static compile-time polymorphism. 
 
 # Install
-## Requiements
+
+*Requiements*
  * cmake
  * gcc (tested with gcc-7) or clang (tested with clang-6)
-
-## Procedure
+ 
+*Procedure*
 ```console
 git clone https://github.com/gchoinka/gpm.git
 mkdir gpm/build && cd gpm/build
