@@ -37,7 +37,7 @@ target_link_libraries(${targetName} fmt::fmt benchmark::benchmark Boost::boost)
 option(GPM_FORMAT_GENERATED_FILES "Should the files which were generated in ${GeneratedIncludesDir} be formated?(only usefull if someone wants to read them)." OFF)
 
 if(CLANG_FORMAT AND ${GPM_FORMAT_GENERATED_FILES})
-    set(FORMAT_STEP "${CLANG_FORMAT}" -i -style=Google "${GeneratedIncludesDir}/ant_simulation_benchmark_generated_functions.cpp")
+    set(FORMAT_STEP "${CLANG_FORMAT}" -i -style=Mozilla "${GeneratedIncludesDir}/ant_simulation_benchmark_generated_functions.cpp")
 else()
     set(FORMAT_STEP "${CMAKE_COMMAND}" -E echo "skiped formating step")
 endif()

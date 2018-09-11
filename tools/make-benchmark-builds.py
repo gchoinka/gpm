@@ -20,7 +20,7 @@ for c in compiler:
         os.mkdir(compilerDir)
         
     os.chdir(compilerDir)
-    check_call(["cmake", "-GNinja", "-DCMAKE_BUILD_TYPE=Release", "-DCMAKE_CXX_COMPILER="+c, gpmDir])
+    check_call(["cmake", "-GNinja", "-DCMAKE_BUILD_TYPE=Release", "-DGPM_FORMAT_GENERATED_FILES=ON", "-DCMAKE_CXX_COMPILER="+c, gpmDir])
     check_call(["cmake", "--build", compilerDir, "--target", "run_tree_benchmark"])
 
 
