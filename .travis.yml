@@ -13,6 +13,8 @@ sudo: false
 
 cache:
   apt: true
+  directories:
+    - /home/travis/.hunter
 
 matrix:
   include:
