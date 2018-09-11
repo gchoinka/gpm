@@ -236,10 +236,10 @@ public:
 int main()
 {        
     int minHeight = 1;
-    int maxHeight = 3;
-    std::random_device rd;
-
-    auto ant = gpm::BasicGenerator<ant::ant_nodes>{minHeight, maxHeight, rd()}();
+    int maxHeight = 7;
+    //std::random_device rd;
+  
+    auto ant = gpm::BasicGenerator<ant::ant_nodes>{minHeight, maxHeight}();
     
     auto antBoardSimName = "antBoardSim";
     auto antBoardSimVisitorName = "antBoardSimVisitor";
