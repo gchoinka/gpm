@@ -37,51 +37,49 @@ public:
 };
 
 
-
-
 template<typename ContexType>
 class Prog3 : public BaseNodeWithChildren<ContexType, 3, 'p', '3'>
 {
 public:
-    using SuperClass = BaseNodeWithChildren<ContexType, 3, 'p', '3'>;
-    using typename SuperClass::BaseNodeWithChildren;
+    using BaseNodeWithChildren<ContexType, 3, 'p', '3'>::BaseNodeWithChildren;
     
     virtual void operator()(ContexType & contex) const override
     {
-        for(auto & c: SuperClass::children_)
+        for(auto & c: BaseNodeWithChildren<ContexType, 3, 'p', '3'>::children_)
             (*c)(contex);
     }
 };
+
 
 template<typename ContexType>
 class Prog2 : public BaseNodeWithChildren<ContexType, 2, 'p', '2'>
 {
 public:
-    using SuperClass = BaseNodeWithChildren<ContexType, 2, 'p', '2'>;
-    using typename SuperClass::BaseNodeWithChildren;
+    using BaseNodeWithChildren<ContexType, 2, 'p', '2'>::BaseNodeWithChildren;
     
     virtual void operator()(ContexType & contex) const override
     {
-        for(auto & c: SuperClass::children_)
+        for(auto & c: BaseNodeWithChildren<ContexType, 2, 'p', '2'>::children_)
             (*c)(contex);
     }
 };
+
 
 template<typename ContexType>
 class IfFoodAhead : public BaseNodeWithChildren<ContexType, 2, 'i', 'f'>
 {
 public:
-    using SuperClass = BaseNodeWithChildren<ContexType, 2, 'i', 'f'>;
-    using typename SuperClass::BaseNodeWithChildren;
+    using BaseNodeWithChildren<ContexType, 2, 'i', 'f'>::BaseNodeWithChildren;
     
     virtual void operator()(ContexType & contex) const override
     {
         if(contex.is_food_in_front())
-            (*(SuperClass::children_[0]))(contex);
+            (*(BaseNodeWithChildren<ContexType, 2, 'i', 'f'>::children_[0]))(contex);
         else
-            (*(SuperClass::children_[1]))(contex);
+            (*(BaseNodeWithChildren<ContexType, 2, 'i', 'f'>::children_[1]))(contex);
     }
 };
+
 
 template<typename ContexType>
 class Move : public BaseNodeWithChildren<ContexType, 0, 'm'>
@@ -93,6 +91,7 @@ public:
     }
 };
 
+
 template<typename ContexType>
 class Left : public BaseNodeWithChildren<ContexType, 0, 'l'>
 {
@@ -102,6 +101,7 @@ public:
         contex.left();
     }
 };
+
 
 template<typename ContexType>
 class Right : public BaseNodeWithChildren<ContexType, 0, 'r'>
@@ -113,64 +113,62 @@ public:
     }
 };
 
-
-
-    namespace detail
-    {
-        template<typename ContexType, typename Iter>
-        std::unique_ptr<BaseNode<ContexType>> factory_imp(Iter &);
-
-        template<typename ContexType, typename Iter>
-        using FactoryMap = std::unordered_map<std::string, std::function<std::unique_ptr<BaseNode<ContexType>>(Iter &)>>;
-
-        
-        
-        template<typename ContexType, typename Iter>
-        struct FactoryMapInsertHelper 
-        {
-            FactoryMap<ContexType, Iter> & factoryMap; 
-            
-            template<class T> 
-            void operator()(T&) 
-            {
-                factoryMap[T::name] = [](Iter & tokenIter) 
-                {
-                    auto ret = std::make_unique<T>();
-                   
-                    for(auto & n: ret->children_)
-                        n = std::move(factory_imp<ContexType>(++tokenIter));
-                    return std::move(ret); 
-                };
-            }
-        };
-
-        template<typename ContexType, typename Iter>
-        FactoryMap<ContexType, Iter> makeFactoryMap()
-        {
-            FactoryMap<ContexType, Iter> factoryMap;
-            auto insertHelper = FactoryMapInsertHelper<ContexType, Iter>{factoryMap};
-            boost::mpl::for_each<boost::mpl::vector<Prog3<ContexType>, Prog2<ContexType>, IfFoodAhead<ContexType>, Move<ContexType>, Left<ContexType>, Right<ContexType>>>(insertHelper);
-            return factoryMap;
-        }
-
-        template<typename ContexType, typename Iter>
-        std::unique_ptr<BaseNode<ContexType>> factory_imp(Iter & tokenIter)
-        {
-            static auto nodeCreateFunMap = makeFactoryMap<ContexType, Iter>();
-            auto token = *tokenIter;
-            if(!nodeCreateFunMap.count(token))
-            {
-                throw std::runtime_error{std::string{"cant find factory function for token >>"} + token + "<<"};
-            }
-                
-            return nodeCreateFunMap[token](tokenIter);
-        }
-    }
-
+namespace detail
+{
+    template<typename ContexType, typename Iter>
+    std::unique_ptr<BaseNode<ContexType>> factory_imp(Iter &);
 
     template<typename ContexType, typename Iter>
-    std::unique_ptr<BaseNode<ContexType>> factory(Iter tokenIter)
+    using FactoryMap = std::unordered_map<std::string, std::function<std::unique_ptr<BaseNode<ContexType>>(Iter &)>>;
+
+    
+    
+    template<typename ContexType, typename Iter>
+    struct FactoryMapInsertHelper 
     {
-        return detail::factory_imp<ContexType>(tokenIter);
+        FactoryMap<ContexType, Iter> & factoryMap; 
+        
+        template<class T> 
+        void operator()(T&) 
+        {
+            factoryMap[T::name] = [](Iter & tokenIter) 
+            {
+                auto ret = std::make_unique<T>();
+                
+                for(auto & n: ret->children_)
+                    n = std::move(factory_imp<ContexType>(++tokenIter));
+                return std::move(ret); 
+            };
+        }
+    };
+
+    template<typename ContexType, typename Iter>
+    FactoryMap<ContexType, Iter> makeFactoryMap()
+    {
+        FactoryMap<ContexType, Iter> factoryMap;
+        auto insertHelper = FactoryMapInsertHelper<ContexType, Iter>{factoryMap};
+        boost::mpl::for_each<boost::mpl::vector<Prog3<ContexType>, Prog2<ContexType>, IfFoodAhead<ContexType>, Move<ContexType>, Left<ContexType>, Right<ContexType>>>(insertHelper);
+        return factoryMap;
     }
+
+    template<typename ContexType, typename Iter>
+    std::unique_ptr<BaseNode<ContexType>> factory_imp(Iter & tokenIter)
+    {
+        static auto nodeCreateFunMap = makeFactoryMap<ContexType, Iter>();
+        auto token = *tokenIter;
+        if(!nodeCreateFunMap.count(token))
+        {
+            throw std::runtime_error{std::string{"cant find factory function for token >>"} + token + "<<"};
+        }
+            
+        return nodeCreateFunMap[token](tokenIter);
+    }
+}
+
+
+template<typename ContexType, typename Iter>
+std::unique_ptr<BaseNode<ContexType>> factory(Iter tokenIter)
+{
+    return detail::factory_imp<ContexType>(tokenIter);
+}
 }

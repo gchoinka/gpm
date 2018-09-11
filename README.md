@@ -9,6 +9,20 @@ It is heavily influenced by gpcxx but it useses boost::variant and std::array fo
 * use modern C++ futures to make it more easily accessible. 
 * use external compiler to converts runtime polymorphism to static compile-time polymorphism. 
 
+# Install
+## Requiements
+ * cmake
+ * gcc (tested with gcc-7) or clang (tested with clang-6)
+
+## Procedure
+```console
+git clone https://github.com/gchoinka/gpm.git
+mkdir gpm/build && cd gpm/build
+cmake .. && cmake --build .
+cmake -- build . --target run_tree_benchmark
+```
+
+
 # Notes
 At this stage I’m not sure if this library can deliver the promise “close to Metal”, so the M will maybe change meaning.
 
