@@ -22,5 +22,6 @@ for c in compiler:
     os.chdir(compilerDir)
     check_call(["cmake", "-GNinja", "-DCMAKE_BUILD_TYPE=Release", "-DGPM_FORMAT_GENERATED_FILES=ON", "-DCMAKE_CXX_COMPILER="+c, gpmDir])
     check_call(["cmake", "--build", compilerDir, "--target", "run_tree_benchmark"])
+    shutil.copy(os.path.join(compilerDir, "tree_benchmark.json"), os.path.join(thisDir, "benchmark/%s-tree_benchmark.json" % c))
 
 
