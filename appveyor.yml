@@ -21,6 +21,6 @@ before_build:
 build_script:
   - cmake --build .
 
-test_script:
-  - cmake --build . --target run_tree_benchmark
-  - ctest --output-on-failure -VV -C Debug .
+#test_script:
+#  - cmake --build . --target run_tree_benchmark
+#  - ctest --output-on-failure -VV -C Debug .
