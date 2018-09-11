@@ -19,7 +19,7 @@ It is heavily influenced by gpcxx but it useses boost::variant and std::array fo
 git clone https://github.com/gchoinka/gpm.git
 mkdir gpm/build && cd gpm/build
 cmake .. && cmake --build .
-cmake -- build . --target run_tree_benchmark
+cmake --build . --target run_tree_benchmark
 ```
 
 
