@@ -26,7 +26,7 @@ cmake --build . --target run_tree_benchmark
 # Status
  * Evaluating different ways to implement a tree structures in C++. 
    * run target cmake `--build . --target generate_tree_for_benchmark` in the build directory and view the `./generated_includes/ant_simulation_benchmark_generated_functions.cpp` file for an example
- * Implementing C++ code generation from C++ itself. See [generate_tree...](examples/ant/generate_tree_for_benchmark_main.cpp) for the code that generated `generated_includes/ant_simulation_benchmark_generated_functions.cpp`
+ * Implementing C++ code generation from C++ itself. See [generate_tree...](examples/ant/generate_tree_for_benchmark_main.cpp) for the code that generated `ant_simulation_benchmark_generated_functions.cpp`
 
 
 # Notes
