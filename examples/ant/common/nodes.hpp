@@ -21,9 +21,9 @@ using prog2 = prog<2, gpm::NodeToken<'p','2'>>;
 using prog3 = prog<3, gpm::NodeToken<'p','3'>>;
 
 using ant_nodes = boost::variant<
-    boost::recursive_wrapper<move>, 
-    boost::recursive_wrapper<left>, 
-    boost::recursive_wrapper<right>, 
+    move, 
+    left, 
+    right, 
     boost::recursive_wrapper<if_food_ahead>, 
     boost::recursive_wrapper<prog2>, 
     boost::recursive_wrapper<prog3>
