@@ -16,8 +16,7 @@
 #include <iterator>
 
 #include <boost/variant.hpp>
-#include <boost/mpl/for_each.hpp>
-#include <boost/mpl/count_if.hpp>
+#include <boost/mp11.hpp>
 #include <boost/type_index.hpp>
 
 
@@ -57,6 +56,18 @@ namespace gpm
                     return ret; 
                 };
             }
+            
+            template<class T> 
+            void operator()(boost::recursive_wrapper<T>) 
+            {
+                factoryMap[T::name] = [](Iter & tokenIter) 
+                {
+                    T ret;
+                    for(auto & n: ret.nodes)
+                        n = factory_imp<VariantType>(++tokenIter);
+                    return ret; 
+                };
+            }
         };
 
         template<typename VariantType, typename Iter>
@@ -64,7 +75,7 @@ namespace gpm
         {
             FactoryMap<VariantType, Iter> factoryMap;
             auto insertHelper = FactoryMapInsertHelper<VariantType, Iter>{factoryMap};
-            boost::mpl::for_each<typename VariantType::types>(insertHelper);
+            boost::mp11::mp_for_each<VariantType>(insertHelper);
             return factoryMap;
         }
 
@@ -125,19 +136,38 @@ namespace gpm
         }
     };
     
+    
+    
+    
+    
     template<typename VariantType>
     class BasicGenerator 
     {
     public:
+        
+        struct OrderNodesHelper
+        {
+            std::vector<VariantType> & terminalNodes;
+            std::vector<VariantType> & noneTerminalNodes;
+            
+            template<class T> 
+            void operator()(T)
+            {
+                terminalNodes.push_back(T{});
+            }
+            
+            template<class T> 
+            void operator()(boost::recursive_wrapper<T>) 
+            {
+                noneTerminalNodes.push_back(T{});
+            }
+        };
+        
         BasicGenerator(int minHeight, int maxHeight, unsigned int rndSeed = 5489u)
             :minHeight_{minHeight}, maxHeight_{maxHeight}, rnd_{rndSeed}
         {
-            boost::mpl::for_each<typename VariantType::types>([&](auto node) mutable{
-                if(std::size(node.nodes) == 0)
-                    terminalNodes_.push_back(std::move(node));
-                else
-                    noneTerminalNodes_.push_back(std::move(node));
-            });
+            OrderNodesHelper orderNodesHelper{terminalNodes_, noneTerminalNodes_};
+            boost::mp11::mp_for_each<VariantType>(orderNodesHelper);
         }
         
         VariantType operator()()
