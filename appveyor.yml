@@ -23,5 +23,5 @@ build_script:
 
 test_script:
   - cmake --build . --target make_tree_benchmark
-  - C:\projects\gpm\examples\ant\Debug\generate_tree_for_benchmark.exe
+#  - C:\projects\gpm\examples\ant\Debug\generate_tree_for_benchmark.exe
 #  - ctest --output-on-failure -VV -C Debug .
