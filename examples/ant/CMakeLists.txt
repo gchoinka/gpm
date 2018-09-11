@@ -45,7 +45,7 @@ endif()
 
 
 add_custom_target(make_tree_benchmark 
-    COMMAND generate_tree_for_benchmark > "${GeneratedIncludesDir}/ant_simulation_benchmark_generated_functions.cpp"
+    COMMAND $<TARGET_FILE:generate_tree_for_benchmark> > "${GeneratedIncludesDir}/ant_simulation_benchmark_generated_functions.cpp"
     COMMAND ${FORMAT_STEP}
     COMMAND ${CMAKE_COMMAND} -E touch_nocreate "${CMAKE_CURRENT_SOURCE_DIR}/tree_benchmark_main.cpp"
     COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target tree_benchmark
@@ -53,9 +53,10 @@ add_custom_target(make_tree_benchmark
 )
 
 add_custom_target(run_tree_benchmark 
-    COMMAND tree_benchmark
+    COMMAND $<TARGET_FILE:tree_benchmark> --benchmark_out_format=json --benchmark_out=${CMAKE_BINARY_DIR}/tree_benchmark.json
     DEPENDS make_tree_benchmark
 )
+
 
 
 if(${GPM_BUILD_TESTS})
