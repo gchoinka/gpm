@@ -24,16 +24,17 @@ matrix:
             - sourceline: 'deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-6.0 main'
               key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
           packages: [ "clang-6.0", "llvm-6.0-dev", "g++-8", "ninja-build"]
-    - env: CXXCOMPILER=g++-8 CCOMPILER=gcc-8
+    - env: CMAKE_BUILD_TYPE=Debug CXXCOMPILER=g++-8 CCOMPILER=gcc-8
       addons: *default_addons
-    #- env: CLANG_VERS="6.0" CXXCOMPILER=clang++-6.0 CCOMPILER=clang-6.0 CMAKE_CXX_FLAGS="-fsanitize=address -fno-omit-frame-pointer" CMAKE_EXE_LINKER_FLAGS="-fsanitize=address"
-    #  addons: *default_addons
-    #- env: CLANG_VERS="6.0" CXXCOMPILER=clang++-6.0 CCOMPILER=clang-6.0 CMAKE_CXX_FLAGS="-fsanitize=memory -fno-omit-frame-pointer" CMAKE_EXE_LINKER_FLAGS="-fsanitize=memory"
-    #  addons: *default_addons
-    - env: CLANG_VERS="6.0" CXXCOMPILER=clang++-6.0 CCOMPILER=clang-6.0 CMAKE_CXX_FLAGS="-fsanitize=undefined -fno-omit-frame-pointer" CMAKE_EXE_LINKER_FLAGS="-fsanitize=undefined"
+    - env: CMAKE_BUILD_TYPE=Release CXXCOMPILER=g++-8 CCOMPILER=gcc-8
       addons: *default_addons
-    #- env: CLANG_VERS="6.0" CXXCOMPILER=g++-8 CCOMPILER=gcc-8 CMAKE_CXX_FLAGS="-fsanitize=address -fno-omit-frame-pointer" CMAKE_EXE_LINKER_FLAGS="-fsanitize=address"
-    #  addons: *default_addons
+    - env: CMAKE_BUILD_TYPE=Debug CXXCOMPILER=g++-8 CMAKE_CXX_FLAGS="-fsanitize=address -fno-omit-frame-pointer" CMAKE_EXE_LINKER_FLAGS="-fsanitize=address" CCOMPILER=gcc-8
+      addons: *default_addons
+    - env: CMAKE_BUILD_TYPE=Debug CXXCOMPILER=clang++-6.0 CMAKE_CXX_FLAGS="-fsanitize=undefined -fno-omit-frame-pointer" CMAKE_EXE_LINKER_FLAGS="-fsanitize=undefined" CLANG_VERS="6.0" CCOMPILER=clang-6.0 
+      addons: *default_addons
+    - env: CMAKE_BUILD_TYPE=Release CXXCOMPILER=clang++-6.0 CCOMPILER=clang-6.0 CLANG_VERS="6.0"
+      addons: *default_addons
+
 
 script:
   - export PATH=/usr/lib/llvm-${CLANG_VERS}/bin/:${PATH}
@@ -43,7 +44,7 @@ script:
     cmake . -GNinja \
       -DCMAKE_CXX_COMPILER="${CXXCOMPILER}" \
       -DCMAKE_C_COMPILER="${CCCOMPILER}" \
-      -DCMAKE_BUILD_TYPE=Debug \
+      -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
       -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS}" \
       -DCMAKE_EXE_LINKER_FLAGS="${CMAKE_EXE_LINKER_FLAGS}" 
   - cmake --build . -- -j2 
