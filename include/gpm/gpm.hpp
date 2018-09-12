@@ -9,7 +9,7 @@
 
 #include <exception>
 #include <array>
-#include <unordered_map>
+
 #include <string_view>
 #include <random>
 #include <vector>
@@ -19,6 +19,7 @@
 #include <boost/variant.hpp>
 #include <boost/mp11.hpp>
 #include <boost/type_index.hpp>
+#include <boost/container/flat_map.hpp>
 
 
 #include <gpm/io.hpp>
@@ -38,7 +39,7 @@ namespace gpm
         VariantType factory_imp(Iter &);
 
         template<typename VariantType, typename Iter>
-        using FactoryMap = std::unordered_map<std::string_view, std::function<VariantType(Iter &)>>;
+        using FactoryMap = boost::container::flat_map<std::string_view, std::function<VariantType(Iter &)>>;
 
         
         template<typename VariantType, typename Iter>

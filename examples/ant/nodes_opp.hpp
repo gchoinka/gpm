@@ -6,6 +6,7 @@
 #include <string_view>
 
 #include <boost/mp11.hpp>
+#include <boost/container/flat_map.hpp>
 
 
 namespace antoop
@@ -120,7 +121,7 @@ namespace detail
     std::unique_ptr<BaseNode<ContexType>> factory_imp(Iter &);
 
     template<typename ContexType, typename Iter>
-    using FactoryMap = std::unordered_map<std::string_view, std::function<std::unique_ptr<BaseNode<ContexType>>(Iter &)>>;
+    using FactoryMap = boost::container::flat_map<std::string_view, std::function<std::unique_ptr<BaseNode<ContexType>>(Iter &)>>;
 
     
     
