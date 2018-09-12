@@ -83,7 +83,7 @@ namespace gpm
         VariantType factory_imp(Iter & tokenIter)
         {
             static auto nodeCreateFunMap = makeFactoryMap<VariantType, Iter>();
-            auto token = *tokenIter;
+            auto token = std::string{*tokenIter};
             if(!nodeCreateFunMap.count(token))
             {
                 throw GPMException{std::string{"cant find factory function for token >>"} + token + "<<"};

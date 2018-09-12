@@ -155,7 +155,7 @@ namespace detail
     std::unique_ptr<BaseNode<ContexType>> factory_imp(Iter & tokenIter)
     {
         static auto nodeCreateFunMap = makeFactoryMap<ContexType, Iter>();
-        auto token = *tokenIter;
+        auto token = std::string{*tokenIter};
         if(!nodeCreateFunMap.count(token))
         {
             throw std::runtime_error{std::string{"cant find factory function for token >>"} + token + "<<"};

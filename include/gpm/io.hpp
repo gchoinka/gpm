@@ -7,8 +7,7 @@
  */
 #pragma once
 
-#include <sstream>
-#include <string>
+
 #include <string_view>
 #include <boost/variant.hpp>
 
@@ -69,75 +68,97 @@ namespace gpm {
     class RPNToken_iterator
     {
         std::string_view sv_;
-        std::string_view::const_iterator currentPos_;
+        std::string_view::size_type tokenBegin_;
+        std::string_view::size_type tokenEnd_;
         
     public:
         RPNToken_iterator(std::string_view sv):sv_{sv}
         {
-            currentPos_ = sv_.end();
-            --currentPos_;
-            for(; currentPos_ > sv_.begin(); --currentPos_)
+            tokenBegin_ = sv_.size();
+            --tokenBegin_;
+            for(; tokenBegin_ > 0; --tokenBegin_)
             {
-                if(*currentPos_ == ' ')
+                if(sv_[tokenBegin_] == ' ')
                 {
-                    currentPos_++;
+                    tokenBegin_++;
+                    break;
+                }
+            }
+            
+            tokenEnd_ = tokenBegin_ + 1;
+            for(; tokenEnd_ != sv_.size(); ++tokenEnd_)
+            {
+                if(sv_[tokenEnd_] == ' ')
+                {
                     break;
                 }
             }
         }
-        std::string operator*()
+        
+        std::string_view operator*()
         {
-            auto endIter = currentPos_ + 1;
-            for(; endIter != sv_.end(); ++endIter)
-            {
-                if(*endIter == ' ')
-                {
-                    break;
-                }
-            }
-            return std::string{sv_.substr(currentPos_ - sv_.begin(), endIter - currentPos_)};
+
+            return sv_.substr(tokenBegin_, tokenEnd_ - tokenBegin_);
         }
         
         RPNToken_iterator& operator++()
         {
             
-            --currentPos_ ;
-            if(currentPos_ > sv_.begin())
+            --tokenBegin_ ;
+            if(tokenBegin_ > 0)
             {
-                --currentPos_ ;
-                for(; currentPos_ > sv_.begin(); --currentPos_)
+                --tokenBegin_ ;
+                for(; tokenBegin_ > 0; --tokenBegin_)
                 {
-                    if(*currentPos_ == ' ')
+                    if(sv_[tokenBegin_] == ' ')
                     {
-                        ++currentPos_;
+                        ++tokenBegin_;
                         break;
                     }
+                }
+            }
+            tokenEnd_ = tokenBegin_ + 1;
+            for(; tokenEnd_ != sv_.size(); ++tokenEnd_)
+            {
+                if(sv_[tokenEnd_] == ' ')
+                {
+                    break;
                 }
             }
             return *this;
         }
     };
     
+    
     class PNToken_iterator
     {
-        std::istringstream iss_; 
-        std::string t_;
+        std::string_view sv_;
+        std::string_view::size_type tokenBegin_;
+        std::string_view::size_type tokenEnd_;
+        
     public:
-        PNToken_iterator(std::string const & s):iss_{s}
+        PNToken_iterator(std::string_view sv):sv_{sv}, tokenBegin_{0}
         {
-            ++*this;
+            tokenEnd_ = tokenBegin_ + 1;
+            while(tokenEnd_ < sv_.size() && sv_[tokenEnd_] != ' ')
+                ++tokenEnd_;
         }
-        std::string const & operator*() const
+        
+        std::string_view operator*() const
         {
-            return t_;
+            return sv_.substr(tokenBegin_, tokenEnd_ - tokenBegin_) ;
         }
         
         PNToken_iterator& operator++()
         {
-            iss_ >> t_;
+            while(tokenBegin_ < sv_.size() && sv_[tokenBegin_] != ' ')
+                ++tokenBegin_;
+            ++tokenBegin_;
+            tokenEnd_ = tokenBegin_ + 1;
+            while(tokenEnd_ < sv_.size() && sv_[tokenEnd_] != ' ')
+                ++tokenEnd_;
             return *this;
         }
-        
     };
     
 }
