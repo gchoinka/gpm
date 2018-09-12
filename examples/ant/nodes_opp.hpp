@@ -4,8 +4,8 @@
 #include <memory>
 #include <utility>
 
-#include <boost/mpl/for_each.hpp>
-#include <boost/mpl/vector.hpp>
+#include <boost/mp11.hpp>
+
 
 namespace antoop
 {
@@ -129,7 +129,7 @@ namespace detail
         FactoryMap<ContexType, Iter> & factoryMap; 
         
         template<class T> 
-        void operator()(T&) 
+        void operator()(T) 
         {
             factoryMap[T::name] = [](Iter & tokenIter) 
             {
@@ -147,7 +147,7 @@ namespace detail
     {
         FactoryMap<ContexType, Iter> factoryMap;
         auto insertHelper = FactoryMapInsertHelper<ContexType, Iter>{factoryMap};
-        boost::mpl::for_each<boost::mpl::vector<Prog3<ContexType>, Prog2<ContexType>, IfFoodAhead<ContexType>, Move<ContexType>, Left<ContexType>, Right<ContexType>>>(insertHelper);
+        boost::mp11::mp_for_each<boost::mp11::mp_list<Prog3<ContexType>, Prog2<ContexType>, IfFoodAhead<ContexType>, Move<ContexType>, Left<ContexType>, Right<ContexType>>>(insertHelper);
         return factoryMap;
     }
 

@@ -57,8 +57,6 @@ struct if_food_ahead : public gpm::BaseNode<ant_nodes, 2, gpm::NodeToken<'i', 'f
     {
         return b ? get<true>() : get<false>();
     }
-    
-
 };
 
 }

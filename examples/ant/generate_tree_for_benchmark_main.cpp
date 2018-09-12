@@ -22,6 +22,7 @@
 #include "common/visitor.hpp"
 
 #include "nodes_opp.hpp"
+#include "nodes_tuple.hpp"
 
 
 
@@ -251,6 +252,16 @@ int main()
     auto oopNotation = boost::apply_visitor(AsOOPNotation{antBoardSimName}, ant);
     
     auto antRPN = boost::apply_visitor(gpm::RPNPrinter<std::string>{}, ant);
+    
+    auto goo = std::tuple<anttup::IF, 
+                    std::tuple<anttup::M>, 
+                    std::tuple<anttup::P2, 
+                        std::tuple<anttup::M>,
+                        std::tuple<anttup::L> 
+                    > 
+                >{};
+    (void)goo;
+    
     
     std::cout << gpm::utils::formatNamed( 
 R"""(
