@@ -10,6 +10,7 @@
 #include <exception>
 #include <array>
 #include <unordered_map>
+#include <string_view>
 #include <random>
 #include <vector>
 #include <functional>
@@ -37,7 +38,7 @@ namespace gpm
         VariantType factory_imp(Iter &);
 
         template<typename VariantType, typename Iter>
-        using FactoryMap = std::unordered_map<std::string, std::function<VariantType(Iter &)>>;
+        using FactoryMap = std::unordered_map<std::string_view, std::function<VariantType(Iter &)>>;
 
         
         template<typename VariantType, typename Iter>
@@ -83,10 +84,10 @@ namespace gpm
         VariantType factory_imp(Iter & tokenIter)
         {
             static auto nodeCreateFunMap = makeFactoryMap<VariantType, Iter>();
-            auto token = std::string{*tokenIter};
+            auto token = *tokenIter;
             if(!nodeCreateFunMap.count(token))
             {
-                throw GPMException{std::string{"cant find factory function for token >>"} + token + "<<"};
+                throw GPMException{std::string{"cant find factory function for token >>"} + std::string{token} + "<<"};
             }
                 
             return nodeCreateFunMap[token](tokenIter);

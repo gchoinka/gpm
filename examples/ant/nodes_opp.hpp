@@ -3,6 +3,7 @@
 #include <array>
 #include <memory>
 #include <utility>
+#include <string_view>
 
 #include <boost/mp11.hpp>
 
@@ -119,7 +120,7 @@ namespace detail
     std::unique_ptr<BaseNode<ContexType>> factory_imp(Iter &);
 
     template<typename ContexType, typename Iter>
-    using FactoryMap = std::unordered_map<std::string, std::function<std::unique_ptr<BaseNode<ContexType>>(Iter &)>>;
+    using FactoryMap = std::unordered_map<std::string_view, std::function<std::unique_ptr<BaseNode<ContexType>>(Iter &)>>;
 
     
     
@@ -155,10 +156,10 @@ namespace detail
     std::unique_ptr<BaseNode<ContexType>> factory_imp(Iter & tokenIter)
     {
         static auto nodeCreateFunMap = makeFactoryMap<ContexType, Iter>();
-        auto token = std::string{*tokenIter};
+        auto token = *tokenIter;
         if(!nodeCreateFunMap.count(token))
         {
-            throw std::runtime_error{std::string{"cant find factory function for token >>"} + token + "<<"};
+            throw std::runtime_error{std::string{"cant find factory function for token >>"} + std::string{token} + "<<"};
         }
             
         return nodeCreateFunMap[token](tokenIter);
