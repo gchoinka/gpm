@@ -40,13 +40,14 @@ public:
 
     std::string operator()(ant::if_food_ahead const & c) const
     {
-        return gpm::utils::formatNamed(
+        return gpm::utils::format(
             R"""(
             std::make_unique<antoop::IfFoodAhead<decltype({simulationName})>>(
                 {true_branch}
                 , {false_branch}
             )
             )"""
+            , gpm::utils::argsnamed
             , "simulationName", simulationName_
             , "true_branch", boost::apply_visitor(AsOOPNotation{simulationName_}, c.get<true>())
             , "false_branch", boost::apply_visitor(AsOOPNotation{simulationName_}, c.get<false>())
@@ -77,7 +78,8 @@ public:
             res += "\n";
         }
         
-        res = gpm::utils::formatNamed("std::make_unique<antoop::{nodeName}<decltype({simulationName})>>({nodeChildren})\n"
+        res = gpm::utils::format("std::make_unique<antoop::{nodeName}<decltype({simulationName})>>({nodeChildren})\n"
+                , gpm::utils::argsnamed
                 , "nodeName", AntNodeToClassName::name(t)
                 , "nodeChildren", res
                 , "simulationName", simulationName_
@@ -99,7 +101,7 @@ public:
 
     std::string operator()(ant::if_food_ahead const & c) const
     {
-        return gpm::utils::formatNamed(
+        return gpm::utils::format(
             R"""(
                 if({simulationName}.is_food_in_front()){{
                     {true_branch}
@@ -107,6 +109,7 @@ public:
                     {false_branch}
                 }}
             )"""
+            , gpm::utils::argsnamed
             , "simulationName", simulationName_
             , "true_branch", boost::apply_visitor(*this, c.get<true>())
             , "false_branch", boost::apply_visitor(*this, c.get<false>())
@@ -127,7 +130,8 @@ public:
         std::string res;
         if constexpr(t.nodes.size() == 0)
         {
-            res += gpm::utils::formatNamed("{simulationName}.{methodName}();\n" 
+            res += gpm::utils::format("{simulationName}.{methodName}();\n" 
+                                             , gpm::utils::argsnamed
                                              , "simulationName", simulationName_
                                              , "methodName", AntNodeToSimulationMethodName::name(t)
             );
@@ -153,7 +157,7 @@ public:
 
     std::string operator()(ant::if_food_ahead const & c) const
     {
-        return gpm::utils::formatNamed(
+        return gpm::utils::format(
             R"""(
                 if({simulationName}.is_food_in_front()){{
                     {true_branch}
@@ -161,6 +165,7 @@ public:
                     {false_branch}
                 }}
             )"""
+            , gpm::utils::argsnamed
             , "simulationName", simulationName_
             , "true_branch", boost::apply_visitor(*this, c.get<true>())
             , "false_branch", boost::apply_visitor(*this, c.get<false>())
@@ -174,7 +179,8 @@ public:
         std::string res;
         if constexpr(t.nodes.size() == 0)
         {
-            res += gpm::utils::formatNamed("{visitorName}({nodeType}{{}});\n" 
+            res += gpm::utils::format("{visitorName}({nodeType}{{}});\n" 
+                                             , gpm::utils::argsnamed
                                              , "visitorName", visitorName_
                                              , "nodeType", nodeType
             );
@@ -196,10 +202,11 @@ public:
 
     std::string operator()(ant::if_food_ahead const & c) const
     {
-        return gpm::utils::formatNamed(
+        return gpm::utils::format(
             R"""(
                 {nodeName}{{{true_branch}, {false_branch}}}
             )"""
+            , gpm::utils::argsnamed
             , "nodeName", boost::typeindex::type_id_runtime(c).pretty_name()
             , "true_branch", boost::apply_visitor(*this, c.get<true>())
             , "false_branch", boost::apply_visitor(*this, c.get<false>())
@@ -221,7 +228,8 @@ public:
             res += "\n";
         }
         
-        res = gpm::utils::formatNamed("{nodeName}{{{nodeChildren}}}\n"
+        res = gpm::utils::format("{nodeName}{{{nodeChildren}}}\n"
+                , gpm::utils::argsnamed
                 , "nodeName", boost::typeindex::type_id_runtime(t).pretty_name()
                 , "nodeChildren", res
         );
@@ -263,7 +271,7 @@ int main()
     (void)goo;
     
     
-    std::cout << gpm::utils::formatNamed( 
+    std::cout << gpm::utils::format( 
 R"""(
 
 static char const antRPNString[] = {{"{antRPN}"}};    
@@ -381,6 +389,7 @@ static void BM_oopTreeFromString(benchmark::State& state)
 BENCHMARK(BM_oopTreeFromString);  
     
 )"""
+        , gpm::utils::argsnamed
         , "antRPN", antRPN
         , "antBoardSimName", antBoardSimName
         , "recursiveVariantNotation", recursiveVariantNotation

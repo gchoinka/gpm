@@ -53,6 +53,7 @@ decltype(auto) mapformat(StrT && fstr, T ... args)
 
 int main() {
 
+    using namespace gpm::utils;
   std::cout << mapformat(R"""(
 {indent}if({cond})
 {indent}{{
@@ -69,7 +70,7 @@ int main() {
     , "indent", "    "
   ); 
   
-  std::cout << gpm::utils::formatNamed(R"""(
+  std::cout << format(R"""(
 {indent}if({cond})
 {indent}{{
 {indent}    {true_case}
@@ -79,6 +80,7 @@ int main() {
 {indent}    {false_case}
 {indent}}}
 )""" 
+    , argsnamed
     , "cond", 42 
     , "true_case", "p3"
     , "false_case", "Nope"

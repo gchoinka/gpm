@@ -13,20 +13,42 @@
 
 namespace gpm::utils
 {
+
 namespace detail
 {
-template<typename StrT, typename Tuple, size_t...Idx>
-decltype(auto) formatNamed_imp(StrT && fstr, Tuple&& args, std::integer_sequence<size_t, Idx...>) 
-{
-    return fmt::format(std::forward<StrT>(fstr), fmt::arg(std::get<Idx*2>(std::forward<Tuple>(args)), std::get<Idx*2+1>(std::forward<Tuple>(args)))...);
-}
+    template<typename StrT, typename TupleT, typename SizeType, SizeType ...Idx>
+    decltype(auto) formatN_imp(StrT && fstr, TupleT&& packedArgs, std::integer_sequence<SizeType, Idx...>) 
+    {
+        // test if std::get<Idx*2+0>(std::forward<Tuple>(packedArgs)) is suitable for named arguments
+        return fmt::format(
+            std::forward<StrT>(fstr), 
+            fmt::arg(
+                std::get<Idx*2+0>(std::forward<TupleT>(packedArgs)), // selects all the even arguments
+                std::get<Idx*2+1>(std::forward<TupleT>(packedArgs))  // selects all the odd arguments
+            )...
+        );
+    }
 }
 
 
-template<typename StrT, typename ...T>
-decltype(auto) formatNamed(StrT && fstr, T && ... args)
+struct argsnamed_t{};
+constexpr auto argsnamed = argsnamed_t{};    
+    
+template<typename StrT, typename ...ArgsT>
+decltype(auto) format(StrT && fstr, argsnamed_t, ArgsT && ...args)
 {
-    return detail::formatNamed_imp(std::forward<StrT>(fstr), std::tuple<T...>{std::forward<T>(args)...}, std::make_integer_sequence<size_t, sizeof...(args)/2>() );
+    return detail::formatN_imp(
+        std::forward<StrT>(fstr), 
+        std::tuple<ArgsT...>{std::forward<ArgsT>(args)...}, 
+        std::make_integer_sequence<decltype(sizeof...(args)/2), sizeof...(args)/2>()
+    );
 }
+    
+template<typename StrT, typename ...ArgsT>
+decltype(auto) format(StrT && fstr, ArgsT && ...args)
+{
+    return fmt::format(std::forward<StrT>(fstr), std::forward<ArgsT>(args)...);
+}
+
 
 }
