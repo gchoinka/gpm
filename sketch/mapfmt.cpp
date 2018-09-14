@@ -50,6 +50,50 @@ decltype(auto) mapformat(StrT && fstr, T ... args)
 }
 
 
+template<typename StrT, typename A>
+decltype(auto) mf(StrT && fstr, A a)
+{
+//     return fmt::format(std::forward<StrT>(fstr), 
+    return fstr;
+}
+
+template<typename KeyT, typename ValueT>
+struct argHolder
+{
+    
+    KeyT k;
+    ValueT v;
+};
+
+template<typename ...Args>
+int toArgs2(std::initializer_list<Args>... b)
+{
+//     if constexpr(sizeof...(args) != 0)
+//         return toArgs(args...);
+//     else
+        return 0;
+}
+
+
+template<typename ...Args>
+int toArgs(Args&&...  args)
+{
+//     if constexpr(sizeof...(args) != 0)
+//         return toArgs(args...);
+//     else
+        return 0;
+}
+
+
+int toArgs()
+{
+//     if constexpr(sizeof...(args) != 0)
+//         return toArgs(args...);
+//     else
+        return 0;
+}
+
+
 
 int main() {
 
@@ -91,4 +135,6 @@ int main() {
   
   std::cout << fmt::format("Hello, {name}! The answer is {number}. Goodbye, {name}.",
            fmt::arg("name", "World"), fmt::arg("number", 42)) << "\n";
+           
+   // std::cout<< mf("Hello, {name}! The answer is {number}. Goodbye, {name}.", toArgs2({"name", "World"},{"number", 42}));
 }

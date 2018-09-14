@@ -6,7 +6,6 @@
  * copy at http://www.boost.org/LICENSE_1_0.txt)
  */
 #include <iostream>
-#include <chrono>
 #include <fstream>
 #include <memory>
 
@@ -14,6 +13,7 @@
 #include <fmt/ostream.h>
 
 #include <gpm/utils/fmtutils.hpp>
+#include <gpm/io.hpp>
 
 
 #include "common/santa_fe_board.hpp"
@@ -22,11 +22,7 @@
 #include "common/visitor.hpp"
 
 #include "nodes_opp.hpp"
-#include "nodes_tuple.hpp"
 
-
-
-  
 
 
 class AsOOPNotation : public boost::static_visitor<std::string>
@@ -196,9 +192,6 @@ public:
 class AsRecursiveVariantNotation : public boost::static_visitor<std::string>
 {
 public:
-    AsRecursiveVariantNotation()
-    {
-    }
 
     std::string operator()(ant::if_food_ahead const & c) const
     {
@@ -240,8 +233,6 @@ public:
 
 
 
-
-
 int main()
 {        
     int minHeight = 1;
@@ -260,15 +251,6 @@ int main()
     auto oopNotation = boost::apply_visitor(AsOOPNotation{antBoardSimName}, ant);
     
     auto antRPN = boost::apply_visitor(gpm::RPNPrinter<std::string>{}, ant);
-    
-    auto goo = std::tuple<anttup::IF, 
-                    std::tuple<anttup::M>, 
-                    std::tuple<anttup::P2, 
-                        std::tuple<anttup::M>,
-                        std::tuple<anttup::L> 
-                    > 
-                >{};
-    (void)goo;
     
     
     std::cout << gpm::utils::format( 

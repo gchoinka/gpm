@@ -33,6 +33,16 @@ target_compile_options(${targetName} PRIVATE ${warning_flags})
 target_link_libraries(${targetName} fmt::fmt benchmark::benchmark Boost::boost)
 
 
+set(targetName ant_board_visualization)
+add_executable(${targetName} ant_board_visualization.cpp) 
+set_target_properties(${targetName} PROPERTIES
+            CXX_STANDARD 17
+            CXX_EXTENSIONS OFF
+)
+target_compile_options(${targetName} PRIVATE ${warning_flags})
+target_link_libraries(${targetName} fmt::fmt Boost::boost)
+
+
 
 option(GPM_FORMAT_GENERATED_FILES "Should the files which were generated in ${GeneratedIncludesDir} be formated?(only usefull if someone wants to read them)." OFF)
 

@@ -1,6 +1,6 @@
 {
   "context": {
-    "date": "2018-09-13 07:34:37",
+    "date": "2018-09-14 09:20:51",
     "executable": "/home/gchoinka/src/gpm/build-benchmarks/clang++-6.0-ASAN/examples/ant/tree_benchmark",
     "num_cpus": 8,
     "mhz_per_cpu": 3500,
@@ -36,49 +36,49 @@
   "benchmarks": [
     {
       "name": "BM_recursiveVariantTreeFromString",
-      "iterations": 134,
-      "real_time": 4.3307938582047559e+06,
-      "cpu_time": 4.3308469029850746e+06,
+      "iterations": 123,
+      "real_time": 5.5315308780381000e+06,
+      "cpu_time": 5.5313784227642277e+06,
       "time_unit": "ns",
       "score": 7.8000000000000000e+01
     },
     {
       "name": "BM_recursiveVariantTree",
-      "iterations": 566,
-      "real_time": 1.2671907579554792e+06,
-      "cpu_time": 1.2671935936395759e+06,
+      "iterations": 420,
+      "real_time": 1.6800877333263911e+06,
+      "cpu_time": 1.6800385333333334e+06,
       "time_unit": "ns",
       "score": 7.8000000000000000e+01
     },
     {
       "name": "BM_cppFixedTree",
-      "iterations": 8962,
-      "real_time": 8.0495873577444363e+04,
-      "cpu_time": 8.0496978018299487e+04,
+      "iterations": 7324,
+      "real_time": 9.7987009284895830e+04,
+      "cpu_time": 9.7992475559803366e+04,
       "time_unit": "ns",
       "score": 7.8000000000000000e+01
     },
     {
       "name": "BM_cppFixedWithVisitor",
-      "iterations": 8276,
-      "real_time": 8.1234889197499579e+04,
-      "cpu_time": 8.1236622281295335e+04,
+      "iterations": 7005,
+      "real_time": 1.0000253590323239e+05,
+      "cpu_time": 1.0000325910064242e+05,
       "time_unit": "ns",
       "score": 7.8000000000000000e+01
     },
     {
       "name": "BM_oopTree",
-      "iterations": 1961,
-      "real_time": 3.6416141713403893e+05,
-      "cpu_time": 3.6416908006119303e+05,
+      "iterations": 1495,
+      "real_time": 4.7976125819070492e+05,
+      "cpu_time": 4.7978630568561854e+05,
       "time_unit": "ns",
       "score": 7.8000000000000000e+01
     },
     {
       "name": "BM_oopTreeFromString",
-      "iterations": 523,
-      "real_time": 1.3408217151041289e+06,
-      "cpu_time": 1.3408491969407271e+06,
+      "iterations": 397,
+      "real_time": 1.8253229118501521e+06,
+      "cpu_time": 1.8067862518891690e+06,
       "time_unit": "ns",
       "score": 7.8000000000000000e+01
     }

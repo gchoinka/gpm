@@ -57,7 +57,23 @@ else()
   message(STATUS "clang-format found: ${CLANG_FORMAT}")
 endif()
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include) # remove this global
+
+# #remove this 
+# include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
+# ExternalProject_Add(frozen
+#     PREFIX ${CMAKE_CURRENT_BINARY_DIR}/frozen
+#     GIT_REPOSITORY https://github.com/serge-sans-paille/frozen.git
+#     GIT_TAG        master
+#     CMAKE_ARGS -DCMAKE_PREFIX_PATH=${CMAKE_INSTALL_PREFIX} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+#     UPDATE_COMMAND ""
+#     CONFIGURE_COMMAND ""
+#     BUILD_COMMAND ""
+#     INSTALL_COMMAND ""
+# )
+
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/frozen/include/)
+
 
 if(${GPM_BUILD_TESTS})
     add_subdirectory(tests)

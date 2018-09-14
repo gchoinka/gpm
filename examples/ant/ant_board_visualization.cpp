@@ -5,12 +5,7 @@
  * (See accompanying file LICENSE_1_0.txt or
  * copy at http://www.boost.org/LICENSE_1_0.txt)
  */
-#include <chrono>
 #include <iostream>
-#include <functional>
-#include <vector>
-
-#include <benchmark/benchmark.h>
 
 #include <gpm/gpm.hpp>
 #include <gpm/io.hpp>
@@ -21,8 +16,6 @@
 #include "common/nodes.hpp"
 #include "common/visitor.hpp"
 
-#include "nodes_opp.hpp"
-
 
 template<typename AntBoardSimT>
 class AntBoardSimDecorator
@@ -32,35 +25,30 @@ public:
 
     AntBoardSimDecorator(AntBoardSimT & other):orgAntBoardSim_{other}{}
     
-    template<typename F>
-    struct BefreAndAfterTask
-    {
-        F  f_;
-        BefreAndAfterTask(F f):f_{f}{f_();}
-        ~BefreAndAfterTask()
-        {
-            f_();
-        }
-    };
+    
+    
 
     
     void move()
     {
-        BefreAndAfterTask b{[this](){orgAntBoardSim_.get_board_as_str([](auto s){std::cout <<s << "\n";});}};
+        orgAntBoardSim_.get_board_as_str([](auto s){std::cout <<s << "\n";});
         orgAntBoardSim_.move();
+        orgAntBoardSim_.get_board_as_str([](auto s){std::cout <<s << "\n";});
     }
     
     void left()
     {
-        BefreAndAfterTask b{[this](){orgAntBoardSim_.get_board_as_str([](auto s){std::cout <<s << "\n";});}};
+        orgAntBoardSim_.get_board_as_str([](auto s){std::cout <<s << "\n";});
         orgAntBoardSim_.left();
+        orgAntBoardSim_.get_board_as_str([](auto s){std::cout <<s << "\n";});
 
     }
     
     void right()
     {
-        BefreAndAfterTask b{[this](){orgAntBoardSim_.get_board_as_str([](auto s){std::cout <<s << "\n";});}};
+        orgAntBoardSim_.get_board_as_str([](auto s){std::cout <<s << "\n";});
         orgAntBoardSim_.right();
+        orgAntBoardSim_.get_board_as_str([](auto s){std::cout <<s << "\n";});
     }
     
     bool is_food_in_front() const
@@ -102,6 +90,14 @@ public:
 
 
 
+
+template<typename AntBoardSimT>
+AntBoardSimDecorator<AntBoardSimT> makeAntBoardSimDecorator(AntBoardSimT toDecorateAntBoardSim)
+{
+    return AntBoardSimDecorator<AntBoardSimT>{toDecorateAntBoardSim};
+}
+
+
 decltype(auto) getAntBoardSim()
 {
     using namespace ant;
@@ -126,13 +122,17 @@ decltype(auto) getAntBoardSim()
 }
 
 
-#if __has_include("ant_simulation_benchmark_generated_functions.cpp")
-    #include "ant_simulation_benchmark_generated_functions.cpp"
-#else
-    #pragma message "run artificial_ant_generate and copy ant_simulation_benchmark_generated_functions.cpp to the same folder, touch this file and then rerun this target"
-#endif
+int main()
+{
+    char const * optimalAntRPNdef = "m r m if l l p3 r m if if p2 r p2 m if";
+    auto optAnt = gpm::factory<ant::ant_nodes>(gpm::RPNToken_iterator{optimalAntRPNdef});
+    auto antBoardSim = makeAntBoardSimDecorator(getAntBoardSim());
+    
+    auto antBoardSimVisitor = ant::AntBoardSimulationVisitor{ antBoardSim };
 
-
-
-BENCHMARK_MAIN();
-
+    while (!antBoardSim.is_finish()) 
+    {
+        boost::apply_visitor(antBoardSimVisitor, optAnt);
+    }
+    return antBoardSim.score();
+}
