@@ -14,23 +14,45 @@ namespace ant::santa_fe {
 constexpr size_t const x_size = 32;
 constexpr size_t const y_size = 32;
 
-constexpr char const* const board[] = {
-    " XXX                            ", "   X                            ",
-    "   X                    .XXX..  ", "   X                    X    X  ",
-    "   X                    X    X  ", "   XXXX.XXXXX       .XX..    .  ",
-    "            X       .        X  ", "            X       X        .  ",
-    "            X       X        .  ", "            X       X        X  ",
-    "            .       X        .  ", "            X       .        .  ",
-    "            X       .        X  ", "            X       X        .  ",
-    "            X       X  ...XXX.  ", "            .   .X...  X        ",
-    "            .   .      .        ", "            X   .      .        ",
-    "            X   X      .X...    ", "            X   X          X    ",
-    "            X   X          .    ", "            X   X          .    ",
-    "            X   .      ...X.    ", "            X   .      X        ",
-    " ..XX..XXXXX.   X               ", " X              X               ",
-    " X              X               ", " X     .XXXXXXX..               ",
-    " X     X                        ", " .     X                        ",
-    " .XXXX..                        ", "                                "};
+constexpr size_t const x_size = 32;
+constexpr size_t const y_size = 32;
+
+// clang-format off
+constexpr char const * const board[] = {
+" XXX                            ",
+"   X                            ",
+"   X                    .XXX..  ",
+"   X                    X    X  ",
+"   X                    X    X  ",
+"   XXXX.XXXXX       .XX..    .  ",
+"            X       .        X  ",
+"            X       X        .  ",
+"            X       X        .  ",
+"            X       X        X  ",
+"            .       X        .  ",
+"            X       .        .  ",
+"            X       .        X  ",
+"            X       X        .  ",
+"            X       X  ...XXX.  ",
+"            .   .X...  X        ",
+"            .   .      .        ",
+"            X   .      .        ",
+"            X   X      .X...    ",
+"            X   X          X    ",
+"            X   X          .    ",
+"            X   X          .    ",
+"            X   .      ...X.    ",
+"            X   .      X        ",
+" ..XX..XXXXX.   X               ",
+" X              X               ",
+" X              X               ",
+" X     .XXXXXXX..               ",
+" X     X                        ",
+" .     X                        ",
+" .XXXX..                        ",
+"                                "
+};
+// clang-format on
 
 namespace detail {
 
