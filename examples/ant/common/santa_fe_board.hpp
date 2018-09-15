@@ -14,9 +14,6 @@ namespace ant::santa_fe {
 constexpr size_t const x_size = 32;
 constexpr size_t const y_size = 32;
 
-constexpr size_t const x_size = 32;
-constexpr size_t const y_size = 32;
-
 // clang-format off
 constexpr char const * const board[] = {
 " XXX                            ",
