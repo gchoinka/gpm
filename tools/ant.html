@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<!-- saved from url=(0075)http://visjs.org/examples/network/layout/hierarchicalLayoutUserdefined.html -->
+<html class="gr__visjs_org">
+<head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>ant</title>
+
+<style type="text/css">
+    body {
+        font: 10pt sans;
+    }
+
+    #mynetwork {
+        width: 1000px;
+        height: 1000px;
+         /* border: 1px solid lightgray; */
+    }
+</style>
+<script type="text/javascript" src="vis.js"></script>
+<link href="vis-network.min.css" rel="stylesheet" type="text/css">
+
+
+<script type="text/javascript">
+    var nodes = null;
+    var edges = null;
+    var network = null;
+    var directionInput = 'LR';
+
+    function destroy() {
+        if (network !== null) {
+            network.destroy();
+            network = null;
+        }
+    }
+
+    function draw() {
+        destroy();
+        nodes = [];
+        edges = [];
+        var connectionCount = [];
+
+        // randomly create some nodes and edges
+        for (var i = 0; i < 15; i++) {
+            nodes.push({id: i, label: String(i)});
+        }
+        edges.push({from: 0, to: 1});
+        edges.push({from: 0, to: 6});
+        edges.push({from: 0, to: 13});
+        edges.push({from: 0, to: 11});
+        edges.push({from: 1, to: 2});
+        edges.push({from: 2, to: 3});
+        edges.push({from: 2, to: 4});
+        edges.push({from: 3, to: 5});
+        edges.push({from: 1, to: 10});
+        edges.push({from: 1, to: 7});
+        edges.push({from: 2, to: 8});
+        edges.push({from: 2, to: 9});
+        edges.push({from: 3, to: 14});
+        edges.push({from: 1, to: 12});
+        nodes[0]["level"] = 0;
+        nodes[1]["level"] = 1;
+        nodes[2]["level"] = 3;
+        nodes[3]["level"] = 4;
+        nodes[4]["level"] = 4;
+        nodes[5]["level"] = 5;
+        nodes[6]["level"] = 1;
+        nodes[7]["level"] = 2;
+        nodes[8]["level"] = 4;
+        nodes[9]["level"] = 4;
+        nodes[10]["level"] = 2;
+        nodes[11]["level"] = 1;
+        nodes[12]["level"] = 2;
+        nodes[13]["level"] = 1;
+        nodes[14]["level"] = 5;
+
+
+        // create a network
+        var container = document.getElementById('mynetwork');
+        var data = {
+            nodes: nodes,
+            edges: edges
+        };
+
+        var options = {
+            edges: {
+                smooth: {
+                    type: 'cubicBezier',
+                    forceDirection: (directionInput.value == "UD" || directionInput.value == "DU") ? 'vertical' : 'horizontal',
+                    roundness: 0.4
+                }
+            },
+            layout: {
+                hierarchical: {
+                    direction: "LR"
+                }
+            },
+            physics:false
+        };
+        network = new vis.Network(container, data, options);
+
+        // add event listeners
+        network.on('select', function (params) {
+            document.getElementById('selection').innerHTML = 'Selection: ' + params.nodes;
+        });
+    }
+
+</script>
+    
+</head>
+
+<body onload="draw();" data-gr-c-s-loaded="true">
+
+<div id="mynetwork">
+<div class="vis-network" tabindex="900" style="position: relative; overflow: hidden; touch-action: pan-y; user-select: none; -webkit-user-drag: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0); width: 100%; height: 100%;">
+<canvas width="100%" height="100%" style="position: relative; touch-action: none; user-select: none; -webkit-user-drag: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0); width: 100%; height: 100%;">
+</canvas>
+</div>
+</div>
+
+<style type="text/css">
+    /* loading */
+    .lt-sk-three-bounce {
+      margin: 2px auto;
+      width: 100%;
+      text-align: center; }
+      .lt-sk-three-bounce .lt-sk-child {
+        width: 5px;
+        height: 5px;
+        background-color: #333;
+        border-radius: 100%;
+        display: inline-block;
+        -webkit-animation: lt-sk-three-bounce 1.4s ease-in-out 0s infinite both;
+                animation: lt-sk-three-bounce 1.4s ease-in-out 0s infinite both; }
+      .lt-sk-three-bounce .lt-sk-bounce1 {
+        -webkit-animation-delay: -0.32s;
+                animation-delay: -0.32s; }
+      .lt-sk-three-bounce .lt-sk-bounce2 {
+        -webkit-animation-delay: -0.16s;
+                animation-delay: -0.16s; }
+
+    @-webkit-keyframes lt-sk-three-bounce {
+      0%, 80%, 100% {
+        -webkit-transform: scale(0);
+                transform: scale(0); }
+      40% {
+        -webkit-transform: scale(1);
+                transform: scale(1); } }
+
+    @keyframes lt-sk-three-bounce {
+      0%, 80%, 100% {
+        -webkit-transform: scale(0);
+                transform: scale(0); }
+      40% {
+        -webkit-transform: scale(1);
+                transform: scale(1); } }
+</style>
+</body>
+</html>
