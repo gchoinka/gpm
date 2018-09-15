@@ -235,11 +235,14 @@ public:
 
 int main()
 {        
-    int minHeight = 1;
-    int maxHeight = 7;
+    //int minHeight = 1;
+    //int maxHeight = 7;
     //std::random_device rd;
   
-    auto ant = gpm::BasicGenerator<ant::ant_nodes>{minHeight, maxHeight}();
+    //auto ant = gpm::BasicGenerator<ant::ant_nodes>{minHeight, maxHeight}();
+    
+    char const * optimalAntRPNdef = "m r m if l l p3 r m if if p2 r p2 m if";
+    auto ant = gpm::factory<ant::ant_nodes>(gpm::RPNToken_iterator{optimalAntRPNdef});
     
     auto antBoardSimName = "antBoardSim";
     auto antBoardSimVisitorName = "antBoardSimVisitor";
@@ -369,6 +372,24 @@ static void BM_oopTreeFromString(benchmark::State& state)
     for (auto _ : state) {{state.counters["score"] = oopTreeFromString(getAntBoardSim());}}
 }}
 BENCHMARK(BM_oopTreeFromString);  
+    
+template<typename AntBoardSimT>
+int oopTreeFromExtString(AntBoardSimT {antBoardSimName})
+{{                
+    auto oopTree = antoop::factory<AntBoardSimT>(gpm::RPNToken_iterator{{ant::optimalAntRPNExt}});
+            
+    while(!{antBoardSimName}.is_finish())
+    {{
+        (*oopTree)({antBoardSimName});
+    }}
+    return {antBoardSimName}.score(); 
+}}
+
+static void BM_oopTreeFromExtString(benchmark::State& state) 
+{{
+    for (auto _ : state) {{state.counters["score"] = oopTreeFromExtString(getAntBoardSim());}}
+}}
+BENCHMARK(BM_oopTreeFromExtString);
     
 )"""
         , gpm::utils::argsnamed

@@ -23,6 +23,8 @@
 
 #include "nodes_opp.hpp"
 
+#include "extern_defined_ants.h"
+
 
 template<typename AntBoardSimT>
 class AntBoardSimDecorator

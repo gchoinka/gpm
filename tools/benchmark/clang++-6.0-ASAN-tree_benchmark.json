@@ -1,10 +1,10 @@
 {
   "context": {
-    "date": "2018-09-14 09:20:51",
+    "date": "2018-09-14 23:18:57",
     "executable": "/home/gchoinka/src/gpm/build-benchmarks/clang++-6.0-ASAN/examples/ant/tree_benchmark",
     "num_cpus": 8,
     "mhz_per_cpu": 3500,
-    "cpu_scaling_enabled": false,
+    "cpu_scaling_enabled": true,
     "caches": [
       {
         "type": "Data",
@@ -36,51 +36,59 @@
   "benchmarks": [
     {
       "name": "BM_recursiveVariantTreeFromString",
-      "iterations": 123,
-      "real_time": 5.5315308780381000e+06,
-      "cpu_time": 5.5313784227642277e+06,
+      "iterations": 3034,
+      "real_time": 2.2822914864868950e+05,
+      "cpu_time": 2.2822867237969677e+05,
       "time_unit": "ns",
-      "score": 7.8000000000000000e+01
+      "score": 0.0000000000000000e+00
     },
     {
       "name": "BM_recursiveVariantTree",
-      "iterations": 420,
-      "real_time": 1.6800877333263911e+06,
-      "cpu_time": 1.6800385333333334e+06,
+      "iterations": 4129,
+      "real_time": 1.6731118890760158e+05,
+      "cpu_time": 1.6731192758537183e+05,
       "time_unit": "ns",
-      "score": 7.8000000000000000e+01
+      "score": 0.0000000000000000e+00
     },
     {
       "name": "BM_cppFixedTree",
-      "iterations": 7324,
-      "real_time": 9.7987009284895830e+04,
-      "cpu_time": 9.7992475559803366e+04,
+      "iterations": 8779,
+      "real_time": 8.1521551315590681e+04,
+      "cpu_time": 8.1522456771841898e+04,
       "time_unit": "ns",
-      "score": 7.8000000000000000e+01
+      "score": 0.0000000000000000e+00
     },
     {
       "name": "BM_cppFixedWithVisitor",
-      "iterations": 7005,
-      "real_time": 1.0000253590323239e+05,
-      "cpu_time": 1.0000325910064242e+05,
+      "iterations": 8705,
+      "real_time": 8.0909068581281681e+04,
+      "cpu_time": 8.0909481102814447e+04,
       "time_unit": "ns",
-      "score": 7.8000000000000000e+01
+      "score": 0.0000000000000000e+00
     },
     {
       "name": "BM_oopTree",
-      "iterations": 1495,
-      "real_time": 4.7976125819070492e+05,
-      "cpu_time": 4.7978630568561854e+05,
+      "iterations": 6252,
+      "real_time": 1.1343534756883958e+05,
+      "cpu_time": 1.1343515259117080e+05,
       "time_unit": "ns",
-      "score": 7.8000000000000000e+01
+      "score": 0.0000000000000000e+00
     },
     {
       "name": "BM_oopTreeFromString",
-      "iterations": 397,
-      "real_time": 1.8253229118501521e+06,
-      "cpu_time": 1.8067862518891690e+06,
+      "iterations": 4765,
+      "real_time": 1.4636885750252134e+05,
+      "cpu_time": 1.4636217019937030e+05,
       "time_unit": "ns",
-      "score": 7.8000000000000000e+01
+      "score": 0.0000000000000000e+00
+    },
+    {
+      "name": "BM_oopTreeFromExtString",
+      "iterations": 4838,
+      "real_time": 1.5712425981809467e+05,
+      "cpu_time": 1.5712352893757759e+05,
+      "time_unit": "ns",
+      "score": 0.0000000000000000e+00
     }
   ]
 }

@@ -6,11 +6,14 @@
 #  copy at http://www.boost.org/LICENSE_1_0.txt)
 #
 
+#move this to somewhere else
 if(MSVC)
   set(warning_flags "-Wall")
 else ()
   set(warning_flags -Wall -Wextra -pedantic -Werror)
 endif()
+
+add_library(extern_defined_ants SHARED extern_defined_ants.cpp)
 
 set(targetName generate_tree_for_benchmark)
 add_executable(${targetName} generate_tree_for_benchmark_main.cpp) 
@@ -30,7 +33,8 @@ set_target_properties(${targetName} PROPERTIES
            CXX_EXTENSIONS OFF
 )
 target_compile_options(${targetName} PRIVATE ${warning_flags})
-target_link_libraries(${targetName} fmt::fmt benchmark::benchmark Boost::boost)
+target_link_libraries(${targetName} fmt::fmt benchmark::benchmark Boost::boost extern_defined_ants)
+
 
 
 set(targetName ant_board_visualization)
@@ -47,7 +51,7 @@ target_link_libraries(${targetName} fmt::fmt Boost::boost)
 option(GPM_FORMAT_GENERATED_FILES "Should the files which were generated in ${GeneratedIncludesDir} be formated?(only usefull if someone wants to read them)." OFF)
 
 if(CLANG_FORMAT AND ${GPM_FORMAT_GENERATED_FILES})
-    set(FORMAT_STEP "${CLANG_FORMAT}" -i -style=Mozilla "${GeneratedIncludesDir}/ant_simulation_benchmark_generated_functions.cpp")
+    set(FORMAT_STEP "${CLANG_FORMAT}" -i -style=google "${GeneratedIncludesDir}/ant_simulation_benchmark_generated_functions.cpp")
 else()
     set(FORMAT_STEP "${CMAKE_COMMAND}" -E echo "skiped formating step")
 endif()
