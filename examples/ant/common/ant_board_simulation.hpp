@@ -7,45 +7,34 @@
  */
 #pragma once
 
-
 #include <array>
-#include <string>
 #include <iterator>
+#include <string>
 
 namespace ant::sim {
 
-struct Pos2d
-{
-    Pos2d(int xval, int yval)
-        :pos{{xval, yval}}
-    {
-    }
-                                    
-    std::array<int, 2> pos;
-    
-    int & x(){ return pos[0]; }
-    int & y(){ return pos[1]; }
+struct Pos2d {
+  Pos2d(int xval, int yval) : pos{{xval, yval}} {}
 
-    int x() const { return pos[0]; }
-    int y() const { return pos[1]; }
+  std::array<int, 2> pos;
+
+  int& x() { return pos[0]; }
+  int& y() { return pos[1]; }
+
+  int x() const { return pos[0]; }
+  int y() const { return pos[1]; }
 };
 
-Pos2d operator+(Pos2d const & lhs, Pos2d const & rhs)
-{
-    return Pos2d{lhs.x() + rhs.x(), lhs.y() + rhs.y()};
+Pos2d operator+(Pos2d const& lhs, Pos2d const& rhs) {
+  return Pos2d{lhs.x() + rhs.x(), lhs.y() + rhs.y()};
 }
 
-bool operator==(Pos2d const & lhs, Pos2d const & rhs)
-{
-    return lhs.pos == rhs.pos;
+bool operator==(Pos2d const& lhs, Pos2d const& rhs) {
+  return lhs.pos == rhs.pos;
 }
 
-inline std::array<Pos2d, 4> const toPos{
-    Pos2d{-1,  0},
-    Pos2d{ 0,  1},
-    Pos2d{ 1,  0},
-    Pos2d{ 0, -1}
-};
+inline std::array<Pos2d, 4> const toPos{Pos2d{-1, 0}, Pos2d{0, 1}, Pos2d{1, 0},
+                                        Pos2d{0, -1}};
 
 constexpr std::array<char, 4> directionToChar{{
     'N',
@@ -54,146 +43,118 @@ constexpr std::array<char, 4> directionToChar{{
     'W',
 }};
 
-enum class Direction : size_t {
-    north = 0,
-    east  = 1,
-    south = 2,
-    west  = 3
-};
+enum class Direction : size_t { north = 0, east = 1, south = 2, west = 3 };
 
-Direction rotateCW(Direction p)
-{
-    return static_cast<Direction>((static_cast<size_t>(p) + 1) % 4);
+Direction rotateCW(Direction p) {
+  return static_cast<Direction>((static_cast<size_t>(p) + 1) % 4);
 }
 
-Direction rotateCCW(Direction p)
-{
-    return static_cast<Direction>((static_cast<size_t>(p) + 3) % 4);
+Direction rotateCCW(Direction p) {
+  return static_cast<Direction>((static_cast<size_t>(p) + 3) % 4);
 }
 
 enum class BoardState { empty, food, hadFood };
 constexpr static std::array<char, 3> boardStateToChar{{' ', 'O', '*'}};
 
-template<typename FieldT>
-class AntBoardSimulation
-{
-public:
-    using FieldType = FieldT;
-    
-    template<typename FieldInitFunction>
-    AntBoardSimulation(int steps, int max_food, ant::sim::Pos2d antPos, ant::sim::Direction direction, FieldInitFunction fieldInitFunction)
-        :steps_{steps}, max_food_{max_food}, antPos_{antPos}, direction_{direction}
-    {
-        fieldInitFunction(field_);
-    } 
-    
-    void move()
-    {
-        --steps_;
-        auto toadd = ant::sim::toPos[static_cast<size_t>(direction_)];
-        antPos_ = (antPos_ + toadd);
-        antPos_.x() = (antPos_.x() + xSize()) % xSize();
-        antPos_.y() = (antPos_.y() + ySize()) % ySize();
-        
-        if(field_[antPos_.x()][antPos_.y()] == BoardState::food)
-        {  
-            ++foodConsumed_;
-            field_[antPos_.x()][antPos_.y()] = BoardState::hadFood;
-        }
+template <typename FieldT>
+class AntBoardSimulation {
+ public:
+  using FieldType = FieldT;
+
+  template <typename FieldInitFunction>
+  AntBoardSimulation(int steps, int max_food, ant::sim::Pos2d antPos,
+                     ant::sim::Direction direction,
+                     FieldInitFunction fieldInitFunction)
+      : steps_{steps},
+        max_food_{max_food},
+        antPos_{antPos},
+        direction_{direction} {
+    fieldInitFunction(field_);
+  }
+
+  void move() {
+    --steps_;
+    auto toadd = ant::sim::toPos[static_cast<size_t>(direction_)];
+    antPos_ = (antPos_ + toadd);
+    antPos_.x() = (antPos_.x() + xSize()) % xSize();
+    antPos_.y() = (antPos_.y() + ySize()) % ySize();
+
+    if (field_[antPos_.x()][antPos_.y()] == BoardState::food) {
+      ++foodConsumed_;
+      field_[antPos_.x()][antPos_.y()] = BoardState::hadFood;
     }
-    
-    void left()
-    {
-        --steps_;
-        direction_ = rotateCCW(direction_);
+  }
+
+  void left() {
+    --steps_;
+    direction_ = rotateCCW(direction_);
+  }
+
+  void right() {
+    --steps_;
+    direction_ = rotateCW(direction_);
+  }
+
+  bool is_food_in_front() const {
+    auto toadd = ant::sim::toPos[static_cast<size_t>(direction_)];
+    auto newPos = antPos_ + toadd;
+    newPos.x() = (newPos.x() + xSize()) % xSize();
+    newPos.y() = (newPos.y() + ySize()) % ySize();
+
+    return field_[newPos.x()][newPos.y()] == BoardState::food;
+  }
+
+  bool is_finish() const { return steps_ <= 0 || score() == 0; }
+
+  int score() const { return max_food_ - foodConsumed_; }
+
+  std::string get_status_line() const {
+    std::string res;
+    res.reserve(ySize());
+    (((res += "steps:") += std::to_string(steps_) += " score:") +=
+     std::to_string(score()) += " fif:") += std::to_string(is_food_in_front());
+    res.insert(res.size(), ySize() - res.size(), ' ');
+    return res;
+  }
+
+  template <typename LineSinkF>
+  void get_board_as_str(LineSinkF lineSink) const {
+    lineSink(get_status_line());
+    for (size_t x = 0; x < xSize(); ++x) {
+      std::string res;
+      res.reserve(ySize());
+      for (size_t y = 0; y < ySize(); ++y) {
+        if (antPos_ == ant::sim::Pos2d{int(x), int(y)})
+          res += ant::sim::directionToChar[static_cast<size_t>(direction_)];
+        else
+          res += boardStateToChar[static_cast<size_t>(field_[x][y])];
+      }
+      lineSink(res);
     }
-    
-    void right()
-    {
-        --steps_;
-        direction_ = rotateCW(direction_);
-    }
-    
-    bool is_food_in_front() const
-    {
-        auto toadd = ant::sim::toPos[static_cast<size_t>(direction_)];
-        auto newPos = antPos_ + toadd;
-        newPos.x() = (newPos.x() + xSize()) % xSize();
-        newPos.y() = (newPos.y() + ySize()) % ySize();
-        
-        return field_[newPos.x()][newPos.y()] == BoardState::food;
-    }
-    
-    bool is_finish() const
-    {
-        return steps_ <= 0 || score() == 0;
-    }
-    
-    int score() const
-    {
-        return max_food_ - foodConsumed_;
-    }
-    
-    std::string get_status_line() const 
-    {
-        std::string res;
-        res.reserve(ySize());
-        (((res += "steps:") += std::to_string(steps_) += " score:") += std::to_string(score()) += " fif:") += std::to_string(is_food_in_front());
-        res.insert(res.size(), ySize() - res.size(), ' ');
-        return res;
-    }
-    
-    template<typename LineSinkF>
-    void get_board_as_str(LineSinkF lineSink) const
-    {
-        lineSink(get_status_line());
-        for(size_t x = 0; x < xSize(); ++x)
-        {
-            std::string res; res.reserve(ySize());
-            for(size_t y = 0; y < ySize(); ++y)
-            {
-                if(antPos_ == ant::sim::Pos2d{int(x),int(y)})
-                    res += ant::sim::directionToChar[static_cast<size_t>(direction_)];
-                else 
-                    res += boardStateToChar[static_cast<size_t>(field_[x][y])];
-            }
-            lineSink(res);
-        }
-    }
-    
-    auto xSize() const
-    {
-        return std::size(field_[0]);
-    }
-    
-    auto ySize() const
-    {
-        return std::size(field_);
-    }
-    friend bool operator==(AntBoardSimulation const & lhs, AntBoardSimulation const & rhs)
-    {
-        return lhs.field_ == rhs.field_ 
-                && lhs.steps_ == rhs.steps_ 
-                && lhs.max_food_ == rhs.max_food_ 
-                && lhs.foodConsumed_ == rhs.foodConsumed_
-                && lhs.antPos_ == rhs.antPos_
-                && lhs.direction_ == rhs.direction_;
-    }
-private:
-    FieldT field_;
-    int steps_ = 0;
-    int max_food_;
-    int foodConsumed_ = 0;
-    ant::sim::Pos2d antPos_;
-    ant::sim::Direction direction_;
+  }
+
+  auto xSize() const { return std::size(field_[0]); }
+
+  auto ySize() const { return std::size(field_); }
+  friend bool operator==(AntBoardSimulation const& lhs,
+                         AntBoardSimulation const& rhs) {
+    return lhs.field_ == rhs.field_ && lhs.steps_ == rhs.steps_ &&
+           lhs.max_food_ == rhs.max_food_ &&
+           lhs.foodConsumed_ == rhs.foodConsumed_ &&
+           lhs.antPos_ == rhs.antPos_ && lhs.direction_ == rhs.direction_;
+  }
+
+ private:
+  FieldT field_;
+  int steps_ = 0;
+  int max_food_;
+  int foodConsumed_ = 0;
+  ant::sim::Pos2d antPos_;
+  ant::sim::Direction direction_;
 };
 
+template <int XSize, int YSize>
+using AntBoardSimulationStaticSize =
+    AntBoardSimulation<std::array<std::array<BoardState, YSize>, XSize>>;
 
-
-template<int XSize, int YSize>
-using AntBoardSimulationStaticSize = AntBoardSimulation<std::array<std::array<BoardState, YSize>, XSize>>;
-
-
-
-
-} // namespace ant
+}  // namespace ant::sim

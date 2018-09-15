@@ -8,55 +8,45 @@
 #pragma once
 #include <gpm/gpm.hpp>
 
-namespace ant
-{
-    
+namespace ant {
+
 struct move;
 struct right;
 struct left;
 struct if_food_ahead;
-template<int nodeCount, typename CTString> struct prog;
+template <int nodeCount, typename CTString>
+struct prog;
 
-using prog2 = prog<2, gpm::NodeToken<'p','2'>>;
-using prog3 = prog<3, gpm::NodeToken<'p','3'>>;
+using prog2 = prog<2, gpm::NodeToken<'p', '2'>>;
+using prog3 = prog<3, gpm::NodeToken<'p', '3'>>;
 
-using ant_nodes = boost::variant<
-    move, 
-    left, 
-    right, 
-    boost::recursive_wrapper<if_food_ahead>, 
-    boost::recursive_wrapper<prog2>, 
-    boost::recursive_wrapper<prog3>
->;
+using ant_nodes =
+    boost::variant<move, left, right, boost::recursive_wrapper<if_food_ahead>,
+                   boost::recursive_wrapper<prog2>,
+                   boost::recursive_wrapper<prog3>>;
 
-
-
-
-template<int NodeCount, typename CTString>
-struct prog : public gpm::BaseNode<ant_nodes, NodeCount, CTString>
-{
-    using prog::BaseNode::BaseNode;
+template <int NodeCount, typename CTString>
+struct prog : public gpm::BaseNode<ant_nodes, NodeCount, CTString> {
+  using prog::BaseNode::BaseNode;
 };
 
 struct move : public gpm::BaseNode<ant_nodes, 0, gpm::NodeToken<'m'>> {};
 
-struct right : public gpm::BaseNode<ant_nodes, 0, gpm::NodeToken<'r'>>{};
+struct right : public gpm::BaseNode<ant_nodes, 0, gpm::NodeToken<'r'>> {};
 
-struct left : public gpm::BaseNode<ant_nodes, 0, gpm::NodeToken<'l'>>{};
+struct left : public gpm::BaseNode<ant_nodes, 0, gpm::NodeToken<'l'>> {};
 
-struct if_food_ahead : public gpm::BaseNode<ant_nodes, 2, gpm::NodeToken<'i', 'f'>>
-{
-    using if_food_ahead::BaseNode::BaseNode;
+struct if_food_ahead
+    : public gpm::BaseNode<ant_nodes, 2, gpm::NodeToken<'i', 'f'>> {
+  using if_food_ahead::BaseNode::BaseNode;
 
-    template<bool c>
-    constexpr ant_nodes const & get() const
-    {
-        return nodes[c ? 0 : 1];
-    }
-    constexpr ant_nodes const & get(bool b) const
-    {
-        return b ? get<true>() : get<false>();
-    }
+  template <bool c>
+  constexpr ant_nodes const& get() const {
+    return nodes[c ? 0 : 1];
+  }
+  constexpr ant_nodes const& get(bool b) const {
+    return b ? get<true>() : get<false>();
+  }
 };
 
-}
+}  // namespace ant

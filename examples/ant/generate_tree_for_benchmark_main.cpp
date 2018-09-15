@@ -5,259 +5,212 @@
  * (See accompanying file LICENSE_1_0.txt or
  * copy at http://www.boost.org/LICENSE_1_0.txt)
  */
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <memory>
 
 #include <fmt/format.h>
 #include <fmt/ostream.h>
 
-#include <gpm/utils/fmtutils.hpp>
 #include <gpm/io.hpp>
+#include <gpm/utils/fmtutils.hpp>
 
-
-#include "common/santa_fe_board.hpp"
 #include "common/ant_board_simulation.hpp"
 #include "common/nodes.hpp"
+#include "common/santa_fe_board.hpp"
 #include "common/visitor.hpp"
 
 #include "nodes_opp.hpp"
 
+class AsOOPNotation : public boost::static_visitor<std::string> {
+  std::string simulationName_;
 
+ public:
+  AsOOPNotation(std::string const& simulationName)
+      : simulationName_{simulationName} {}
 
-class AsOOPNotation : public boost::static_visitor<std::string>
-{
-    std::string simulationName_;
-public:    
-    AsOOPNotation(std::string const & simulationName)
-        :simulationName_{simulationName}
-    {
-    }
-
-    std::string operator()(ant::if_food_ahead const & c) const
-    {
-        return gpm::utils::format(
-            R"""(
+  std::string operator()(ant::if_food_ahead const& c) const {
+    return gpm::utils::format(
+        R"""(
             std::make_unique<antoop::IfFoodAhead<decltype({simulationName})>>(
                 {true_branch}
                 , {false_branch}
             )
-            )"""
-            , gpm::utils::argsnamed
-            , "simulationName", simulationName_
-            , "true_branch", boost::apply_visitor(AsOOPNotation{simulationName_}, c.get<true>())
-            , "false_branch", boost::apply_visitor(AsOOPNotation{simulationName_}, c.get<false>())
-        );
+            )""",
+        gpm::utils::argsnamed, "simulationName", simulationName_, "true_branch",
+        boost::apply_visitor(AsOOPNotation{simulationName_}, c.get<true>()),
+        "false_branch",
+        boost::apply_visitor(AsOOPNotation{simulationName_}, c.get<false>()));
+  }
+
+  struct AntNodeToClassName {
+    static char const* name(ant::move&) { return "Move"; }
+    static char const* name(ant::left&) { return "Left"; }
+    static char const* name(ant::right&) { return "Right"; }
+    static char const* name(ant::prog2&) { return "Prog2"; }
+    static char const* name(ant::prog3&) { return "Prog3"; }
+  };
+
+  template <typename T>
+  std::string operator()(T t) const {
+    std::string res;
+    if constexpr (t.nodes.size() != 0) {
+      auto delimi = "\n";
+      for (auto& n : t.nodes) {
+        (res += delimi) += boost::apply_visitor(*this, n);
+        delimi = ",";
+      }
+      res += "\n";
     }
-    
-    struct AntNodeToClassName
-    {
-        static char const * name(ant::move&) { return "Move"; }
-        static char const * name(ant::left&) { return "Left"; }
-        static char const * name(ant::right&) { return "Right"; }
-        static char const * name(ant::prog2&) { return "Prog2"; }
-        static char const * name(ant::prog3&) { return "Prog3"; }
-    };  
-    
-    template<typename T>
-    std::string operator()(T t) const
-    {
-        std::string res;
-        if constexpr(t.nodes.size() != 0)
-        {
-            auto delimi = "\n";
-            for(auto & n: t.nodes)
-            {
-                (res += delimi) += boost::apply_visitor(*this, n);
-                delimi = ",";
-            }
-            res += "\n";
-        }
-        
-        res = gpm::utils::format("std::make_unique<antoop::{nodeName}<decltype({simulationName})>>({nodeChildren})\n"
-                , gpm::utils::argsnamed
-                , "nodeName", AntNodeToClassName::name(t)
-                , "nodeChildren", res
-                , "simulationName", simulationName_
-        );
-        return res;
-    }    
+
+    res = gpm::utils::format(
+        "std::make_unique<antoop::{nodeName}<decltype({simulationName})>>({"
+        "nodeChildren})\n",
+        gpm::utils::argsnamed, "nodeName", AntNodeToClassName::name(t),
+        "nodeChildren", res, "simulationName", simulationName_);
+    return res;
+  }
 };
 
- 
+class AsCPPFixedNotation : public boost::static_visitor<std::string> {
+  std::string simulationName_;
 
-class AsCPPFixedNotation : public boost::static_visitor<std::string>
-{
-    std::string simulationName_;    
-public:   
-    AsCPPFixedNotation(std::string const & simulationName)
-        :simulationName_{simulationName}
-    {
-    }
+ public:
+  AsCPPFixedNotation(std::string const& simulationName)
+      : simulationName_{simulationName} {}
 
-    std::string operator()(ant::if_food_ahead const & c) const
-    {
-        return gpm::utils::format(
-            R"""(
+  std::string operator()(ant::if_food_ahead const& c) const {
+    return gpm::utils::format(
+        R"""(
                 if({simulationName}.is_food_in_front()){{
                     {true_branch}
                 }}else{{
                     {false_branch}
                 }}
-            )"""
-            , gpm::utils::argsnamed
-            , "simulationName", simulationName_
-            , "true_branch", boost::apply_visitor(*this, c.get<true>())
-            , "false_branch", boost::apply_visitor(*this, c.get<false>())
-        );
-    }
-    
-    struct AntNodeToSimulationMethodName
-    {
-        static char const * name(ant::move&) { return "move"; }
-        static char const * name(ant::left&) { return "left"; }
-        static char const * name(ant::right&) { return "right"; }
-    };    
+            )""",
+        gpm::utils::argsnamed, "simulationName", simulationName_, "true_branch",
+        boost::apply_visitor(*this, c.get<true>()), "false_branch",
+        boost::apply_visitor(*this, c.get<false>()));
+  }
 
-    
-    template<typename T>
-    std::string operator()(T t) const
-    {
-        std::string res;
-        if constexpr(t.nodes.size() == 0)
-        {
-            res += gpm::utils::format("{simulationName}.{methodName}();\n" 
-                                             , gpm::utils::argsnamed
-                                             , "simulationName", simulationName_
-                                             , "methodName", AntNodeToSimulationMethodName::name(t)
-            );
-        }
-        for(auto & n: t.nodes)
-            res += boost::apply_visitor(*this, n);
-        return res;
+  struct AntNodeToSimulationMethodName {
+    static char const* name(ant::move&) { return "move"; }
+    static char const* name(ant::left&) { return "left"; }
+    static char const* name(ant::right&) { return "right"; }
+  };
+
+  template <typename T>
+  std::string operator()(T t) const {
+    std::string res;
+    if constexpr (t.nodes.size() == 0) {
+      res += gpm::utils::format("{simulationName}.{methodName}();\n",
+                                gpm::utils::argsnamed, "simulationName",
+                                simulationName_, "methodName",
+                                AntNodeToSimulationMethodName::name(t));
     }
+    for (auto& n : t.nodes) res += boost::apply_visitor(*this, n);
+    return res;
+  }
 };
 
+class AsCPPFixedWithVisitorNotation
+    : public boost::static_visitor<std::string> {
+  std::string simulationName_;
+  std::string visitorName_;
 
+ public:
+  AsCPPFixedWithVisitorNotation(std::string const& simulationName,
+                                std::string const& visitorName)
+      : simulationName_{simulationName}, visitorName_{visitorName} {}
 
-class AsCPPFixedWithVisitorNotation : public boost::static_visitor<std::string>
-{
-    std::string simulationName_;
-    std::string visitorName_;
-public:    
-    
-    AsCPPFixedWithVisitorNotation(std::string const & simulationName, std::string const & visitorName)
-        :simulationName_{simulationName}, visitorName_{visitorName}
-    {
-    }
-
-    std::string operator()(ant::if_food_ahead const & c) const
-    {
-        return gpm::utils::format(
-            R"""(
+  std::string operator()(ant::if_food_ahead const& c) const {
+    return gpm::utils::format(
+        R"""(
                 if({simulationName}.is_food_in_front()){{
                     {true_branch}
                 }}else{{
                     {false_branch}
                 }}
-            )"""
-            , gpm::utils::argsnamed
-            , "simulationName", simulationName_
-            , "true_branch", boost::apply_visitor(*this, c.get<true>())
-            , "false_branch", boost::apply_visitor(*this, c.get<false>())
-        );
+            )""",
+        gpm::utils::argsnamed, "simulationName", simulationName_, "true_branch",
+        boost::apply_visitor(*this, c.get<true>()), "false_branch",
+        boost::apply_visitor(*this, c.get<false>()));
+  }
+
+  template <typename T>
+  std::string operator()(T t) const {
+    auto nodeType = boost::typeindex::type_id_runtime(t).pretty_name();
+    std::string res;
+    if constexpr (t.nodes.size() == 0) {
+      res += gpm::utils::format("{visitorName}({nodeType}{{}});\n",
+                                gpm::utils::argsnamed, "visitorName",
+                                visitorName_, "nodeType", nodeType);
     }
-    
-    template<typename T>
-    std::string operator()(T t) const
-    {
-        auto nodeType = boost::typeindex::type_id_runtime(t).pretty_name();
-        std::string res;
-        if constexpr(t.nodes.size() == 0)
-        {
-            res += gpm::utils::format("{visitorName}({nodeType}{{}});\n" 
-                                             , gpm::utils::argsnamed
-                                             , "visitorName", visitorName_
-                                             , "nodeType", nodeType
-            );
-        }
-        for(auto & n: t.nodes)
-            res += boost::apply_visitor(*this, n);
-        return res;
-    }
-    
+    for (auto& n : t.nodes) res += boost::apply_visitor(*this, n);
+    return res;
+  }
 };
 
-
-class AsRecursiveVariantNotation : public boost::static_visitor<std::string>
-{
-public:
-
-    std::string operator()(ant::if_food_ahead const & c) const
-    {
-        return gpm::utils::format(
-            R"""(
+class AsRecursiveVariantNotation : public boost::static_visitor<std::string> {
+ public:
+  std::string operator()(ant::if_food_ahead const& c) const {
+    return gpm::utils::format(
+        R"""(
                 {nodeName}{{{true_branch}, {false_branch}}}
-            )"""
-            , gpm::utils::argsnamed
-            , "nodeName", boost::typeindex::type_id_runtime(c).pretty_name()
-            , "true_branch", boost::apply_visitor(*this, c.get<true>())
-            , "false_branch", boost::apply_visitor(*this, c.get<false>())
-        );
+            )""",
+        gpm::utils::argsnamed, "nodeName",
+        boost::typeindex::type_id_runtime(c).pretty_name(), "true_branch",
+        boost::apply_visitor(*this, c.get<true>()), "false_branch",
+        boost::apply_visitor(*this, c.get<false>()));
+  }
+
+  template <typename T>
+  std::string operator()(T t) const {
+    std::string res;
+    if constexpr (t.nodes.size() != 0) {
+      auto delimi = "\n";
+      for (auto& n : t.nodes) {
+        (res += delimi) += boost::apply_visitor(*this, n);
+        delimi = ",";
+      }
+      res += "\n";
     }
-    
-    template<typename T>
-    std::string operator()(T t) const
-    {
-        std::string res;
-        if constexpr(t.nodes.size() != 0)
-        {
-            auto delimi = "\n";
-            for(auto & n: t.nodes)
-            {
-                (res += delimi) += boost::apply_visitor(*this, n);
-                delimi = ",";
-            }
-            res += "\n";
-        }
-        
-        res = gpm::utils::format("{nodeName}{{{nodeChildren}}}\n"
-                , gpm::utils::argsnamed
-                , "nodeName", boost::typeindex::type_id_runtime(t).pretty_name()
-                , "nodeChildren", res
-        );
-        return res;
-    }    
+
+    res = gpm::utils::format("{nodeName}{{{nodeChildren}}}\n",
+                             gpm::utils::argsnamed, "nodeName",
+                             boost::typeindex::type_id_runtime(t).pretty_name(),
+                             "nodeChildren", res);
+    return res;
+  }
 };
 
+int main() {
+  // int minHeight = 1;
+  // int maxHeight = 7;
+  // std::random_device rd;
 
+  // auto ant = gpm::BasicGenerator<ant::ant_nodes>{minHeight, maxHeight}();
 
+  char const* optimalAntRPNdef = "m r m if l l p3 r m if if p2 r p2 m if";
+  auto ant =
+      gpm::factory<ant::ant_nodes>(gpm::RPNToken_iterator{optimalAntRPNdef});
 
-int main()
-{        
-    //int minHeight = 1;
-    //int maxHeight = 7;
-    //std::random_device rd;
-  
-    //auto ant = gpm::BasicGenerator<ant::ant_nodes>{minHeight, maxHeight}();
-    
-    char const * optimalAntRPNdef = "m r m if l l p3 r m if if p2 r p2 m if";
-    auto ant = gpm::factory<ant::ant_nodes>(gpm::RPNToken_iterator{optimalAntRPNdef});
-    
-    auto antBoardSimName = "antBoardSim";
-    auto antBoardSimVisitorName = "antBoardSimVisitor";
-    
-    
-    auto recursiveVariantNotation = boost::apply_visitor(AsRecursiveVariantNotation{}, ant);
-    auto cppFixedNotation = boost::apply_visitor(AsCPPFixedNotation{antBoardSimName}, ant);
-    auto cppFixedWithVisitorNotation = boost::apply_visitor(AsCPPFixedWithVisitorNotation{antBoardSimName, antBoardSimVisitorName}, ant);
-    auto oopNotation = boost::apply_visitor(AsOOPNotation{antBoardSimName}, ant);
-    
-    auto antRPN = boost::apply_visitor(gpm::RPNPrinter<std::string>{}, ant);
-    
-    
-    std::cout << gpm::utils::format( 
-R"""(
+  auto antBoardSimName = "antBoardSim";
+  auto antBoardSimVisitorName = "antBoardSimVisitor";
+
+  auto recursiveVariantNotation =
+      boost::apply_visitor(AsRecursiveVariantNotation{}, ant);
+  auto cppFixedNotation =
+      boost::apply_visitor(AsCPPFixedNotation{antBoardSimName}, ant);
+  auto cppFixedWithVisitorNotation = boost::apply_visitor(
+      AsCPPFixedWithVisitorNotation{antBoardSimName, antBoardSimVisitorName},
+      ant);
+  auto oopNotation = boost::apply_visitor(AsOOPNotation{antBoardSimName}, ant);
+
+  auto antRPN = boost::apply_visitor(gpm::RPNPrinter<std::string>{}, ant);
+
+  std::cout << gpm::utils::format(
+      R"""(
 
 static char const antRPNString[] = {{"{antRPN}"}};    
 
@@ -391,13 +344,9 @@ static void BM_oopTreeFromExtString(benchmark::State& state)
 }}
 BENCHMARK(BM_oopTreeFromExtString);
     
-)"""
-        , gpm::utils::argsnamed
-        , "antRPN", antRPN
-        , "antBoardSimName", antBoardSimName
-        , "recursiveVariantNotation", recursiveVariantNotation
-        , "cppFixedNotation", cppFixedNotation
-        , "cppFixedWithVisitorNotation", cppFixedWithVisitorNotation
-        , "oopNotation", oopNotation
-    );
+)""",
+      gpm::utils::argsnamed, "antRPN", antRPN, "antBoardSimName",
+      antBoardSimName, "recursiveVariantNotation", recursiveVariantNotation,
+      "cppFixedNotation", cppFixedNotation, "cppFixedWithVisitorNotation",
+      cppFixedWithVisitorNotation, "oopNotation", oopNotation);
 }
