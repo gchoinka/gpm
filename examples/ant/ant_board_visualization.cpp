@@ -6,6 +6,9 @@
  * copy at http://www.boost.org/LICENSE_1_0.txt)
  */
 #include <iostream>
+#include <fstream>
+
+#include <cxxopts.hpp>
 
 #include <gpm/gpm.hpp>
 #include <gpm/io.hpp>
@@ -66,31 +69,52 @@ AntBoardSimDecorator<AntBoardSimT> makeAntBoardSimDecorator(
   return AntBoardSimDecorator<AntBoardSimT>{toDecorateAntBoardSim};
 }
 
-decltype(auto) getAntBoardSim() {
+
+
+decltype(auto) getAntBoardSim(char const * filename) {
   using namespace ant;
   auto max_steps = 400;
   auto max_food = 89;
   auto antSim =
       sim::AntBoardSimulationStaticSize<santa_fe::x_size, santa_fe::y_size>{
           max_steps, max_food, sim::Pos2d{0, 0}, sim::Direction::east,
-          [](sim::AntBoardSimulationStaticSize<
-              santa_fe::x_size, santa_fe::y_size>::FieldType& board) {
-            for (size_t x = 0; x < board.size(); ++x) {
+          [filename](auto & board) {
+            std::ifstream boardFile(filename);
+            int x = 0;
+            for (std::string line; std::getline(boardFile, line); ) {
+              if(line.size() != board[x].size())
+                throw std::runtime_error{"line length does not match with the board"};
               for (size_t y = 0; y < board[x].size(); ++y) {
-                board[x][y] = santa_fe::board[x][y] == 'X'
+                board[x][y] = line[y] == 'X'
                                   ? sim::BoardState::food
                                   : sim::BoardState::empty;
               }
+              ++x;
             }
+            if(x != board.size())
+              throw std::runtime_error{"not enoth lines int the file."};
           }};
   return antSim;
 }
 
-int main() {
+int main(int argc, char * argv[]) {
+  cxxopts::Options options("ant_board_visualization", "One line description of MyProgram");
+  options.add_options()
+    ("b,boarddef", "File name", cxxopts::value<std::string>())
+//("f,file", "File name", cxxopts::value<std::string>())
+  ;
+  
+  auto cliArgs = options.parse(argc, argv);
+  
+  if (!cliArgs.count("boarddef")){
+    std::cout << options.help({"", ""}) << std::endl;
+    exit(0);
+  }
+  
   char const* optimalAntRPNdef = "m r m if l l p3 r m if if p2 r p2 m if";
   auto optAnt =
       gpm::factory<ant::ant_nodes>(gpm::RPNToken_iterator{optimalAntRPNdef});
-  auto antBoardSim = makeAntBoardSimDecorator(getAntBoardSim());
+      auto antBoardSim = makeAntBoardSimDecorator(getAntBoardSim(cliArgs["boarddef"].as<std::string>().c_str()));
 
   auto antBoardSimVisitor = ant::AntBoardSimulationVisitor{antBoardSim};
 
