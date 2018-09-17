@@ -10,6 +10,10 @@
 #include <iostream>
 #include <vector>
 
+#include <boost/hana.hpp>
+#include <boost/hana/ext/std/tuple.hpp>
+#include <boost/type_index.hpp>
+
 #include <benchmark/benchmark.h>
 
 #include <gpm/gpm.hpp>
@@ -83,19 +87,37 @@ decltype(auto) getAntBoardSim() {
   using namespace ant;
   auto max_steps = 400;
   auto max_food = 89;
+//   auto antSim =
+//       sim::AntBoardSimulationStaticSize<santa_fe::x_size, santa_fe::y_size>{
+//           max_steps, max_food, sim::Pos2d{0, 0}, sim::Direction::east,
+//           [](sim::AntBoardSimulationStaticSize<
+//               santa_fe::x_size, santa_fe::y_size>::FieldType& board) {
+//             for (size_t x = 0; x < board.size(); ++x) {
+//               for (size_t y = 0; y < board[x].size(); ++y) {
+//                 board[x][y] = santa_fe::board[x][y] == 'X'
+//                                   ? sim::BoardState::food
+//                                   : sim::BoardState::empty;
+//               }
+//             }
+//           }};
+
+  static auto rndSeed = std::random_device{}();
+  auto rnd = std::mt19937{rndSeed};
+  auto intdist = std::uniform_int_distribution<> {0, 10};
   auto antSim =
-      sim::AntBoardSimulationStaticSize<santa_fe::x_size, santa_fe::y_size>{
-          max_steps, max_food, sim::Pos2d{0, 0}, sim::Direction::east,
-          [](sim::AntBoardSimulationStaticSize<
-              santa_fe::x_size, santa_fe::y_size>::FieldType& board) {
-            for (size_t x = 0; x < board.size(); ++x) {
-              for (size_t y = 0; y < board[x].size(); ++y) {
-                board[x][y] = santa_fe::board[x][y] == 'X'
-                                  ? sim::BoardState::food
-                                  : sim::BoardState::empty;
-              }
-            }
-          }};
+    sim::AntBoardSimulationStaticSize<santa_fe::x_size, santa_fe::y_size>{
+      max_steps, max_food, sim::Pos2d{0, 0}, sim::Direction::east,
+      [&](sim::AntBoardSimulationStaticSize<
+      santa_fe::x_size, santa_fe::y_size>::FieldType& board) {
+        for (size_t x = 0; x < board.size(); ++x) {
+          for (size_t y = 0; y < board[x].size(); ++y) {
+            board[x][y] = intdist(rnd) == 0
+            ? sim::BoardState::food
+            : sim::BoardState::empty;
+          }
+        }
+      }};
+
   return antSim;
 }
 
@@ -104,6 +126,30 @@ decltype(auto) getAntBoardSim() {
 #else
 #pragma message \
     "run artificial_ant_generate and copy ant_simulation_benchmark_generated_functions.cpp to the same folder, touch this file and then rerun this target"
+
+template<typename AntBoardSimT>
+decltype(auto) getAllTreeBenchmarks()
+{
+  return std::make_tuple();
+}
 #endif
 
-BENCHMARK_MAIN();
+int main(int argc, char** argv) {
+  namespace hana = boost::hana;
+  auto allTreeBechmarks = getAllTreeBenchmarks<decltype(getAntBoardSim())>();
+  
+
+  hana::for_each(allTreeBechmarks, [](auto & treeBenchmarkFunktion) {
+    auto BM_lambda = [treeBenchmarkFunktion](benchmark::State& state)
+    {
+      for (auto _ : state)
+        state.counters["score"] = std::get<0>(treeBenchmarkFunktion)(getAntBoardSim());
+    };
+    benchmark::RegisterBenchmark(std::get<1>(treeBenchmarkFunktion), BM_lambda);
+  });
+  
+  //
+    
+  benchmark::Initialize(&argc, argv);
+  benchmark::RunSpecifiedBenchmarks();
+}

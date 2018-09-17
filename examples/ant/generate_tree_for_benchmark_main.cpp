@@ -184,16 +184,25 @@ class AsRecursiveVariantNotation : public boost::static_visitor<std::string> {
   }
 };
 
-int main() {
-  // int minHeight = 1;
-  // int maxHeight = 7;
+decltype(auto) getRandomAnt()
+{
+  int minHeight = 1;
+  int maxHeight = 9;
   // std::random_device rd;
+  
+  return gpm::BasicGenerator<ant::ant_nodes>{minHeight, maxHeight}();
+}
 
-  // auto ant = gpm::BasicGenerator<ant::ant_nodes>{minHeight, maxHeight}();
-
+decltype(auto) getOptAnt()
+{
   char const* optimalAntRPNdef = "m r m if l l p3 r m if if p2 r p2 m if";
-  auto ant =
-      gpm::factory<ant::ant_nodes>(gpm::RPNToken_iterator{optimalAntRPNdef});
+  return gpm::factory<ant::ant_nodes>(gpm::RPNToken_iterator{optimalAntRPNdef});
+}
+
+int main() {
+
+  
+  auto ant = getOptAnt();
 
   auto antBoardSimName = "antBoardSim";
   auto antBoardSimVisitorName = "antBoardSimVisitor";
@@ -227,13 +236,7 @@ static int recursiveVariantTreeFromString(AntBoardSimT {antBoardSimName})
     }}
     return {antBoardSimName}.score(); 
 }}
-
-static void BM_recursiveVariantTreeFromString(benchmark::State& state) 
-{{
-    for (auto _ : state) {{state.counters["score"] = recursiveVariantTreeFromString(getAntBoardSim());}}
-}}
-BENCHMARK(BM_recursiveVariantTreeFromString); 
-    
+  
 
 template<typename AntBoardSimT>
 static int recursiveVariantTree(AntBoardSimT {antBoardSimName})
@@ -249,12 +252,7 @@ static int recursiveVariantTree(AntBoardSimT {antBoardSimName})
     return {antBoardSimName}.score(); 
 }}
 
-static void BM_recursiveVariantTree(benchmark::State& state) 
-{{
-    for (auto _ : state) {{state.counters["score"] = recursiveVariantTree(getAntBoardSim());}}
-}}
-BENCHMARK(BM_recursiveVariantTree); 
-    
+  
 template<typename AntBoardSimT>
 int cppFixedTree(AntBoardSimT {antBoardSimName})
 {{
@@ -264,12 +262,7 @@ int cppFixedTree(AntBoardSimT {antBoardSimName})
     return {antBoardSimName}.score();
 }}
     
-static void BM_cppFixedTree(benchmark::State& state) 
-{{
-    for (auto _ : state) {{state.counters["score"] = cppFixedTree(getAntBoardSim());}}
-}}
-BENCHMARK(BM_cppFixedTree);  
- 
+
     
 template<typename AntBoardSimT>
 int cppFixedWithVisitor(AntBoardSimT {antBoardSimName})
@@ -283,11 +276,6 @@ int cppFixedWithVisitor(AntBoardSimT {antBoardSimName})
     return {antBoardSimName}.score(); 
 }}
 
-static void BM_cppFixedWithVisitor(benchmark::State& state) 
-{{
-    for (auto _ : state) {{state.counters["score"] = cppFixedWithVisitor(getAntBoardSim());}}
-}}
-BENCHMARK(BM_cppFixedWithVisitor);  
 
 template<typename AntBoardSimT>
 int oopTree(AntBoardSimT {antBoardSimName})
@@ -301,12 +289,6 @@ int oopTree(AntBoardSimT {antBoardSimName})
     return {antBoardSimName}.score(); 
 }}
 
-static void BM_oopTree(benchmark::State& state) 
-{{
-    for (auto _ : state) {{state.counters["score"] = oopTree(getAntBoardSim());}}
-}}
-BENCHMARK(BM_oopTree);  
-    
     
 template<typename AntBoardSimT>
 int oopTreeFromString(AntBoardSimT {antBoardSimName})
@@ -320,11 +302,6 @@ int oopTreeFromString(AntBoardSimT {antBoardSimName})
     return {antBoardSimName}.score(); 
 }}
 
-static void BM_oopTreeFromString(benchmark::State& state) 
-{{
-    for (auto _ : state) {{state.counters["score"] = oopTreeFromString(getAntBoardSim());}}
-}}
-BENCHMARK(BM_oopTreeFromString);  
     
 template<typename AntBoardSimT>
 int oopTreeFromExtString(AntBoardSimT {antBoardSimName})
@@ -338,15 +315,29 @@ int oopTreeFromExtString(AntBoardSimT {antBoardSimName})
     return {antBoardSimName}.score(); 
 }}
 
-static void BM_oopTreeFromExtString(benchmark::State& state) 
+template<typename AntBoardSimT>
+decltype(auto) getAllTreeBenchmarks()
 {{
-    for (auto _ : state) {{state.counters["score"] = oopTreeFromExtString(getAntBoardSim());}}
+  return std::make_tuple(
+      std::make_tuple(&recursiveVariantTreeFromString<AntBoardSimT>, "recursiveVariantTreeFromString")
+    , std::make_tuple(&recursiveVariantTree<AntBoardSimT>, "recursiveVariantTree")
+    , std::make_tuple(&cppFixedTree<AntBoardSimT>, "cppFixedTree")
+    , std::make_tuple(&cppFixedWithVisitor<AntBoardSimT>, "cppFixedWithVisitor")
+    , std::make_tuple(&oopTree<AntBoardSimT>, "oopTree")
+    , std::make_tuple(&oopTreeFromString<AntBoardSimT>, "oopTreeFromString")
+    , std::make_tuple(&oopTreeFromExtString<AntBoardSimT>, "oopTreeFromExtString")
+  );
 }}
-BENCHMARK(BM_oopTreeFromExtString);
-    
+
 )""",
-      gpm::utils::argsnamed, "antRPN", antRPN, "antBoardSimName",
-      antBoardSimName, "recursiveVariantNotation", recursiveVariantNotation,
-      "cppFixedNotation", cppFixedNotation, "cppFixedWithVisitorNotation",
-      cppFixedWithVisitorNotation, "oopNotation", oopNotation);
+// clang-format off
+      gpm::utils::argsnamed
+      , "antRPN", antRPN
+      , "antBoardSimName", antBoardSimName
+      , "recursiveVariantNotation", recursiveVariantNotation
+      , "cppFixedNotation", cppFixedNotation
+      , "cppFixedWithVisitorNotation", cppFixedWithVisitorNotation
+      , "oopNotation", oopNotation
+      // clang-format on
+  );
 }
