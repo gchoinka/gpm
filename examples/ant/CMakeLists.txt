@@ -13,7 +13,6 @@ else ()
   set(warning_flags -Wall -Wextra -pedantic -Werror)
 endif()
 
-add_library(extern_defined_ants SHARED extern_defined_ants.cpp)
 
 set(targetName generate_tree_for_benchmark)
 add_executable(${targetName} generate_tree_for_benchmark_main.cpp) 
@@ -33,7 +32,7 @@ set_target_properties(${targetName} PROPERTIES
            CXX_EXTENSIONS OFF
 )
 target_compile_options(${targetName} PRIVATE ${warning_flags})
-target_link_libraries(${targetName} fmt::fmt benchmark::benchmark Boost::boost extern_defined_ants)
+target_link_libraries(${targetName} fmt::fmt benchmark::benchmark Boost::boost cxxopts::cxxopts)
 
 
 
@@ -67,7 +66,7 @@ add_custom_target(make_tree_benchmark
 )
 
 add_custom_target(run_tree_benchmark 
-    COMMAND $<TARGET_FILE:tree_benchmark> --benchmark_out_format=json --benchmark_out=${CMAKE_BINARY_DIR}/tree_benchmark.json
+    COMMAND $<TARGET_FILE:tree_benchmark> --benchmark_out_format=json --benchmark_out=${CMAKE_BINARY_DIR}/tree_benchmark.json -b "${CMAKE_CURRENT_SOURCE_DIR}/santa_fe_board.txt"
     DEPENDS make_tree_benchmark
 )
 

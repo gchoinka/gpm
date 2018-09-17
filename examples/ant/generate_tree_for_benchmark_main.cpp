@@ -303,17 +303,6 @@ int oopTreeFromString(AntBoardSimT {antBoardSimName})
 }}
 
     
-template<typename AntBoardSimT>
-int oopTreeFromExtString(AntBoardSimT {antBoardSimName})
-{{                
-    auto oopTree = antoop::factory<AntBoardSimT>(gpm::RPNToken_iterator{{ant::optimalAntRPNExt}});
-            
-    while(!{antBoardSimName}.is_finish())
-    {{
-        (*oopTree)({antBoardSimName});
-    }}
-    return {antBoardSimName}.score(); 
-}}
 
 template<typename AntBoardSimT>
 decltype(auto) getAllTreeBenchmarks()
@@ -325,7 +314,6 @@ decltype(auto) getAllTreeBenchmarks()
     , std::make_tuple(&cppFixedWithVisitor<AntBoardSimT>, "cppFixedWithVisitor")
     , std::make_tuple(&oopTree<AntBoardSimT>, "oopTree")
     , std::make_tuple(&oopTreeFromString<AntBoardSimT>, "oopTreeFromString")
-    , std::make_tuple(&oopTreeFromExtString<AntBoardSimT>, "oopTreeFromExtString")
   );
 }}
 
