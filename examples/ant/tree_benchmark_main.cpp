@@ -6,9 +6,9 @@
  * copy at http://www.boost.org/LICENSE_1_0.txt)
  */
 #include <chrono>
+#include <fstream>
 #include <functional>
 #include <iostream>
-#include <fstream>
 #include <vector>
 
 #include <boost/hana.hpp>
@@ -28,7 +28,6 @@
 #include "common/visitor.hpp"
 
 #include "nodes_opp.hpp"
-
 
 template <typename AntBoardSimT>
 class AntBoardSimDecorator {
@@ -110,51 +109,50 @@ decltype(auto) getAntRandomBoardSim() {
   using namespace ant;
   auto max_steps = 400;
   auto max_food = 89;
-  
+
   static auto rndSeed = std::random_device{}();
   auto rnd = std::mt19937{rndSeed};
-  auto intdist = std::uniform_int_distribution<> {0, 10};
+  auto intdist = std::uniform_int_distribution<>{0, 10};
   auto antSim =
-  sim::AntBoardSimulationStaticSize<santa_fe::x_size, santa_fe::y_size>{
-    max_steps, max_food, sim::Pos2d{0, 0}, sim::Direction::east,
-    [&](sim::AntBoardSimulationStaticSize<
-    santa_fe::x_size, santa_fe::y_size>::FieldType& board) {
-      for (size_t x = 0; x < board.size(); ++x) {
-        for (size_t y = 0; y < board[x].size(); ++y) {
-          board[x][y] = intdist(rnd) == 0
-          ? sim::BoardState::food
-          : sim::BoardState::empty;
-        }
-      }
-    }};
-    
-    return antSim;
+      sim::AntBoardSimulationStaticSize<santa_fe::x_size, santa_fe::y_size>{
+          max_steps, max_food, sim::Pos2d{0, 0}, sim::Direction::east,
+          [&](sim::AntBoardSimulationStaticSize<
+              santa_fe::x_size, santa_fe::y_size>::FieldType& board) {
+            for (size_t x = 0; x < board.size(); ++x) {
+              for (size_t y = 0; y < board[x].size(); ++y) {
+                board[x][y] = intdist(rnd) == 0 ? sim::BoardState::food
+                                                : sim::BoardState::empty;
+              }
+            }
+          }};
+
+  return antSim;
 }
 
-decltype(auto) getAntBoardSimFromFileName(char const * filename) {
+decltype(auto) getAntBoardSimFromFileName(char const* filename) {
   using namespace ant;
   auto max_steps = 400;
   auto max_food = 89;
   auto antSim =
-  sim::AntBoardSimulationStaticSize<santa_fe::x_size, santa_fe::y_size>{
-    max_steps, max_food, sim::Pos2d{0, 0}, sim::Direction::east,
-    [filename](auto & board) {
-      std::ifstream boardFile(filename);
-      int x = 0;
-      for (std::string line; std::getline(boardFile, line); ) {
-        if(line.size() != board[x].size())
-          throw std::runtime_error{"line length does not match with the board"};
-        for (size_t y = 0; y < board[x].size(); ++y) {
-          board[x][y] = line[y] == 'X'
-          ? sim::BoardState::food
-          : sim::BoardState::empty;
-        }
-        ++x;
-      }
-      if(x != board.size())
-        throw std::runtime_error{"not enoth lines int the file."};
-    }};
-    return antSim;
+      sim::AntBoardSimulationStaticSize<santa_fe::x_size, santa_fe::y_size>{
+          max_steps, max_food, sim::Pos2d{0, 0}, sim::Direction::east,
+          [filename](auto& board) {
+            std::ifstream boardFile(filename);
+            size_t x = 0;
+            for (std::string line; std::getline(boardFile, line);) {
+              if (line.size() != board[x].size())
+                throw std::runtime_error{
+                    "line length does not match with the board"};
+              for (size_t y = 0; y < board[x].size(); ++y) {
+                board[x][y] = line[y] == 'X' ? sim::BoardState::food
+                                             : sim::BoardState::empty;
+              }
+              ++x;
+            }
+            if (x != board.size())
+              throw std::runtime_error{"not enoth lines int the file."};
+          }};
+  return antSim;
 }
 
 #if __has_include("ant_simulation_benchmark_generated_functions.cpp")
@@ -163,47 +161,39 @@ decltype(auto) getAntBoardSimFromFileName(char const * filename) {
 #pragma message \
     "run artificial_ant_generate and copy ant_simulation_benchmark_generated_functions.cpp to the same folder, touch this file and then rerun this target"
 
-template<typename AntBoardSimT>
-decltype(auto) getAllTreeBenchmarks()
-{
+template <typename AntBoardSimT>
+decltype(auto) getAllTreeBenchmarks() {
   return std::make_tuple();
 }
 #endif
 
 int main(int argc, char** argv) {
   namespace hana = boost::hana;
-  
-  cxxopts::Options options("ant_board_visualization", "One line description of MyProgram");
-  options
-  .allow_unrecognised_options()
-  .add_options()
-  ("b,boarddef", "File name", cxxopts::value<std::string>())
-  //("f,file", "File name", cxxopts::value<std::string>())
-  ;
-  
+
+  cxxopts::Options options("tree_benchmark", "");
+  options.allow_unrecognised_options().add_options()(
+      "b,boarddef", "File name", cxxopts::value<std::string>());
+
   auto cliArgs = options.parse(argc, argv);
-  
-  if (!cliArgs.count("boarddef")){
+
+  if (!cliArgs.count("boarddef")) {
     std::cout << options.help({"", ""}) << std::endl;
     exit(0);
   }
-  
-  auto allTreeBechmarks = getAllTreeBenchmarks<decltype(getAntBoardSimFromFileName(""))>();
-  
-  hana::for_each(allTreeBechmarks, [cliArgs](auto & treeBenchmarkFunktion) {
-    auto BM_lambda = [treeBenchmarkFunktion, cliArgs](benchmark::State& state)
-    {
-      auto theSim = getAntBoardSimFromFileName(cliArgs["boarddef"].as<std::string>().c_str());
+
+  auto allTreeBechmarks =
+      getAllTreeBenchmarks<decltype(getAntBoardSimFromFileName(""))>();
+
+  hana::for_each(allTreeBechmarks, [cliArgs](auto& treeBenchmarkFunktion) {
+    auto BM_lambda = [treeBenchmarkFunktion, cliArgs](benchmark::State& state) {
+      auto theSim = getAntBoardSimFromFileName(
+          cliArgs["boarddef"].as<std::string>().c_str());
       for (auto _ : state)
         state.counters["score"] = std::get<0>(treeBenchmarkFunktion)(theSim);
     };
     benchmark::RegisterBenchmark(std::get<1>(treeBenchmarkFunktion), BM_lambda);
   });
-  
-  //
-    
-  benchmark::Initialize(&argc, argv);
-  
 
+  benchmark::Initialize(&argc, argv);
   benchmark::RunSpecifiedBenchmarks();
 }

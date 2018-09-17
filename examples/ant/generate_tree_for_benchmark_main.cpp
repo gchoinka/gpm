@@ -184,24 +184,20 @@ class AsRecursiveVariantNotation : public boost::static_visitor<std::string> {
   }
 };
 
-decltype(auto) getRandomAnt()
-{
+decltype(auto) getRandomAnt() {
   int minHeight = 1;
   int maxHeight = 9;
   // std::random_device rd;
-  
+
   return gpm::BasicGenerator<ant::ant_nodes>{minHeight, maxHeight}();
 }
 
-decltype(auto) getOptAnt()
-{
+decltype(auto) getOptAnt() {
   char const* optimalAntRPNdef = "m r m if l l p3 r m if if p2 r p2 m if";
   return gpm::factory<ant::ant_nodes>(gpm::RPNToken_iterator{optimalAntRPNdef});
 }
 
 int main() {
-
-  
   auto ant = getOptAnt();
 
   auto antBoardSimName = "antBoardSim";
@@ -318,7 +314,7 @@ decltype(auto) getAllTreeBenchmarks()
 }}
 
 )""",
-// clang-format off
+      // clang-format off
       gpm::utils::argsnamed
       , "antRPN", antRPN
       , "antBoardSimName", antBoardSimName
