@@ -27,9 +27,10 @@ class AntBoardSimulationVisitor : public boost::static_visitor<void> {
     boost::apply_visitor(*this, c.get(sim_.is_food_in_front()));
   }
 
-  template <int NodeCount, typename CTString>
-  void operator()(prog<NodeCount, CTString> const& b) const {
-    for (auto const& n : b.nodes) boost::apply_visitor(*this, n);
+  template<typename T>
+  void operator()(T const& node) const {
+    if constexpr(std::tuple_size<decltype(node.nodes)>::value != 0)
+      for (auto const& n : node.nodes) boost::apply_visitor(*this, n);
   }
 
  private:

@@ -15,6 +15,7 @@
 #include <random>
 #include <string_view>
 #include <vector>
+#include <tuple>
 
 #include <boost/container/flat_map.hpp>
 #include <boost/mp11.hpp>
@@ -119,11 +120,8 @@ struct Builder : public boost::static_visitor<void> {
   }
 };
 
-template<typename T, auto Size>
-constexpr typename std::array<T, Size>::size_type getChildrenSize(std::array<T, Size>)
-{
-  return Size;
-}
+
+
 
 template <typename VariantType>
 class BasicGenerator {

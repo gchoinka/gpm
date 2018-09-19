@@ -1,6 +1,6 @@
 {
   "context": {
-    "date": "2018-09-19 12:44:34",
+    "date": "2018-09-19 16:26:19",
     "executable": "/home/gchoinka/src/gpm/build-benchmarks/g++-7/examples/ant/tree_benchmark",
     "num_cpus": 8,
     "mhz_per_cpu": 3500,
@@ -36,49 +36,49 @@
   "benchmarks": [
     {
       "name": "recursiveVariantTreeFromString",
-      "iterations": 4203,
-      "real_time": 1.6731928717460224e+05,
-      "cpu_time": 1.6729684606233644e+05,
+      "iterations": 4183,
+      "real_time": 1.6740955271258971e+05,
+      "cpu_time": 1.6740749509921111e+05,
       "time_unit": "ns",
       "score": 7.8000000000000000e+01
     },
     {
       "name": "recursiveVariantTree",
-      "iterations": 9527,
-      "real_time": 7.3563414713315229e+04,
-      "cpu_time": 7.3509750498582958e+04,
+      "iterations": 9599,
+      "real_time": 7.3825510572315121e+04,
+      "cpu_time": 7.3823497135118247e+04,
       "time_unit": "ns",
       "score": 7.8000000000000000e+01
     },
     {
       "name": "cppFixedTree",
-      "iterations": 901296,
-      "real_time": 7.7761405462429036e+02,
-      "cpu_time": 7.7760514525749602e+02,
+      "iterations": 885135,
+      "real_time": 7.6676683895113933e+02,
+      "cpu_time": 7.6677034915577872e+02,
       "time_unit": "ns",
       "score": 7.8000000000000000e+01
     },
     {
       "name": "cppFixedWithVisitor",
-      "iterations": 898871,
-      "real_time": 7.7640064147887449e+02,
-      "cpu_time": 7.7640328033722312e+02,
+      "iterations": 907934,
+      "real_time": 7.6798353734748957e+02,
+      "cpu_time": 7.6798317719129352e+02,
       "time_unit": "ns",
       "score": 7.8000000000000000e+01
     },
     {
       "name": "oopTree",
-      "iterations": 38699,
-      "real_time": 1.8406926174003984e+04,
-      "cpu_time": 1.8406988656037625e+04,
+      "iterations": 38966,
+      "real_time": 1.8025976389529700e+04,
+      "cpu_time": 1.8026080916696599e+04,
       "time_unit": "ns",
       "score": 7.8000000000000000e+01
     },
     {
       "name": "oopTreeFromString",
-      "iterations": 16980,
-      "real_time": 4.0483636454815096e+04,
-      "cpu_time": 4.0483540577149593e+04,
+      "iterations": 17373,
+      "real_time": 4.1095641568920779e+04,
+      "cpu_time": 4.1095531744661239e+04,
       "time_unit": "ns",
       "score": 7.8000000000000000e+01
     }

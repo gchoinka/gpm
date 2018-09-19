@@ -18,27 +18,24 @@ struct right : public gpm::BaseNode<boost::any, 0, gpm::NodeToken<'r'>> {};
 struct left : public gpm::BaseNode<boost::any, 0, gpm::NodeToken<'l'>> {};
 
 struct if_food_ahead;
-template <int nodeCount, typename CTString>
-struct prog;
 
-using prog2 = prog<2, gpm::NodeToken<'p', '2'>>;
-using prog3 = prog<3, gpm::NodeToken<'p', '3'>>;
+struct prog2;
+
+struct prog3;
 
 using ant_nodes =
     boost::variant<move, left, right, boost::recursive_wrapper<if_food_ahead>,
                    boost::recursive_wrapper<prog2>,
                    boost::recursive_wrapper<prog3>>;
 
-template <int NodeCount, typename CTString>
-struct prog : public gpm::BaseNode<ant_nodes, NodeCount, CTString> {
-  using prog::BaseNode::BaseNode;
+
+struct prog2 : public gpm::BaseNode<ant_nodes, 2, gpm::NodeToken<'p', '2'>> {
+  using BaseNode::BaseNode;
 };
 
-// struct move : public gpm::BaseNode<ant_nodes, 0, gpm::NodeToken<'m'>> {};
-//
-// struct right : public gpm::BaseNode<ant_nodes, 0, gpm::NodeToken<'r'>> {};
-//
-// struct left : public gpm::BaseNode<ant_nodes, 0, gpm::NodeToken<'l'>> {};
+struct prog3 : public gpm::BaseNode<ant_nodes, 3, gpm::NodeToken<'p', '3'>> {
+  using BaseNode::BaseNode;
+};
 
 struct if_food_ahead
     : public gpm::BaseNode<ant_nodes, 2, gpm::NodeToken<'i', 'f'>> {
