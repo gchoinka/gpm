@@ -9,8 +9,8 @@
 #include <fstream>
 #include <functional>
 #include <iostream>
-#include <vector>
 #include <variant>
+#include <vector>
 
 #include <boost/hana.hpp>
 #include <boost/hana/ext/std/tuple.hpp>
@@ -130,49 +130,45 @@ decltype(auto) getAntRandomBoardSim() {
   return antSim;
 }
 
-
 decltype(auto) getAntBoardSimFromFileName(char const* filename) {
   using namespace ant;
   std::string errorMessage;
-  
-  auto boardInitFunction = [filename, &errorMessage](auto& board) mutable{
+
+  auto boardInitFunction = [filename, &errorMessage](auto& board) mutable {
     std::ifstream boardFile(filename);
-    if(!boardFile.good())
-    {
+    if (!boardFile.good()) {
       (errorMessage += "Could not open the file: ") += filename;
       return false;
     }
     size_t x = 0;
     for (std::string line; std::getline(boardFile, line);) {
-      if (line.size() != board[x].size())
-      {
+      if (line.size() != board[x].size()) {
         errorMessage = "line length does not match with the board";
         return false;
       }
       for (size_t y = 0; y < board[x].size(); ++y) {
-        board[x][y] = line[y] == 'X' ? sim::BoardState::food
-        : sim::BoardState::empty;
+        board[x][y] =
+            line[y] == 'X' ? sim::BoardState::food : sim::BoardState::empty;
       }
       ++x;
     }
-    if (x != board.size())
-    {
+    if (x != board.size()) {
       errorMessage = "not enoth lines int the file.";
       return false;
     }
     return true;
   };
-  
+
   auto max_steps = 400;
   auto max_food = 89;
   auto antBoardSim =
-    sim::AntBoardSimulationStaticSize<santa_fe::x_size, santa_fe::y_size>{
-      max_steps, max_food, sim::Pos2d{0, 0}, sim::Direction::east, boardInitFunction};
-  
+      sim::AntBoardSimulationStaticSize<santa_fe::x_size, santa_fe::y_size>{
+          max_steps, max_food, sim::Pos2d{0, 0}, sim::Direction::east,
+          boardInitFunction};
+
   boost::variant<std::string, decltype(antBoardSim)> result{antBoardSim};
-  if(!errorMessage.empty())
-    result = errorMessage;
-    
+  if (!errorMessage.empty()) result = errorMessage;
+
   return result;
 }
 
@@ -188,34 +184,29 @@ decltype(auto) getAllTreeBenchmarks() {
 }
 #endif
 
-
-struct RegisterIfPosible : public boost::static_visitor<void>
-{  
-  void operator()(std::string errorMessage) const
-  {
+struct RegisterIfPosible : public boost::static_visitor<void> {
+  void operator()(std::string errorMessage) const {
     std::cout << errorMessage << "\n";
   }
-  
-  template<typename T>
-  void operator()(T theAntBoardSim) const
-  {
-    auto allTreeBechmarks =
-    getAllTreeBenchmarks<decltype(theAntBoardSim)>();
-    
-    boost::hana::for_each(allTreeBechmarks, [theAntBoardSim](auto& treeBenchmarkFunktion) {
-      auto BM_lambda = [treeBenchmarkFunktion,theAntBoardSim](benchmark::State& state) {
-        auto theAntBoardSimCopy = theAntBoardSim;
-        for (auto _ : state)
-          state.counters["score"] = std::get<0>(treeBenchmarkFunktion)(theAntBoardSimCopy);
-      };
-      benchmark::RegisterBenchmark(std::get<1>(treeBenchmarkFunktion), BM_lambda);
-    });
 
+  template <typename T>
+  void operator()(T theAntBoardSim) const {
+    auto allTreeBechmarks = getAllTreeBenchmarks<decltype(theAntBoardSim)>();
+
+    boost::hana::for_each(
+        allTreeBechmarks, [theAntBoardSim](auto& treeBenchmarkFunktion) {
+          auto BM_lambda = [treeBenchmarkFunktion,
+                            theAntBoardSim](benchmark::State& state) {
+            auto theAntBoardSimCopy = theAntBoardSim;
+            for (auto _ : state)
+              state.counters["score"] =
+                  std::get<0>(treeBenchmarkFunktion)(theAntBoardSimCopy);
+          };
+          benchmark::RegisterBenchmark(std::get<1>(treeBenchmarkFunktion),
+                                       BM_lambda);
+        });
   }
 };
-
-
-
 
 int main(int argc, char** argv) {
   namespace hana = boost::hana;
@@ -230,13 +221,13 @@ int main(int argc, char** argv) {
     std::cout << options.help({"", ""}) << std::endl;
     exit(0);
   }
-  
+
   auto filename = cliArgs["boarddef"].as<std::string>();
-  
+
   auto const resultAntBoardSim = getAntBoardSimFromFileName(filename.c_str());
-  
+
   boost::apply_visitor(RegisterIfPosible{}, resultAntBoardSim);
-  
+
   benchmark::Initialize(&argc, argv);
-  benchmark::RunSpecifiedBenchmarks(); 
+  benchmark::RunSpecifiedBenchmarks();
 }

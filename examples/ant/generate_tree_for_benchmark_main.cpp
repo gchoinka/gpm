@@ -12,6 +12,8 @@
 #include <fmt/format.h>
 #include <fmt/ostream.h>
 
+#include <cxxopts.hpp>
+
 #include <gpm/io.hpp>
 #include <gpm/utils/fmtutils.hpp>
 
@@ -197,8 +199,28 @@ decltype(auto) getOptAnt() {
   return gpm::factory<ant::ant_nodes>(gpm::RPNToken_iterator{optimalAntRPNdef});
 }
 
-int main() {
-  auto ant = getRandomAnt();
+decltype(auto) getOptAntFromFile(char const* filename) {
+  std::ifstream f(filename);
+  std::string str;
+  std::getline(f, str);
+  return gpm::factory<ant::ant_nodes>(gpm::RPNToken_iterator{str});
+}
+
+int main(int argc, char** argv) {
+  cxxopts::Options options("generate_tree_for_benchmark", "");
+  options.allow_unrecognised_options().add_options()(
+      "a,antrpndef", "File name", cxxopts::value<std::string>())(
+      "o,outfile", "File name", cxxopts::value<std::string>());
+
+  auto cliArgs = options.parse(argc, argv);
+
+  if (!cliArgs.count("antrpndef") || !cliArgs.count("outfile")) {
+    std::cout << options.help({"", ""}) << std::endl;
+    exit(0);
+  }
+
+  auto filename = cliArgs["antrpndef"].as<std::string>();
+  auto ant = getOptAntFromFile(filename.c_str());
 
   auto antBoardSimName = "antBoardSim";
   auto antBoardSimVisitorName = "antBoardSimVisitor";
@@ -214,7 +236,9 @@ int main() {
 
   auto antRPN = boost::apply_visitor(gpm::RPNPrinter<std::string>{}, ant);
 
-  std::cout << gpm::utils::format(
+  auto outFileName = cliArgs["outfile"].as<std::string>();
+  std::ofstream outf(outFileName.c_str());
+  outf << gpm::utils::format(
       R"""(
 
 static char const antRPNString[] = {{"{antRPN}"}};    
