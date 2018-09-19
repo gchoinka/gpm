@@ -15,13 +15,13 @@ namespace gpm {
 template <typename StringT>
 struct Printer : public boost::static_visitor<StringT> {
   template <typename T>
-  StringT operator()(T const& b) const {
+  StringT operator()(T const& node) const {
     char const* delimiter = "";
     char const* begin_delimiter = "";
     char const* end_delimiter = "";
     StringT children;
-    if constexpr (b.nodes.size() != 0)
-      for (auto const& n : b.nodes) {
+    if constexpr (std::tuple_size<decltype(node.nodes)>::value != 0)
+      for (auto const& n : node.nodes) {
         children += delimiter + boost::apply_visitor(*this, n);
         delimiter = " , ";
         begin_delimiter = "( ";
@@ -34,10 +34,10 @@ struct Printer : public boost::static_visitor<StringT> {
 template <typename StringT>
 struct RPNPrinter : public boost::static_visitor<StringT> {
   template <typename T>
-  StringT operator()(T const& b) const {
+  StringT operator()(T const& node) const {
     StringT children;
-    if constexpr (b.nodes.size() != 0)
-      for (auto const& n : b.nodes) {
+    if constexpr (std::tuple_size<decltype(node.nodes)>::value != 0)
+      for (auto const& n : node.nodes) {
         children = boost::apply_visitor(*this, n) + " " + children;
       }
     return children + T::name;
@@ -47,10 +47,10 @@ struct RPNPrinter : public boost::static_visitor<StringT> {
 template <typename StringT>
 struct PNPrinter : public boost::static_visitor<StringT> {
   template <typename T>
-  StringT operator()(T const& b) const {
+  StringT operator()(T const& node) const {
     StringT children;
-    if constexpr (b.nodes.size() != 0)
-      for (auto const& n : b.nodes) {
+    if constexpr (std::tuple_size<decltype(node.nodes)>::value != 0)
+      for (auto const& n : node.nodes) {
         children = children + " " + boost::apply_visitor(*this, n);
       }
     return T::name + children;

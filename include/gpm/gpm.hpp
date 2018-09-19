@@ -104,7 +104,7 @@ struct Builder : public boost::static_visitor<void> {
   template <typename T>
   void operator()(T &node) const {
     if (height_ > 0) {
-      if constexpr (node.nodes.size() != 0)
+      if constexpr (std::tuple_size<decltype(node.nodes)>::value != 0)
         for (auto &childNode : node.nodes) {
           childNode = noneTermialGen_();
           auto sub =
@@ -118,6 +118,12 @@ struct Builder : public boost::static_visitor<void> {
     }
   }
 };
+
+template<typename T, auto Size>
+constexpr typename std::array<T, Size>::size_type getChildrenSize(std::array<T, Size>)
+{
+  return Size;
+}
 
 template <typename VariantType>
 class BasicGenerator {
@@ -145,7 +151,7 @@ class BasicGenerator {
     VariantType rootNode = makeNoneTermial();
     boost::apply_visitor(
         [&](auto &aNode) {
-          if constexpr (aNode.nodes.size() != 0)
+          if constexpr (std::tuple_size<decltype(aNode.nodes)>::value != 0)
             for (auto &childNode : aNode.nodes) {
               Builder<VariantType> b{height(rnd_) - 1, makeTermial,
                                      makeNoneTermial};
@@ -184,14 +190,17 @@ struct NodeToken {
   constexpr static char name[] = {ch..., '\0'};
 };
 
-template <typename VariantType, int NodeCount, typename CTString>
+template <typename VariantType, int NodeCount_, typename CTString>
 struct BaseNode : public CTString {
   template <typename... Args>
   BaseNode(Args &&... args) : nodes{std::forward<Args>(args)...} {}
 
-  std::array<VariantType, NodeCount> nodes;
+  static constexpr auto NodeCount = NodeCount_;
+  std::array<VariantType, NodeCount_> nodes;
 
   constexpr char const *nameStr() const { return CTString::name; }
 };
 
 }  // namespace gpm
+
+
