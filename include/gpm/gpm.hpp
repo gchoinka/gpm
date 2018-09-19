@@ -25,6 +25,24 @@
 #include <gpm/io.hpp>
 
 namespace gpm {
+
+template <auto ... ch>
+struct NodeToken {
+  constexpr static char name[] = {ch..., '\0'};
+};
+
+template <typename VariantType, int NodeCount_, typename CTString>
+struct BaseNode : public CTString {
+  template <typename... Args>
+  BaseNode(Args &&... args) : nodes{std::forward<Args>(args)...} {}
+  
+  static constexpr auto NodeCount = NodeCount_;
+  std::array<VariantType, NodeCount_> nodes;
+  
+  constexpr char const *nameStr() const { return CTString::name; }
+};
+  
+  
 class GPMException : public std::runtime_error {
  public:
   using std::runtime_error::runtime_error;
@@ -123,6 +141,30 @@ struct Builder : public boost::static_visitor<void> {
 
 
 
+template<typename VariantType, typename TerminalFactory, typename NoneTerminalFactory>
+struct NodeChildrenInsert
+{
+  VariantType dummy_;
+  TerminalFactory & terminalFactory_;
+  NoneTerminalFactory & noneTerminalFactory_;
+  int height_;
+  
+  
+  template<typename T, auto NodeCount, typename CTString>
+  void operator()(BaseNode<T, NodeCount, CTString> & node)
+  {
+    if constexpr (NodeCount != 0)
+      for (auto &childNode : node.nodes) {
+        Builder<VariantType> b{height_, terminalFactory_, noneTerminalFactory_};
+        childNode = noneTerminalFactory_();
+        boost::apply_visitor(b, childNode);
+      }
+  }
+};
+  
+template<typename VariantType, typename TerminalFactory, typename NoneTerminalFactory>
+NodeChildrenInsert(VariantType, TerminalFactory &, NoneTerminalFactory &, int height) -> NodeChildrenInsert<VariantType, TerminalFactory, NoneTerminalFactory>;
+
 template <typename VariantType>
 class BasicGenerator {
  public:
@@ -147,17 +189,13 @@ class BasicGenerator {
     };
 
     VariantType rootNode = makeNoneTermial();
+    
+    NodeChildrenInsert ni{rootNode, makeTermial, makeNoneTermial, height(rnd_) - 1};
+
     boost::apply_visitor(
-        [&](auto &aNode) {
-          if constexpr (std::tuple_size<decltype(aNode.nodes)>::value != 0)
-            for (auto &childNode : aNode.nodes) {
-              Builder<VariantType> b{height(rnd_) - 1, makeTermial,
-                                     makeNoneTermial};
-              childNode = makeNoneTermial();
-              boost::apply_visitor(b, childNode);
-            }
-        },
-        rootNode);
+      ni,
+      rootNode);
+  
     return rootNode;
   }
 
@@ -183,21 +221,7 @@ class BasicGenerator {
   std::mt19937 rnd_;
 };
 
-template <char... ch>
-struct NodeToken {
-  constexpr static char name[] = {ch..., '\0'};
-};
 
-template <typename VariantType, int NodeCount_, typename CTString>
-struct BaseNode : public CTString {
-  template <typename... Args>
-  BaseNode(Args &&... args) : nodes{std::forward<Args>(args)...} {}
-
-  static constexpr auto NodeCount = NodeCount_;
-  std::array<VariantType, NodeCount_> nodes;
-
-  constexpr char const *nameStr() const { return CTString::name; }
-};
 
 }  // namespace gpm
 
