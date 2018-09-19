@@ -20,7 +20,7 @@ struct Printer : public boost::static_visitor<StringT> {
     char const* begin_delimiter = "";
     char const* end_delimiter = "";
     StringT children;
-    if constexpr(b.nodes.size() != 0)
+    if constexpr (b.nodes.size() != 0)
       for (auto const& n : b.nodes) {
         children += delimiter + boost::apply_visitor(*this, n);
         delimiter = " , ";
@@ -36,7 +36,7 @@ struct RPNPrinter : public boost::static_visitor<StringT> {
   template <typename T>
   StringT operator()(T const& b) const {
     StringT children;
-    if constexpr(b.nodes.size() != 0)
+    if constexpr (b.nodes.size() != 0)
       for (auto const& n : b.nodes) {
         children = boost::apply_visitor(*this, n) + " " + children;
       }
@@ -49,7 +49,7 @@ struct PNPrinter : public boost::static_visitor<StringT> {
   template <typename T>
   StringT operator()(T const& b) const {
     StringT children;
-    if constexpr(b.nodes.size() != 0)
+    if constexpr (b.nodes.size() != 0)
       for (auto const& n : b.nodes) {
         children = children + " " + boost::apply_visitor(*this, n);
       }

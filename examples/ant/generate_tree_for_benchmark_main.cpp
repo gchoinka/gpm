@@ -110,9 +110,8 @@ class AsCPPFixedNotation : public boost::static_visitor<std::string> {
                                 simulationName_, "methodName",
                                 AntNodeToSimulationMethodName::name(t));
     }
-    if constexpr(t.nodes.size() != 0)
-      for (auto& n : t.nodes) 
-        res += boost::apply_visitor(*this, n);
+    if constexpr (t.nodes.size() != 0)
+      for (auto& n : t.nodes) res += boost::apply_visitor(*this, n);
     return res;
   }
 };
@@ -150,7 +149,7 @@ class AsCPPFixedWithVisitorNotation
                                 gpm::utils::argsnamed, "visitorName",
                                 visitorName_, "nodeType", nodeType);
     }
-    if constexpr(t.nodes.size() != 0)
+    if constexpr (t.nodes.size() != 0)
       for (auto& n : t.nodes) res += boost::apply_visitor(*this, n);
     return res;
   }

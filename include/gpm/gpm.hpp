@@ -46,7 +46,7 @@ struct FactoryMapInsertHelper {
   void operator()(T) {
     factoryMap[T::name] = [](Iter &tokenIter) {
       T ret;
-      if constexpr(ret.nodes.size() != 0)
+      if constexpr (ret.nodes.size() != 0)
         for (auto &n : ret.nodes) n = factory_imp<VariantType>(++tokenIter);
       return ret;
     };
@@ -56,7 +56,7 @@ struct FactoryMapInsertHelper {
   void operator()(boost::recursive_wrapper<T>) {
     factoryMap[T::name] = [](Iter &tokenIter) {
       T ret;
-      if constexpr(ret.nodes.size() != 0)
+      if constexpr (ret.nodes.size() != 0)
         for (auto &n : ret.nodes) n = factory_imp<VariantType>(++tokenIter);
       return ret;
     };
@@ -104,7 +104,7 @@ struct Builder : public boost::static_visitor<void> {
   template <typename T>
   void operator()(T &node) const {
     if (height_ > 0) {
-      if constexpr(node.nodes.size() != 0)
+      if constexpr (node.nodes.size() != 0)
         for (auto &childNode : node.nodes) {
           childNode = noneTermialGen_();
           auto sub =
@@ -145,10 +145,10 @@ class BasicGenerator {
     VariantType rootNode = makeNoneTermial();
     boost::apply_visitor(
         [&](auto &aNode) {
-          if constexpr(aNode.nodes.size() != 0)
+          if constexpr (aNode.nodes.size() != 0)
             for (auto &childNode : aNode.nodes) {
               Builder<VariantType> b{height(rnd_) - 1, makeTermial,
-                                    makeNoneTermial};
+                                     makeNoneTermial};
               childNode = makeNoneTermial();
               boost::apply_visitor(b, childNode);
             }

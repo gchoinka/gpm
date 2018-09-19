@@ -6,13 +6,10 @@
  * copy at http://www.boost.org/LICENSE_1_0.txt)
  */
 #pragma once
-#include <gpm/gpm.hpp>
 #include <boost/any.hpp>
-
+#include <gpm/gpm.hpp>
 
 namespace ant {
-  
-
 
 struct move : public gpm::BaseNode<boost::any, 0, gpm::NodeToken<'m'>> {};
 
@@ -28,7 +25,7 @@ using prog2 = prog<2, gpm::NodeToken<'p', '2'>>;
 using prog3 = prog<3, gpm::NodeToken<'p', '3'>>;
 
 using ant_nodes =
-boost::variant<move, left, right, boost::recursive_wrapper<if_food_ahead>,
+    boost::variant<move, left, right, boost::recursive_wrapper<if_food_ahead>,
                    boost::recursive_wrapper<prog2>,
                    boost::recursive_wrapper<prog3>>;
 
@@ -38,9 +35,9 @@ struct prog : public gpm::BaseNode<ant_nodes, NodeCount, CTString> {
 };
 
 // struct move : public gpm::BaseNode<ant_nodes, 0, gpm::NodeToken<'m'>> {};
-// 
+//
 // struct right : public gpm::BaseNode<ant_nodes, 0, gpm::NodeToken<'r'>> {};
-// 
+//
 // struct left : public gpm::BaseNode<ant_nodes, 0, gpm::NodeToken<'l'>> {};
 
 struct if_food_ahead
