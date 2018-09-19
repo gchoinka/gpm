@@ -1,10 +1,10 @@
 {
   "context": {
-    "date": "2018-09-14 23:19:22",
+    "date": "2018-09-17 02:28:27",
     "executable": "/home/gchoinka/src/gpm/build-benchmarks/clang++-6.0-USAN/examples/ant/tree_benchmark",
     "num_cpus": 8,
     "mhz_per_cpu": 3500,
-    "cpu_scaling_enabled": true,
+    "cpu_scaling_enabled": false,
     "caches": [
       {
         "type": "Data",
@@ -35,60 +35,52 @@
   },
   "benchmarks": [
     {
-      "name": "BM_recursiveVariantTreeFromString",
-      "iterations": 2420,
-      "real_time": 2.8550329834690865e+05,
-      "cpu_time": 2.8550550082644622e+05,
+      "name": "recursiveVariantTreeFromString",
+      "iterations": 199,
+      "real_time": 3.3672047135754763e+06,
+      "cpu_time": 3.3672288492462318e+06,
       "time_unit": "ns",
-      "score": 0.0000000000000000e+00
+      "score": 7.8000000000000000e+01
     },
     {
-      "name": "BM_recursiveVariantTree",
-      "iterations": 2718,
-      "real_time": 2.5371108094190600e+05,
-      "cpu_time": 2.5371296541574682e+05,
+      "name": "recursiveVariantTree",
+      "iterations": 584,
+      "real_time": 1.1473944366477791e+06,
+      "cpu_time": 1.1474064760273974e+06,
       "time_unit": "ns",
-      "score": 0.0000000000000000e+00
+      "score": 7.8000000000000000e+01
     },
     {
-      "name": "BM_cppFixedTree",
-      "iterations": 4219,
-      "real_time": 1.5882729722673557e+05,
-      "cpu_time": 1.5882843896657982e+05,
+      "name": "cppFixedTree",
+      "iterations": 4671,
+      "real_time": 1.4687548447940414e+05,
+      "cpu_time": 1.4676404196103616e+05,
       "time_unit": "ns",
-      "score": 0.0000000000000000e+00
+      "score": 7.8000000000000000e+01
     },
     {
-      "name": "BM_cppFixedWithVisitor",
-      "iterations": 4358,
-      "real_time": 1.6293943689782073e+05,
-      "cpu_time": 1.6294060394676460e+05,
+      "name": "cppFixedWithVisitor",
+      "iterations": 4665,
+      "real_time": 1.5180852047181694e+05,
+      "cpu_time": 1.5180607352625942e+05,
       "time_unit": "ns",
-      "score": 0.0000000000000000e+00
+      "score": 7.8000000000000000e+01
     },
     {
-      "name": "BM_oopTree",
-      "iterations": 3252,
-      "real_time": 2.2077323400976544e+05,
-      "cpu_time": 2.2077221186961871e+05,
+      "name": "oopTree",
+      "iterations": 1134,
+      "real_time": 5.0560164286020392e+05,
+      "cpu_time": 5.0511540299823612e+05,
       "time_unit": "ns",
-      "score": 0.0000000000000000e+00
+      "score": 7.8000000000000000e+01
     },
     {
-      "name": "BM_oopTreeFromString",
-      "iterations": 2943,
-      "real_time": 2.4645925416259217e+05,
-      "cpu_time": 2.4645974889568452e+05,
+      "name": "oopTreeFromString",
+      "iterations": 513,
+      "real_time": 1.4030746023509230e+06,
+      "cpu_time": 1.4030855984405465e+06,
       "time_unit": "ns",
-      "score": 0.0000000000000000e+00
-    },
-    {
-      "name": "BM_oopTreeFromExtString",
-      "iterations": 2935,
-      "real_time": 2.4268789233373987e+05,
-      "cpu_time": 2.4268790221465065e+05,
-      "time_unit": "ns",
-      "score": 0.0000000000000000e+00
+      "score": 7.8000000000000000e+01
     }
   ]
 }

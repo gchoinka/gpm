@@ -14,10 +14,10 @@ if os.path.exists(buildDir):
 os.mkdir(buildDir)
 
 compiler=[
-    {"compiler":"g++-7", "dir":"g++-7", "cmake_args":["-DCMAKE_BUILD_TYPE=Release", "-DCMAKE_CXX_FLAGS=-DGPM_BENCHMARK_NAME_PREFIX=gcc7"]}, 
-    {"compiler":"clang++-6.0", "dir":"clang++-6.0", "cmake_args":["-DCMAKE_BUILD_TYPE=Release", "-DCMAKE_CXX_FLAGS=-DGPM_BENCHMARK_NAME_PREFIX=clang6"]}, 
-    {"compiler":"clang++-6.0", "dir":"clang++-6.0-ASAN", "cmake_args":["-DCMAKE_BUILD_TYPE=Debug", "-DCMAKE_CXX_FLAGS=-fsanitize=address -fno-omit-frame-pointer -DGPM_BENCHMARK_NAME_PREFIX=clang6ASAN",  "-DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address"]}, 
-    {"compiler":"clang++-6.0", "dir":"clang++-6.0-USAN", "cmake_args":["-DCMAKE_BUILD_TYPE=Debug", "-DCMAKE_CXX_FLAGS=-fsanitize=undefined -fno-omit-frame-pointer -DGPM_BENCHMARK_NAME_PREFIX=clang6USAN",  "-DCMAKE_EXE_LINKER_FLAGS=-fsanitize=undefined"]}, 
+    {"compiler":"g++-7", "dir":"g++-7", "cmake_args":["-DCMAKE_BUILD_TYPE=Release", "-DCMAKE_CXX_FLAGS=-DGPM_BENCHMARK_NAME_PREFIX=\"gcc7\""]}, 
+    {"compiler":"clang++-6.0", "dir":"clang++-6.0", "cmake_args":["-DCMAKE_BUILD_TYPE=Release", "-DCMAKE_CXX_FLAGS=-DGPM_BENCHMARK_NAME_PREFIX=\"clang6\""]}, 
+    {"compiler":"clang++-6.0", "dir":"clang++-6.0-ASAN", "cmake_args":["-DCMAKE_BUILD_TYPE=Debug", "-DCMAKE_CXX_FLAGS=-fsanitize=address -fno-omit-frame-pointer -DGPM_BENCHMARK_NAME_PREFIX=\"clang6ASAN\"",  "-DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address"]}, 
+    {"compiler":"clang++-6.0", "dir":"clang++-6.0-USAN", "cmake_args":["-DCMAKE_BUILD_TYPE=Debug", "-DCMAKE_CXX_FLAGS=-fsanitize=undefined -fno-omit-frame-pointer -DGPM_BENCHMARK_NAME_PREFIX=\"clang6USAN\"",  "-DCMAKE_EXE_LINKER_FLAGS=-fsanitize=undefined"]}, 
 ]
 for c in compiler:
     compilerDir = os.path.join(buildDir, c["dir"])

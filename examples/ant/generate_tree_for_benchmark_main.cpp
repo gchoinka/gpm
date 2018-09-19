@@ -186,7 +186,7 @@ class AsRecursiveVariantNotation : public boost::static_visitor<std::string> {
 
 decltype(auto) getRandomAnt() {
   int minHeight = 1;
-  int maxHeight = 9;
+  int maxHeight = 7;
   // std::random_device rd;
 
   return gpm::BasicGenerator<ant::ant_nodes>{minHeight, maxHeight}();
@@ -198,7 +198,7 @@ decltype(auto) getOptAnt() {
 }
 
 int main() {
-  auto ant = getOptAnt();
+  auto ant = getRandomAnt();
 
   auto antBoardSimName = "antBoardSim";
   auto antBoardSimVisitorName = "antBoardSimVisitor";

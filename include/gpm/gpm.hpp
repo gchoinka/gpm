@@ -118,8 +118,7 @@ struct Builder : public boost::static_visitor<void> {
 
 template <typename VariantType>
 class BasicGenerator {
-
-public:
+ public:
   BasicGenerator(int minHeight, int maxHeight, unsigned int rndSeed = 5489u)
       : minHeight_{minHeight}, maxHeight_{maxHeight}, rnd_{rndSeed} {
     OrderNodesHelper orderNodesHelper{terminalNodes_, noneTerminalNodes_};
@@ -158,12 +157,12 @@ public:
   struct OrderNodesHelper {
     std::vector<VariantType> &terminalNodes;
     std::vector<VariantType> &noneTerminalNodes;
-    
+
     template <class T>
     void operator()(T) {
       terminalNodes.push_back(T{});
     }
-    
+
     template <class T>
     void operator()(boost::recursive_wrapper<T>) {
       noneTerminalNodes.push_back(T{});
