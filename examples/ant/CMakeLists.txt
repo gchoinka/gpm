@@ -8,7 +8,7 @@
 
 #move this to somewhere else
 if(MSVC)
-  set(warning_flags "-Wall")
+  #set(warning_flags "-Wall")
 else ()
   set(warning_flags -Wall -Wextra -pedantic -Werror)
 endif()
