@@ -41,13 +41,22 @@ struct if_food_ahead
     : public gpm::BaseNode<ant_nodes, 2, gpm::NodeToken<'i', 'f'>> {
   using if_food_ahead::BaseNode::BaseNode;
 
-  template <bool c>
-  constexpr ant_nodes const& get() const {
-    return nodes[c ? 0 : 1];
-  }
   constexpr ant_nodes const& get(bool b) const {
-    return b ? get<true>() : get<false>();
+    return b ? children[0] : children[1];
   }
 };
 
+
+
 }  // namespace ant
+
+
+namespace gpm{
+  template<>
+  constexpr size_t ChildrenSize<ant::if_food_ahead> = 2;
+  template<>
+  constexpr size_t ChildrenSize<ant::prog3> = 3;
+  template<>
+  constexpr size_t ChildrenSize<ant::prog2> = 2;
+  
+}

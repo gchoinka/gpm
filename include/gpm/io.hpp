@@ -20,8 +20,8 @@ struct Printer : public boost::static_visitor<StringT> {
     char const* begin_delimiter = "";
     char const* end_delimiter = "";
     StringT children;
-    if constexpr (std::tuple_size<decltype(node.nodes)>::value != 0)
-      for (auto const& n : node.nodes) {
+    if constexpr (std::tuple_size<decltype(node.children)>::value != 0)
+      for (auto const& n : node.children) {
         children += delimiter + boost::apply_visitor(*this, n);
         delimiter = " , ";
         begin_delimiter = "( ";
@@ -36,8 +36,8 @@ struct RPNPrinter : public boost::static_visitor<StringT> {
   template <typename T>
   StringT operator()(T const& node) const {
     StringT children;
-    if constexpr (std::tuple_size<decltype(node.nodes)>::value != 0)
-      for (auto const& n : node.nodes) {
+    if constexpr (std::tuple_size<decltype(node.children)>::value != 0)
+      for (auto const& n : node.children) {
         children = boost::apply_visitor(*this, n) + " " + children;
       }
     return children + T::name;
@@ -49,8 +49,8 @@ struct PNPrinter : public boost::static_visitor<StringT> {
   template <typename T>
   StringT operator()(T const& node) const {
     StringT children;
-    if constexpr (std::tuple_size<decltype(node.nodes)>::value != 0)
-      for (auto const& n : node.nodes) {
+    if constexpr (std::tuple_size<decltype(node.children)>::value != 0)
+      for (auto const& n : node.children) {
         children = children + " " + boost::apply_visitor(*this, n);
       }
     return T::name + children;

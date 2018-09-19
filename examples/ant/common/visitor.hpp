@@ -29,8 +29,8 @@ class AntBoardSimulationVisitor : public boost::static_visitor<void> {
 
   template<typename T>
   void operator()(T const& node) const {
-    if constexpr(std::tuple_size<decltype(node.nodes)>::value != 0)
-      for (auto const& n : node.nodes) boost::apply_visitor(*this, n);
+    if constexpr(std::tuple_size<decltype(node.children)>::value != 0)
+      for (auto const& n : node.children) boost::apply_visitor(*this, n);
   }
 
  private:

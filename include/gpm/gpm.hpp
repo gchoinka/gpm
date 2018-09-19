@@ -31,13 +31,12 @@ struct NodeToken {
   constexpr static char name[] = {ch..., '\0'};
 };
 
-template <typename VariantType, int NodeCount_, typename CTString>
+template <typename VariantType, size_t NodeCount_, typename CTString>
 struct BaseNode : public CTString {
   template <typename... Args>
-  BaseNode(Args &&... args) : nodes{std::forward<Args>(args)...} {}
+  BaseNode(Args &&... args) : children{std::forward<Args>(args)...} {}
   
-  static constexpr auto NodeCount = NodeCount_;
-  std::array<VariantType, NodeCount_> nodes;
+  std::array<VariantType, NodeCount_> children;
   
   constexpr char const *nameStr() const { return CTString::name; }
 };
@@ -65,8 +64,8 @@ struct FactoryMapInsertHelper {
   void operator()(T) {
     factoryMap[T::name] = [](Iter &tokenIter) {
       T ret;
-      if constexpr (ret.nodes.size() != 0)
-        for (auto &n : ret.nodes) n = factory_imp<VariantType>(++tokenIter);
+      if constexpr (ret.children.size() != 0)
+        for (auto &n : ret.children) n = factory_imp<VariantType>(++tokenIter);
       return ret;
     };
   }
@@ -75,8 +74,8 @@ struct FactoryMapInsertHelper {
   void operator()(boost::recursive_wrapper<T>) {
     factoryMap[T::name] = [](Iter &tokenIter) {
       T ret;
-      if constexpr (ret.nodes.size() != 0)
-        for (auto &n : ret.nodes) n = factory_imp<VariantType>(++tokenIter);
+      if constexpr (ret.children.size() != 0)
+        for (auto &n : ret.children) n = factory_imp<VariantType>(++tokenIter);
       return ret;
     };
   }
@@ -123,15 +122,15 @@ struct Builder : public boost::static_visitor<void> {
   template <typename T>
   void operator()(T &node) const {
     if (height_ > 0) {
-      if constexpr (std::tuple_size<decltype(node.nodes)>::value != 0)
-        for (auto &childNode : node.nodes) {
+      if constexpr (std::tuple_size<decltype(node.children)>::value != 0)
+        for (auto &childNode : node.children) {
           childNode = noneTermialGen_();
           auto sub =
               Builder<VariantType>{height_ - 1, termialGen_, noneTermialGen_};
           boost::apply_visitor(sub, childNode);
         }
     } else {
-      for (auto &childNode : node.nodes) {
+      for (auto &childNode : node.children) {
         childNode = termialGen_();
       }
     }
@@ -139,6 +138,17 @@ struct Builder : public boost::static_visitor<void> {
 };
 
 
+
+struct AnyTypeNullSink
+{
+  template<typename T>
+  AnyTypeNullSink(T const &&) {}
+  template<typename T>
+  AnyTypeNullSink const & operator=(T const &&) { return *this;}
+};
+
+template<typename T>
+constexpr size_t ChildrenSize = 0;
 
 
 template<typename VariantType, typename TerminalFactory, typename NoneTerminalFactory>
@@ -150,11 +160,11 @@ struct NodeChildrenInsert
   int height_;
   
   
-  template<typename T, auto NodeCount, typename CTString>
-  void operator()(BaseNode<T, NodeCount, CTString> & node)
+  template<typename NodeT>
+  void operator()(NodeT & node)
   {
-    if constexpr (NodeCount != 0)
-      for (auto &childNode : node.nodes) {
+    if constexpr (ChildrenSize<NodeT> != 0)
+      for (auto &childNode : node.children) {
         Builder<VariantType> b{height_, terminalFactory_, noneTerminalFactory_};
         childNode = noneTerminalFactory_();
         boost::apply_visitor(b, childNode);
