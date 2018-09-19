@@ -10,8 +10,8 @@ cmake_minimum_required(VERSION 3.9.2)
 
 include("cmake/HunterGate.cmake")
 HunterGate(
-    URL "https://github.com/ruslo/hunter/archive/v0.23.22.tar.gz"
-    SHA1 "dffc6269efd60e79ea2e28a927cce94d3e4a6e03"
+    URL "https://github.com/ruslo/hunter/archive/v0.23.27.tar.gz"
+    SHA1 "70d75a25f895df3da00d8382417e8c2a08c93173"
 )
 
 project(gpm VERSION 0.1.0 LANGUAGES CXX)
@@ -32,7 +32,7 @@ include_directories("${GeneratedIncludesDir}")
 
 
 hunter_add_package(Boost)
-set(BOOST_MIN_VERSION "1.66.0") # hunter on windows does not have 1.68
+set(BOOST_MIN_VERSION "1.68.0") 
 find_package(Boost ${BOOST_MIN_VERSION} REQUIRED)
 
 hunter_add_package(fmt)
