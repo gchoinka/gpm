@@ -46,7 +46,8 @@ struct FactoryMapInsertHelper {
   void operator()(T) {
     factoryMap[T::name] = [](Iter &tokenIter) {
       T ret;
-      for (auto &n : ret.nodes) n = factory_imp<VariantType>(++tokenIter);
+      if constexpr(ret.nodes.size() != 0)
+        for (auto &n : ret.nodes) n = factory_imp<VariantType>(++tokenIter);
       return ret;
     };
   }
@@ -55,7 +56,8 @@ struct FactoryMapInsertHelper {
   void operator()(boost::recursive_wrapper<T>) {
     factoryMap[T::name] = [](Iter &tokenIter) {
       T ret;
-      for (auto &n : ret.nodes) n = factory_imp<VariantType>(++tokenIter);
+      if constexpr(ret.nodes.size() != 0)
+        for (auto &n : ret.nodes) n = factory_imp<VariantType>(++tokenIter);
       return ret;
     };
   }
@@ -102,12 +104,13 @@ struct Builder : public boost::static_visitor<void> {
   template <typename T>
   void operator()(T &node) const {
     if (height_ > 0) {
-      for (auto &childNode : node.nodes) {
-        childNode = noneTermialGen_();
-        auto sub =
-            Builder<VariantType>{height_ - 1, termialGen_, noneTermialGen_};
-        boost::apply_visitor(sub, childNode);
-      }
+      if constexpr(node.nodes.size() != 0)
+        for (auto &childNode : node.nodes) {
+          childNode = noneTermialGen_();
+          auto sub =
+              Builder<VariantType>{height_ - 1, termialGen_, noneTermialGen_};
+          boost::apply_visitor(sub, childNode);
+        }
     } else {
       for (auto &childNode : node.nodes) {
         childNode = termialGen_();
@@ -142,12 +145,13 @@ class BasicGenerator {
     VariantType rootNode = makeNoneTermial();
     boost::apply_visitor(
         [&](auto &aNode) {
-          for (auto &childNode : aNode.nodes) {
-            Builder<VariantType> b{height(rnd_) - 1, makeTermial,
-                                   makeNoneTermial};
-            childNode = makeNoneTermial();
-            boost::apply_visitor(b, childNode);
-          }
+          if constexpr(aNode.nodes.size() != 0)
+            for (auto &childNode : aNode.nodes) {
+              Builder<VariantType> b{height(rnd_) - 1, makeTermial,
+                                    makeNoneTermial};
+              childNode = makeNoneTermial();
+              boost::apply_visitor(b, childNode);
+            }
         },
         rootNode);
     return rootNode;
