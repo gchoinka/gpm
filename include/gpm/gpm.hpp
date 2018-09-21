@@ -14,8 +14,8 @@
 #include <iterator>
 #include <random>
 #include <string_view>
-#include <vector>
 #include <tuple>
+#include <vector>
 
 #include <boost/assert.hpp>
 #include <boost/container/flat_map.hpp>
@@ -27,7 +27,7 @@
 
 namespace gpm {
 
-template <auto ... ch>
+template <auto... ch>
 struct NodeToken {
   constexpr static char name[] = {ch..., '\0'};
 };
@@ -36,10 +36,9 @@ template <typename VariantType, size_t NodeCount_, typename CTString>
 struct BaseNode : public CTString {
   template <typename... Args>
   BaseNode(Args &&... args) : children{std::forward<Args>(args)...} {}
-  
+
   std::array<VariantType, NodeCount_> children;
 };
-  
 
 namespace detail {
 template <typename VariantType, typename Iter>
@@ -99,10 +98,8 @@ VariantType factory(Iter tokenIter) {
   return detail::factory_imp<VariantType>(tokenIter);
 }
 
-
-struct AnyTypeNullSink
-{
-  template<typename T>
+struct AnyTypeNullSink {
+  template <typename T>
   AnyTypeNullSink(T const &&) {}
   template <typename T>
   AnyTypeNullSink const &operator=(T const &&) {
@@ -242,8 +239,4 @@ class BasicGenerator {
   std::mt19937 rnd_;
 };
 
-
-
 }  // namespace gpm
-
-

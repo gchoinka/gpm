@@ -30,7 +30,6 @@ using ant_nodes =
                    boost::recursive_wrapper<prog2>,
                    boost::recursive_wrapper<prog3>>;
 
-
 struct prog2 : public gpm::BaseNode<ant_nodes, 2, gpm::NodeToken<'p', '2'>> {
   using BaseNode::BaseNode;
 };
@@ -47,7 +46,5 @@ struct if_food_ahead
     return b ? children[0] : children[1];
   }
 };
-
-
 
 }  // namespace ant
