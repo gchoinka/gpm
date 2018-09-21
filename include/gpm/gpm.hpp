@@ -17,6 +17,7 @@
 #include <vector>
 #include <tuple>
 
+#include <boost/assert.hpp>
 #include <boost/container/flat_map.hpp>
 #include <boost/mp11.hpp>
 #include <boost/type_index.hpp>
@@ -37,15 +38,8 @@ struct BaseNode : public CTString {
   BaseNode(Args &&... args) : children{std::forward<Args>(args)...} {}
   
   std::array<VariantType, NodeCount_> children;
-  
-  constexpr char const *nameStr() const { return CTString::name; }
 };
   
-  
-class GPMException : public std::runtime_error {
- public:
-  using std::runtime_error::runtime_error;
-};
 
 namespace detail {
 template <typename VariantType, typename Iter>
@@ -93,10 +87,8 @@ template <typename VariantType, typename Iter>
 VariantType factory_imp(Iter &tokenIter) {
   static auto nodeCreateFunMap = makeFactoryMap<VariantType, Iter>();
   auto token = *tokenIter;
-  if (!nodeCreateFunMap.count(token)) {
-    throw GPMException{std::string{"cant find factory function for token >>"} +
-                       std::string{token} + "<<"};
-  }
+  BOOST_ASSERT_MSG(nodeCreateFunMap.count(token) > 0,
+                   "can not find factory function for token");
 
   return nodeCreateFunMap[token](tokenIter);
 }
@@ -107,127 +99,146 @@ VariantType factory(Iter tokenIter) {
   return detail::factory_imp<VariantType>(tokenIter);
 }
 
-template <typename VariantType>
-struct Builder : public boost::static_visitor<void> {
-  Builder(int height, std::function<VariantType()> termialGen,
-          std::function<VariantType()> noneTermialGen)
-      : height_{height},
-        termialGen_{termialGen},
-        noneTermialGen_{noneTermialGen} {}
-
-  int height_ = 0;
-  std::function<VariantType()> termialGen_;
-  std::function<VariantType()> noneTermialGen_;
-
-  template <typename T>
-  void operator()(T &node) const {
-    if (height_ > 0) {
-      if constexpr (std::tuple_size<decltype(node.children)>::value != 0)
-        for (auto &childNode : node.children) {
-          childNode = noneTermialGen_();
-          auto sub =
-              Builder<VariantType>{height_ - 1, termialGen_, noneTermialGen_};
-          boost::apply_visitor(sub, childNode);
-        }
-    } else {
-      for (auto &childNode : node.children) {
-        childNode = termialGen_();
-      }
-    }
-  }
-};
-
-
 
 struct AnyTypeNullSink
 {
   template<typename T>
   AnyTypeNullSink(T const &&) {}
-  template<typename T>
-  AnyTypeNullSink const & operator=(T const &&) { return *this;}
-};
-
-template<typename T>
-constexpr size_t ChildrenSize = 0;
-
-
-template<typename VariantType, typename TerminalFactory, typename NoneTerminalFactory>
-struct NodeChildrenInsert
-{
-  VariantType dummy_;
-  TerminalFactory & terminalFactory_;
-  NoneTerminalFactory & noneTerminalFactory_;
-  int height_;
-  
-  
-  template<typename NodeT>
-  void operator()(NodeT & node)
-  {
-    if constexpr (ChildrenSize<NodeT> != 0)
-      for (auto &childNode : node.children) {
-        Builder<VariantType> b{height_, terminalFactory_, noneTerminalFactory_};
-        childNode = noneTerminalFactory_();
-        boost::apply_visitor(b, childNode);
-      }
+  template <typename T>
+  AnyTypeNullSink const &operator=(T const &&) {
+    return *this;
   }
 };
-  
-template<typename VariantType, typename TerminalFactory, typename NoneTerminalFactory>
-NodeChildrenInsert(VariantType, TerminalFactory &, NoneTerminalFactory &, int height) -> NodeChildrenInsert<VariantType, TerminalFactory, NoneTerminalFactory>;
+
+template <typename VariantType, typename TerminalNodeFactoryT,
+          typename NotTerminalNodeFactoryT, typename NodeFactoryT>
+struct ChildrenInserter : boost::static_visitor<VariantType> {
+  TerminalNodeFactoryT &terminalNodeFactory_;
+  NotTerminalNodeFactoryT &notTerminalNodeFactory_;
+  NodeFactoryT &nodeFactory_;
+  int const minHeight_;
+  int const maxHeight_;
+  int currentHeight_;
+
+  ChildrenInserter(VariantType, TerminalNodeFactoryT &terminalNodeFactory,
+                   NotTerminalNodeFactoryT &notTerminalNodeFactory,
+                   NodeFactoryT &nodeFactory, int minHeight, int maxHeight,
+                   int currentHeight)
+      : terminalNodeFactory_{terminalNodeFactory},
+        notTerminalNodeFactory_{notTerminalNodeFactory},
+        nodeFactory_{nodeFactory},
+        minHeight_{minHeight},
+        maxHeight_{maxHeight},
+        currentHeight_{currentHeight} {}
+
+  template <typename NodeT>
+  VariantType operator()(NodeT node) const {
+    if constexpr (node.children.size() != 0) {
+      for (auto &childNode : node.children) {
+        if (currentHeight_ < maxHeight_) {
+          if (currentHeight_ >= minHeight_)
+            childNode = nodeFactory_();
+          else
+            childNode = notTerminalNodeFactory_();
+          auto nextLevel = *this;
+          nextLevel.currentHeight_++;
+          childNode = boost::apply_visitor(nextLevel, childNode);
+        } else if (currentHeight_ == maxHeight_) {
+          childNode = terminalNodeFactory_();
+        }
+      }
+    }
+    return node;
+  }
+};
+
+template <typename VariantType, typename TerminalNodeFactoryT,
+          typename NotTerminalNodeFactoryT, typename NodeFactoryT>
+ChildrenInserter(VariantType, TerminalNodeFactoryT &, NotTerminalNodeFactoryT &,
+                 NodeFactoryT &, int, int, int)
+    ->ChildrenInserter<VariantType, TerminalNodeFactoryT,
+                       NotTerminalNodeFactoryT, NodeFactoryT>;
+
+template <typename T>
+struct IsInRecursiveWrapper {
+  static constexpr auto value = 0;
+};
+
+template <typename T>
+struct IsInRecursiveWrapper<boost::recursive_wrapper<T>> {
+  static constexpr auto value = 1;
+};
+
+template <typename T>
+constexpr auto isInRecursiveWrapper_v = IsInRecursiveWrapper<T>::value;
+
+template <typename T>
+struct UnpackRecursiveWrapper {
+  static decltype(auto) get(T t) { return t; }
+};
+
+template <typename T>
+struct UnpackRecursiveWrapper<boost::recursive_wrapper<T>> {
+  static decltype(auto) get(boost::recursive_wrapper<T> t) { return t.get(); }
+};
 
 template <typename VariantType>
 class BasicGenerator {
  public:
   BasicGenerator(int minHeight, int maxHeight, unsigned int rndSeed = 5489u)
       : minHeight_{minHeight}, maxHeight_{maxHeight}, rnd_{rndSeed} {
-    OrderNodesHelper orderNodesHelper{terminalNodes_, noneTerminalNodes_};
-    boost::mp11::mp_for_each<VariantType>(orderNodesHelper);
+    std::vector<VariantType> terminalNodes;
+    std::vector<VariantType> notTerminalNodes;
+    std::vector<VariantType> allNodes;
+
+    boost::mp11::mp_for_each<VariantType>([&](auto node) {
+      auto unpacked = UnpackRecursiveWrapper<decltype(node)>::get(node);
+      allNodes.push_back(unpacked);
+      if (unpacked.children.size() == 0)
+        terminalNodes.push_back(unpacked);
+      else
+        notTerminalNodes.push_back(unpacked);
+    });
+
+    BOOST_ASSERT_MSG(minHeight > 1, "minHeight needs to be bigger that 1");
+    BOOST_ASSERT_MSG(terminalNodes.size() > 0, "no terminatin nodes defined");
+    BOOST_ASSERT_MSG(notTerminalNodes.size() > 0,
+                     "no none terminatin nodes defined");
+
+    std::uniform_int_distribution<size_t> randomTermNodeSelector{
+        0, terminalNodes.size() - 1};
+    randomTerminalNode_ = [=]() mutable {
+      return terminalNodes[randomTermNodeSelector(rnd_)];
+    };
+
+    std::uniform_int_distribution<size_t> randomNotTermNodeSelector{
+        0, notTerminalNodes.size() - 1};
+    randomNotTerminalNode_ = [=]() mutable {
+      return notTerminalNodes[randomNotTermNodeSelector(rnd_)];
+    };
+
+    std::uniform_int_distribution<size_t> randomNodeSelector{
+        0, allNodes.size() - 1};
+    randomNode_ = [=]() mutable { return allNodes[randomNodeSelector(rnd_)]; };
   }
 
   VariantType operator()() {
-    std::uniform_int_distribution<> height{minHeight_, maxHeight_};
-    std::uniform_int_distribution<size_t> randomNoneTermSelector{
-        0, noneTerminalNodes_.size() - 1};
-    std::uniform_int_distribution<size_t> randomTermSelector{
-        0, terminalNodes_.size() - 1};
+    auto rootNode = randomNotTerminalNode_();
 
-    auto makeTermial = [&]() {
-      return terminalNodes_[randomTermSelector(rnd_)];
-    };
-    auto makeNoneTermial = [&]() {
-      return noneTerminalNodes_[randomNoneTermSelector(rnd_)];
-    };
-
-    VariantType rootNode = makeNoneTermial();
-    
-    NodeChildrenInsert ni{rootNode, makeTermial, makeNoneTermial, height(rnd_) - 1};
-
-    boost::apply_visitor(
-      ni,
-      rootNode);
-  
-    return rootNode;
+    return boost::apply_visitor(
+        ChildrenInserter{rootNode, randomTerminalNode_, randomNotTerminalNode_,
+                         randomNode_, minHeight_, maxHeight_, 1},
+        rootNode);
   }
 
  private:
-  struct OrderNodesHelper {
-    std::vector<VariantType> &terminalNodes;
-    std::vector<VariantType> &noneTerminalNodes;
+  int const minHeight_;
+  int const maxHeight_;
 
-    template <class T>
-    void operator()(T) {
-      terminalNodes.push_back(T{});
-    }
+  std::function<VariantType()> randomTerminalNode_;
+  std::function<VariantType()> randomNotTerminalNode_;
+  std::function<VariantType()> randomNode_;
 
-    template <class T>
-    void operator()(boost::recursive_wrapper<T>) {
-      noneTerminalNodes.push_back(T{});
-    }
-  };
-  int minHeight_;
-  int maxHeight_;
-  std::vector<VariantType> terminalNodes_;
-  std::vector<VariantType> noneTerminalNodes_;
   std::mt19937 rnd_;
 };
 

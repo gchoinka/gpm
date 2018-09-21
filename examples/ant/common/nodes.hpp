@@ -6,16 +6,18 @@
  * copy at http://www.boost.org/LICENSE_1_0.txt)
  */
 #pragma once
-#include <boost/any.hpp>
 #include <gpm/gpm.hpp>
 
 namespace ant {
 
-struct move : public gpm::BaseNode<boost::any, 0, gpm::NodeToken<'m'>> {};
+struct move
+    : public gpm::BaseNode<gpm::AnyTypeNullSink, 0, gpm::NodeToken<'m'>> {};
 
-struct right : public gpm::BaseNode<boost::any, 0, gpm::NodeToken<'r'>> {};
+struct right
+    : public gpm::BaseNode<gpm::AnyTypeNullSink, 0, gpm::NodeToken<'r'>> {};
 
-struct left : public gpm::BaseNode<boost::any, 0, gpm::NodeToken<'l'>> {};
+struct left
+    : public gpm::BaseNode<gpm::AnyTypeNullSink, 0, gpm::NodeToken<'l'>> {};
 
 struct if_food_ahead;
 
@@ -49,14 +51,3 @@ struct if_food_ahead
 
 
 }  // namespace ant
-
-
-namespace gpm{
-  template<>
-  constexpr size_t ChildrenSize<ant::if_food_ahead> = 2;
-  template<>
-  constexpr size_t ChildrenSize<ant::prog3> = 3;
-  template<>
-  constexpr size_t ChildrenSize<ant::prog2> = 2;
-  
-}

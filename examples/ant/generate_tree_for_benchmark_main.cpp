@@ -84,23 +84,6 @@ class AsCPPFixedNotation : public boost::static_visitor<std::string> {
   AsCPPFixedNotation(std::string const& simulationName)
       : simulationName_{simulationName} {}
 
-//   std::string operator()(ant::if_food_ahead const& node) const {
-//     return gpm::utils::format(
-//         R"""(
-//                 if({simulationName}.is_food_in_front()){{
-//                     {true_branch}
-//                 }}else{{
-//                     {false_branch}
-//                 }}
-//             )""",
-//         gpm::utils::argsnamed, 
-//         // clang-format off
-//         "simulationName", simulationName_
-//         , "true_branch", boost::apply_visitor(*this, node.get(true))
-//         , "false_branch", boost::apply_visitor(*this, node.get(false)));
-//         // clang-format on
-//   }
-
   struct AntNodeToSimulationMethodName {
     static char const* name(ant::move) { return "move"; }
     static char const* name(ant::left) { return "left"; }
@@ -110,7 +93,7 @@ class AsCPPFixedNotation : public boost::static_visitor<std::string> {
   };
 
   template <typename NodeT>
-  std::string operator()(NodeT const & node) const {
+  std::string operator()(NodeT node) const {
     std::string res;
     if constexpr (std::is_same_v<ant::if_food_ahead, NodeT>) {
       return gpm::utils::format(
@@ -128,15 +111,14 @@ class AsCPPFixedNotation : public boost::static_visitor<std::string> {
       );
       // clang-format off
     }
-    else if constexpr (gpm::ChildrenSize<NodeT> == 0) {
+    else if constexpr (node.children.size() == 0) {
       res += gpm::utils::format("{simulationName}.{methodName}();\n",
                                 gpm::utils::argsnamed, 
                                 // clang-format off
                                 "simulationName", simulationName_, 
                                 "methodName", AntNodeToSimulationMethodName::name(node));
                                 // clang-format on
-    }
-    else if constexpr (gpm::ChildrenSize<NodeT> != 0){
+    } else if constexpr (node.children.size() != 0) {
       for (auto& n : node.children) res += boost::apply_visitor(*this, n);
 
     }
@@ -172,15 +154,15 @@ class AsCPPFixedWithVisitorNotation
   }
 
   template <typename NodeT>
-  std::string operator()(NodeT const & node) const {
+  std::string operator()(NodeT node) const {
     auto nodeType = boost::typeindex::type_id_runtime(node).pretty_name();
     std::string res;
-    if constexpr (gpm::ChildrenSize<NodeT> == 0) {
+    if constexpr (node.children.size() == 0) {
       res += gpm::utils::format("{visitorName}({nodeType}{{}});\n",
                                 gpm::utils::argsnamed, "visitorName",
                                 visitorName_, "nodeType", nodeType);
     }
-    if constexpr (gpm::ChildrenSize<NodeT> != 0)
+    if constexpr (node.children.size() != 0)
       for (auto& n : node.children) res += boost::apply_visitor(*this, n);
     return res;
   }
@@ -202,9 +184,9 @@ class AsRecursiveVariantNotation : public boost::static_visitor<std::string> {
   }
 
   template <typename NodeT>
-  std::string operator()(NodeT const & node) const {
+  std::string operator()(NodeT node) const {
     std::string res;
-    if constexpr (gpm::ChildrenSize<NodeT> != 0) {
+    if constexpr (node.children.size() != 0) {
       auto delimi = "\n";
       for (auto& n : node.children) {
         (res += delimi) += boost::apply_visitor(*this, n);
@@ -223,7 +205,7 @@ class AsRecursiveVariantNotation : public boost::static_visitor<std::string> {
 
 decltype(auto) getRandomAnt() {
   int minHeight = 1;
-  int maxHeight = 7;
+  int maxHeight = 17;
   // std::random_device rd;
 
   return gpm::BasicGenerator<ant::ant_nodes>{minHeight, maxHeight}();
@@ -256,6 +238,7 @@ int main(int argc, char** argv) {
 
   auto filename = cliArgs["antrpndef"].as<std::string>();
   auto ant = getOptAntFromFile(filename.c_str());
+  // auto ant = getRandomAnt();
 
   auto antBoardSimName = "antBoardSim";
   auto antBoardSimVisitorName = "antBoardSimVisitor";
