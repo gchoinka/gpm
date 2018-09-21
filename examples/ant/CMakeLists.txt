@@ -58,6 +58,7 @@ endif()
 
 
 add_custom_target(make_tree_benchmark 
+    COMMAND ${CMAKE_COMMAND} -E remove "${GeneratedIncludesDir}/ant_simulation_benchmark_generated_functions.cpp"
     COMMAND "$<TARGET_FILE:generate_tree_for_benchmark>" -a "${CMAKE_CURRENT_SOURCE_DIR}/data/randomAnt.txt" -o "${GeneratedIncludesDir}/ant_simulation_benchmark_generated_functions.cpp"
     COMMAND ${FORMAT_STEP}
     COMMAND ${CMAKE_COMMAND} -E touch_nocreate "${CMAKE_CURRENT_SOURCE_DIR}/tree_benchmark_main.cpp"
