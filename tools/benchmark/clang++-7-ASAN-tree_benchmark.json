@@ -1,7 +1,7 @@
 {
   "context": {
-    "date": "2018-09-22 21:52:28",
-    "executable": "/home/gchoinka/src/gpm/build-benchmarks/g++-7/examples/ant/tree_benchmark",
+    "date": "2018-09-22 21:56:34",
+    "executable": "/home/gchoinka/src/gpm/build-benchmarks/clang++-7-ASAN/examples/ant/tree_benchmark",
     "num_cpus": 8,
     "mhz_per_cpu": 3500,
     "cpu_scaling_enabled": true,
@@ -31,54 +31,54 @@
         "num_sharing": 8
       }
     ],
-    "library_build_type": "release"
+    "library_build_type": "debug"
   },
   "benchmarks": [
     {
       "name": "variantDynamic",
-      "iterations": 2973,
-      "real_time": 2.2604770601913927e+05,
-      "cpu_time": 2.2604604944500508e+05,
+      "iterations": 101,
+      "real_time": 5.4355210297289165e+06,
+      "cpu_time": 5.4355562871287139e+06,
       "time_unit": "ns",
       "score": 8.3000000000000000e+01
     },
     {
       "name": "variantCTStatic",
-      "iterations": 6697,
-      "real_time": 1.0603530013394760e+05,
-      "cpu_time": 1.0603513334328808e+05,
+      "iterations": 420,
+      "real_time": 1.6991140523757730e+06,
+      "cpu_time": 1.6990659023809521e+06,
       "time_unit": "ns",
       "score": 8.3000000000000000e+01
     },
     {
       "name": "oopTreeDynamic",
-      "iterations": 18269,
-      "real_time": 3.9307550769082482e+04,
-      "cpu_time": 3.9307343751710570e+04,
+      "iterations": 587,
+      "real_time": 1.1926668688197369e+06,
+      "cpu_time": 1.1926653117546851e+06,
       "time_unit": "ns",
       "score": 8.3000000000000000e+01
     },
     {
       "name": "oppTreeCTStatic",
-      "iterations": 41517,
-      "real_time": 1.7124329888989716e+04,
-      "cpu_time": 1.7124196088349348e+04,
+      "iterations": 2266,
+      "real_time": 3.1321743159746629e+05,
+      "cpu_time": 3.1321743115622230e+05,
       "time_unit": "ns",
       "score": 8.3000000000000000e+01
     },
     {
       "name": "unwrappedDirectCTStatic",
-      "iterations": 1070573,
-      "real_time": 6.4861369845930403e+02,
-      "cpu_time": 6.4861465588988335e+02,
+      "iterations": 13015,
+      "real_time": 5.5042164041268952e+04,
+      "cpu_time": 5.5042187168651573e+04,
       "time_unit": "ns",
       "score": 8.3000000000000000e+01
     },
     {
       "name": "unwrappedVisitorCallingCTStatic",
-      "iterations": 1052176,
-      "real_time": 6.5177065054065440e+02,
-      "cpu_time": 6.5177453201745709e+02,
+      "iterations": 11827,
+      "real_time": 5.5822697556542982e+04,
+      "cpu_time": 5.5821067388179588e+04,
       "time_unit": "ns",
       "score": 8.3000000000000000e+01
     }

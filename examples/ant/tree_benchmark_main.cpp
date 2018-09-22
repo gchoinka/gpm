@@ -182,6 +182,8 @@ template <typename AntBoardSimT>
 decltype(auto) getAllTreeBenchmarks() {
   return std::make_tuple();
 }
+
+[[gnu::unused]] static char const* getAntRPN() { return ""; }
 #endif
 
 struct RegisterIfPosible : public boost::static_visitor<void> {
