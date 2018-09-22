@@ -21,7 +21,7 @@ set_target_properties(${targetName} PROPERTIES
             CXX_EXTENSIONS OFF
 )
 target_compile_options(${targetName} PRIVATE ${warning_flags})
-target_link_libraries(${targetName} fmt::fmt Boost::boost cxxopts::cxxopts)
+target_link_libraries(${targetName} fmt::fmt Boost::boost Boost::program_options)
 
 
 
@@ -59,7 +59,7 @@ endif()
 
 add_custom_target(make_tree_benchmark 
     COMMAND ${CMAKE_COMMAND} -E remove "${GeneratedIncludesDir}/ant_simulation_benchmark_generated_functions.cpp"
-    COMMAND "$<TARGET_FILE:generate_tree_for_benchmark>" -a "${CMAKE_CURRENT_SOURCE_DIR}/data/randomAnt.txt" -o "${GeneratedIncludesDir}/ant_simulation_benchmark_generated_functions.cpp"
+    COMMAND "$<TARGET_FILE:generate_tree_for_benchmark>" --antrpndef "${CMAKE_CURRENT_SOURCE_DIR}/data/randomAnt.txt" --outfile "${GeneratedIncludesDir}/ant_simulation_benchmark_generated_functions.cpp"
     COMMAND ${FORMAT_STEP}
     COMMAND ${CMAKE_COMMAND} -E touch_nocreate "${CMAKE_CURRENT_SOURCE_DIR}/tree_benchmark_main.cpp"
     COMMAND ${CMAKE_COMMAND} --build "${CMAKE_BINARY_DIR}" --target tree_benchmark

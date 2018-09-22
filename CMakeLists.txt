@@ -31,9 +31,9 @@ file(MAKE_DIRECTORY "${GeneratedIncludesDir}")
 include_directories("${GeneratedIncludesDir}")
 
 
-hunter_add_package(Boost)
+hunter_add_package(Boost COMPONENTS program_options)
 set(BOOST_MIN_VERSION "1.68.0") 
-find_package(Boost ${BOOST_MIN_VERSION} REQUIRED)
+find_package(Boost ${BOOST_MIN_VERSION} COMPONENTS program_options REQUIRED)
 
 hunter_add_package(fmt)
 find_package(fmt CONFIG REQUIRED)
