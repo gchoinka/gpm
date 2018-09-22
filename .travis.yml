@@ -18,7 +18,7 @@ cache:
 
 matrix:
   include:
-    - env: CLANG_VERS="7.0" CXXCOMPILER="clang++-7.0" CCOMPILER="clang-7.0"
+    - env: CLANG_VERS="7" CXXCOMPILER="clang++-7" CCOMPILER="clang-7"
       addons: &default_addons
         apt:
           sources:
