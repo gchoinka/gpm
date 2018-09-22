@@ -7,22 +7,52 @@
  */
 #pragma once
 
-#include <string>
-#include <boost/variant.hpp>
-#include <boost/type_index.hpp>
 #include <fmt/format.h>
+#include <boost/type_index.hpp>
+#include <boost/variant.hpp>
+#include <string>
 
 #include "../common/nodes.hpp"
 
 using namespace fmt::literals;
 
-struct UnwrappedVisitorCallingCTStatic
-{
-  static std::string name() { return "oopTreeFromString"; }
-  static std::string body() {
-    return R"""(
+class AsCPPFixedWithVisitorNotation
+    : public boost::static_visitor<std::string> {
+ public:
+  std::string operator()(ant::if_food_ahead const& node) const {
+    return fmt::format(
+        R"""(
+        if(antBoardSim.is_food_in_front()){{
+        {true_branch}
+  }}else{{
+  {false_branch}
+  }}
+    )""",
+        "true_branch"_a = boost::apply_visitor(*this, node.get(true)),
+        "false_branch"_a = boost::apply_visitor(*this, node.get(false)));
+  }
+
+  template <typename NodeT>
+  std::string operator()(NodeT node) const {
+    auto nodeType = boost::typeindex::type_id_runtime(node).pretty_name();
+    std::string res;
+    if constexpr (node.children.size() == 0) {
+      res += fmt::format("antBoardSimVisitor({nodeType}{{}});\n",
+                         "nodeType"_a = nodeType);
+    }
+    if constexpr (node.children.size() != 0)
+      for (auto& n : node.children) res += boost::apply_visitor(*this, n);
+    return res;
+  }
+};
+
+struct UnwrappedVisitorCallingCTStatic {
+  std::string name() const { return "unwrappedVisitorCallingCTStatic"; }
+  std::string functionName() const { return "unwrappedVisitorCallingCTStatic"; }
+  std::string body(ant::ant_nodes ant) const {
+    return fmt::format(R"""(
 template<typename AntBoardSimT>
-int cppFixedWithVisitor(AntBoardSimT antBoardSim)
+int unwrappedVisitorCallingCTStatic(AntBoardSimT antBoardSim, std::string_view const &)
 {{                
   auto antBoardSimVisitor = ant::AntBoardSimulationVisitor{{antBoardSim}};
 
@@ -32,45 +62,8 @@ int cppFixedWithVisitor(AntBoardSimT antBoardSim)
   }}
   return antBoardSim.score(); 
 }}
-)""";
-  }
-};
-
-class AsCPPFixedWithVisitorNotation
-: public boost::static_visitor<std::string> {
-  std::string simulationName_;
-  std::string visitorName_;
-  
-public:
-  AsCPPFixedWithVisitorNotation(std::string const& simulationName,
-                                std::string const& visitorName)
-  : simulationName_{simulationName}, visitorName_{visitorName} {}
-  
-  std::string operator()(ant::if_food_ahead const& node) const {
-    return fmt::format(
-      R"""(
-        if({simulationName}.is_food_in_front()){{
-        {true_branch}
-  }}else{{
-  {false_branch}
-  }}
     )""",
-    "simulationName"_a = simulationName_,
-    "true_branch"_a = boost::apply_visitor(*this, node.get(true)),
-                       "false_branch"_a = boost::apply_visitor(*this, node.get(false)));
-  }
-  
-  template <typename NodeT>
-  std::string operator()(NodeT node) const {
-    auto nodeType = boost::typeindex::type_id_runtime(node).pretty_name();
-    std::string res;
-    if constexpr (node.children.size() == 0) {
-      res +=
-      fmt::format("{visitorName}({nodeType}{{}});\n",
-                  "visitorName"_a = visitorName_, "nodeType"_a = nodeType);
-    }
-    if constexpr (node.children.size() != 0)
-      for (auto& n : node.children) res += boost::apply_visitor(*this, n);
-      return res;
+                       "cppFixedWithVisitorNotation"_a = boost::apply_visitor(
+                           AsCPPFixedWithVisitorNotation{}, ant));
   }
 };

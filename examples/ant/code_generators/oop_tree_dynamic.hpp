@@ -11,15 +11,16 @@
 
 #include <fmt/format.h>
 
-struct OOPTreeDynamic
-{
-  static std::string name() { return "oopTreeFromString"; }
-  static std::string body() {
-    return R"""(
+struct OOPTreeDynamic {
+  std::string name() const { return "oopTreeDynamic"; }
+  std::string functionName() const { return "oopTreeDynamic"; }
+
+  std::string body(ant::ant_nodes) const {
+    return fmt::format(R"""(
 template<typename AntBoardSimT>
-int oopTreeFromString(AntBoardSimT antBoardSim)
+static int oopTreeDynamic(AntBoardSimT antBoardSim, std::string_view const & sv)
 {{                
-  auto oopTree = antoop::factory<AntBoardSimT>(gpm::RPNToken_iterator{{antRPNString}});
+  auto oopTree = antoop::factory<AntBoardSimT>(gpm::RPNToken_iterator{{sv}});
   
   while(!antBoardSim.is_finish())
   {{
@@ -27,6 +28,6 @@ int oopTreeFromString(AntBoardSimT antBoardSim)
   }}
   return antBoardSim.score(); 
 }}
-)""";
+)""");
   }
 };

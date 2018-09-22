@@ -7,27 +7,27 @@
  */
 #pragma once
 
-#include <string>
 #include <fmt/format.h>
+#include <string>
 
-struct VariantDynamic
-{
-  static std::string name() { return "oopTreeFromString"; }
-  static std::string body() {
-    return R"""(
+struct VariantDynamic {
+  std::string name() const { return "variantDynamic"; }
+  std::string functionName() const { return "variantDynamic"; }
+  std::string body(ant::ant_nodes) const {
+    return fmt::format(R"""(
 template<typename AntBoardSimT>
-static int recursiveVariantTreeFromString(AntBoardSimT {antBoardSimName})
+static int variantDynamic(AntBoardSimT antBoardSim, std::string_view const & sv)
 {{    
-  auto optAnt = gpm::factory<ant::ant_nodes>(gpm::RPNToken_iterator{{antRPNString}});
+  auto optAnt = gpm::factory<ant::ant_nodes>(gpm::RPNToken_iterator{{sv}});
 
-  auto antBoardSimVisitor = ant::AntBoardSimulationVisitor{{{antBoardSimName}}};
+  auto antBoardSimVisitor = ant::AntBoardSimulationVisitor{{antBoardSim}};
 
-  while(!{antBoardSimName}.is_finish())
+  while(!antBoardSim.is_finish())
   {{
     boost::apply_visitor(antBoardSimVisitor, optAnt);
   }}
-  return {antBoardSimName}.score(); 
+  return antBoardSim.score(); 
 }}
-)""";
+)""");
   }
 };

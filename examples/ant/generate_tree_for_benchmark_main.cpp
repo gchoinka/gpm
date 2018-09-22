@@ -11,13 +11,18 @@
 #include <memory>
 #include <type_traits>
 
+#include <boost/algorithm/string/join.hpp>
+#include <boost/hana.hpp>
+namespace hana = boost::hana;
+
 #include <outcome.hpp>
 namespace outcome = OUTCOME_V2_NAMESPACE;
 
 #include <fmt/format.h>
 #include <fmt/ostream.h>
 
-#include <cxxopts.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/program_options.hpp>
 
 #include <gpm/io.hpp>
 #include <gpm/utils/fmtutils.hpp>
@@ -28,19 +33,15 @@ namespace outcome = OUTCOME_V2_NAMESPACE;
 #include "common/visitor.hpp"
 #include "nodes_opp.hpp"
 
-#include "code_generators/viarant_ctstatic.hpp"
-#include "code_generators/variant_dynamic.hpp"
-#include "code_generators/unwrapped_visitorcalling_ctstatic.hpp"
-#include "code_generators/unwrapped_direct_ctstatic.hpp"
 #include "code_generators/oop_tree_dynamic.hpp"
 #include "code_generators/opp_tree_ctstatic.hpp"
-
-using namespace fmt::literals;
-
-
+#include "code_generators/unwrapped_direct_ctstatic.hpp"
+#include "code_generators/unwrapped_visitorcalling_ctstatic.hpp"
+#include "code_generators/variant_dynamic.hpp"
+#include "code_generators/viarant_ctstatic.hpp"
 
 decltype(auto) getRandomAnt() {
-  int minHeight = 1;
+  int minHeight = 2;
   int maxHeight = 17;
   // std::random_device rd;
 
@@ -59,86 +60,80 @@ decltype(auto) getOptAntFromFile(char const* filename) {
   return gpm::factory<ant::ant_nodes>(gpm::RPNToken_iterator{str});
 }
 
-
-enum class HandleCLIErrrc
-{
-  Success     = 0, // 0 should not represent an error
-  MissingArg  = 1, 
+struct CLIArgs {
+  using ErrorMessage = std::string;
+  std::string outfile;
+  std::string antrpndef;
 };
 
-
-
-template<typename ErrorMessageSinkT>
-outcome::checked<std::tuple<cxxopts::ParseResult, cxxopts::Options>, HandleCLIErrrc> handleCLI(int argc, char ** argv, ErrorMessageSinkT errorMessageSink)
-{
-  cxxopts::Options options("generate_tree_for_benchmark", "");
-  options.allow_unrecognised_options().add_options()
-  // clang-format off
-  ("a,antrpndef", "File name", cxxopts::value<std::string>())
-  ("o,outfile", "File name", cxxopts::value<std::string>());
-  // clang-format on  
-  auto cliArgs = options.parse(argc, argv);
-  
-  if (!cliArgs.count("antrpndef") || !cliArgs.count("outfile")) {
-    errorMessageSink(options.help({"", ""}));
-    return outcome::failure(HandleCLIErrrc::MissingArg);
+outcome::unchecked<CLIArgs, CLIArgs::ErrorMessage> handleCLI(int argc,
+                                                             char** argv) {
+  using namespace fmt::literals;
+  namespace po = boost::program_options;
+  auto args = CLIArgs{};
+  po::options_description desc("Allowed options");
+  desc.add_options()("help", "produce help message")(
+      "antrpndef", po::value<std::string>(&args.antrpndef)->required(), "")(
+      "outfile", po::value<std::string>(&args.outfile)->required(), "");
+  po::variables_map vm;
+  try {
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
+  } catch (std::exception const& e) {
+    if (vm.count("help"))
+      return outcome::failure(boost::lexical_cast<std::string>(desc));
+    else
+      return outcome::failure(e.what());
   }
-  return std::make_tuple(cliArgs, options);
+
+  if (vm.count("help")) {
+    return outcome::failure(boost::lexical_cast<std::string>(desc));
+  }
+  return args;
 }
 
 int main(int argc, char** argv) {
-
-  auto cliArgsOutcome = handleCLI(argc, argv, [](auto const & s){ std::cerr << s << "\n"; } );
-  if(!cliArgsOutcome)
+  auto cliArgsOutcome = handleCLI(argc, argv);
+  if (!cliArgsOutcome) {
+    std::cerr << cliArgsOutcome.error() << "\n";
     exit(1);
-  auto cliArgs = std::get<cxxopts::ParseResult>(cliArgsOutcome.value());
-    
-  
-  auto filename = cliArgs["antrpndef"].as<std::string>();
-  auto ant = getOptAntFromFile(filename.c_str());
-  
-  
-  // auto ant = getRandomAnt();
+  }
+  auto cliArgs = cliArgsOutcome.value();
 
-//   auto antBoardSimName = "antBoardSim";
-//   auto antBoardSimVisitorName = "antBoardSimVisitor";
-// 
-//   auto recursiveVariantNotation =
-//       boost::apply_visitor(AsRecursiveVariantNotation{}, ant);
-//   auto cppFixedNotation =
-//       boost::apply_visitor(AsCPPFixedNotation{antBoardSimName}, ant);
-//   auto cppFixedWithVisitorNotation = boost::apply_visitor(
-//       AsCPPFixedWithVisitorNotation{antBoardSimName, antBoardSimVisitorName},
-//       ant);
-//   auto oopNotation = boost::apply_visitor(AsOOPNotation{antBoardSimName}, ant);
-// 
-//   auto antRPN = boost::apply_visitor(gpm::RPNPrinter<std::string>{}, ant);
-// 
-//   auto outFileName = cliArgs["outfile"].as<std::string>();
-//   std::ofstream outf(outFileName.c_str());
-//   outf << fmt::format(
-//       R"""(
-// static char const antRPNString[] = {{"{antRPN}"}};    
-// 
-// 
-// template<typename AntBoardSimT>
-// decltype(auto) getAllTreeBenchmarks()
-// {{
-//   return std::make_tuple(
-//       std::make_tuple(&recursiveVariantTreeFromString<AntBoardSimT>, "recursiveVariantTreeFromString")
-//     , std::make_tuple(&recursiveVariantTree<AntBoardSimT>, "recursiveVariantTree")
-//     , std::make_tuple(&cppFixedTree<AntBoardSimT>, "cppFixedTree")
-//     , std::make_tuple(&cppFixedWithVisitor<AntBoardSimT>, "cppFixedWithVisitor")
-//     , std::make_tuple(&oopTree<AntBoardSimT>, "oopTree")
-//     , std::make_tuple(&oopTreeFromString<AntBoardSimT>, "oopTreeFromString")
-//   );
-// }}
-// 
-// )""",
-//       "antRPN"_a = antRPN, "antBoardSimName"_a = antBoardSimName,
-//       "recursiveVariantNotation"_a = recursiveVariantNotation,
-//       "cppFixedNotation"_a = cppFixedNotation,
-//       "cppFixedWithVisitorNotation"_a = cppFixedWithVisitorNotation,
-//       "oopNotation"_a = oopNotation
-//               );
+  auto ant = getRandomAnt();
+
+  auto bm = hana::make_tuple(
+      VariantDynamic{}, VariantCTStatic{}, OOPTreeDynamic{}, OPPTreeCTStatic{},
+      UnwrappedDirectCTStatic{}, UnwrappedVisitorCallingCTStatic{});
+
+  std::ofstream outf(cliArgs.outfile.c_str());
+
+  outf << fmt::format(
+      "static char const * getAntRPN() {{ return \"{antRPN}\"; }}\n",
+      "antRPN"_a = boost::apply_visitor(gpm::RPNPrinter<std::string>{}, ant));
+  hana::for_each(
+      bm, [&](auto const& codeGenerator) { outf << codeGenerator.body(ant); });
+
+  std::string tupleElements;
+  auto delimiter = "\n      ";
+
+  hana::for_each(bm, [&](auto const& codeGenerator) {
+    tupleElements += fmt::format(
+        R"""({Delimiter} std::make_tuple(&{FunctionPointer}<AntBoardSimT>, "{BenchmareName}"))""",
+        "Delimiter"_a = delimiter,
+        "FunctionPointer"_a = codeGenerator.functionName(),
+        "BenchmareName"_a = codeGenerator.name());
+    delimiter = "\n    , ";
+  });
+
+  fmt::print(outf,
+             R"""(
+template<typename AntBoardSimT>
+decltype(auto) getAllTreeBenchmarks()
+{{
+  return std::make_tuple({tupleElements});
+}}
+  
+)""",
+             "tupleElements"_a = tupleElements);
 }

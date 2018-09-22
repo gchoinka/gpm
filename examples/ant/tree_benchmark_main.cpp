@@ -199,8 +199,8 @@ struct RegisterIfPosible : public boost::static_visitor<void> {
                             theAntBoardSim](benchmark::State& state) {
             auto theAntBoardSimCopy = theAntBoardSim;
             for (auto _ : state)
-              state.counters["score"] =
-                  std::get<0>(treeBenchmarkFunktion)(theAntBoardSimCopy);
+              state.counters["score"] = std::get<0>(treeBenchmarkFunktion)(
+                  theAntBoardSimCopy, getAntRPN());
           };
           benchmark::RegisterBenchmark(std::get<1>(treeBenchmarkFunktion),
                                        BM_lambda);
