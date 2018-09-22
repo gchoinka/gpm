@@ -62,6 +62,8 @@ endif()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include) # remove this global
 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/ned14_outcome/include)
+
 # #remove this 
 # include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
 # ExternalProject_Add(frozen
