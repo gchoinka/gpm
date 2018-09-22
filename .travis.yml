@@ -18,23 +18,23 @@ cache:
 
 matrix:
   include:
-    - env: CLANG_VERS="6.0" CXXCOMPILER="clang++-6.0" CCOMPILER="clang-6.0"
+    - env: CLANG_VERS="7.0" CXXCOMPILER="clang++-7.0" CCOMPILER="clang-7.0"
       addons: &default_addons
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - sourceline: 'deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-6.0 main'
+            - sourceline: 'deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-7.0 main'
               key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
-          packages: [ "clang-6.0", "llvm-6.0-dev", "g++-8", "ninja-build"]
+          packages: [ "clang-7.0", "llvm-7.0-dev", "g++-8", "ninja-build"]
     - env: CMAKE_BUILD_TYPE=Debug CXXCOMPILER=g++-8 CCOMPILER=gcc-8
       addons: *default_addons
     - env: CMAKE_BUILD_TYPE=Release CXXCOMPILER=g++-8 CCOMPILER=gcc-8
       addons: *default_addons
       #- env: CMAKE_BUILD_TYPE=Debug CXXCOMPILER=g++-8 CMAKE_CXX_FLAGS="-fsanitize=address -fno-omit-frame-pointer" CMAKE_EXE_LINKER_FLAGS="-fsanitize=address -fuse-ld=gold" CCOMPILER=gcc-8
       #  addons: *default_addons
-    - env: CMAKE_BUILD_TYPE=Debug CXXCOMPILER=clang++-6.0 CMAKE_CXX_FLAGS="-fsanitize=undefined -fno-omit-frame-pointer" CMAKE_EXE_LINKER_FLAGS="-fsanitize=undefined" CLANG_VERS="6.0" CCOMPILER=clang-6.0 
+    - env: CMAKE_BUILD_TYPE=Debug CXXCOMPILER=clang++-7.0 CMAKE_CXX_FLAGS="-fsanitize=undefined -fno-omit-frame-pointer" CMAKE_EXE_LINKER_FLAGS="-fsanitize=undefined" CLANG_VERS="7.0" CCOMPILER=clang-7.0 
       addons: *default_addons
-    - env: CMAKE_BUILD_TYPE=Release CXXCOMPILER=clang++-6.0 CCOMPILER=clang-6.0 CLANG_VERS="6.0"
+    - env: CMAKE_BUILD_TYPE=Release CXXCOMPILER=clang++-7.0 CCOMPILER=clang-7.0 CLANG_VERS="7.0"
       addons: *default_addons
 
 
