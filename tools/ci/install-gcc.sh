@@ -15,6 +15,6 @@ wget -qO- "${URL}" | tar xz -C "${WORK_DIR}"
 cd "${WORK_DIR}"/gcc-?.?.?* 
 ./contrib/download_prerequisites
 ./configure --prefix="${INSTALL_DIR}" --disable-multilib
-make -j2
+make -j2 &> "${WORK_DIR}/gcc-build.log"
 make install
 rm -rf "${WORK_DIR}"/gcc-?.?.?* 
