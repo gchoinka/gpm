@@ -52,7 +52,8 @@ endif()
 hunter_add_package(cxxopts)
 find_package(cxxopts CONFIG REQUIRED)
 
-find_program(CLANG_FORMAT NAMES "clang-format" "clang-format-9.0" "clang-format-8.0" "clang-format-7.0" "clang-format-6.0" "clang-format-5.0" "clang-format-4.0" "clang-format-3.0" DOC "Path to clang-format executable")
+
+find_program(CLANG_FORMAT NAMES clang-format clang-format-9 clang-format-9.0 clang-format-8 clang-format-8.0 clang-format-7 clang-format-7.0 clang-format-6 clang-format-6.0 clang-format-5 clang-format-5.0 clang-format-4 clang-format-4.0 clang-format-3 clang-format-3.0 DOC "Path to clang-format executable")
 
 if(NOT CLANG_FORMAT)
   message(STATUS "clang-format not found.")
@@ -60,24 +61,10 @@ else()
   message(STATUS "clang-format found: ${CLANG_FORMAT}")
 endif()
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include) # remove this global
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include) # TODO replace this calls to include_directories
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/ned14_outcome/include)
 
-# #remove this 
-# include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
-# ExternalProject_Add(frozen
-#     PREFIX ${CMAKE_CURRENT_BINARY_DIR}/frozen
-#     GIT_REPOSITORY https://github.com/serge-sans-paille/frozen.git
-#     GIT_TAG        master
-#     CMAKE_ARGS -DCMAKE_PREFIX_PATH=${CMAKE_INSTALL_PREFIX} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
-#     UPDATE_COMMAND ""
-#     CONFIGURE_COMMAND ""
-#     BUILD_COMMAND ""
-#     INSTALL_COMMAND ""
-# )
-
-include_directories(${CMAKE_CURRENT_BINARY_DIR}/frozen/include/)
 
 
 if(${GPM_BUILD_TESTS})

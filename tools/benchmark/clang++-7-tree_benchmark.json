@@ -1,6 +1,6 @@
 {
   "context": {
-    "date": "2018-09-22 21:55:46",
+    "date": "2018-09-23 01:45:25",
     "executable": "/home/gchoinka/src/gpm/build-benchmarks/clang++-7/examples/ant/tree_benchmark",
     "num_cpus": 8,
     "mhz_per_cpu": 3500,
@@ -36,49 +36,57 @@
   "benchmarks": [
     {
       "name": "variantDynamic",
-      "iterations": 2151,
-      "real_time": 2.9121752161542274e+05,
-      "cpu_time": 2.9118151092515112e+05,
+      "iterations": 1725,
+      "real_time": 3.8176934551143937e+05,
+      "cpu_time": 3.7729711594202887e+05,
       "time_unit": "ns",
       "score": 8.3000000000000000e+01
     },
     {
       "name": "variantCTStatic",
-      "iterations": 6497,
-      "real_time": 1.0256560597206191e+05,
-      "cpu_time": 1.0256568770201629e+05,
+      "iterations": 4405,
+      "real_time": 1.7152207582265616e+05,
+      "cpu_time": 1.7144305425652672e+05,
       "time_unit": "ns",
       "score": 8.3000000000000000e+01
     },
     {
       "name": "oopTreeDynamic",
-      "iterations": 19614,
-      "real_time": 3.5323117212293510e+04,
-      "cpu_time": 3.5323123789130223e+04,
+      "iterations": 13557,
+      "real_time": 4.8005115880765967e+04,
+      "cpu_time": 4.7988083204248738e+04,
       "time_unit": "ns",
       "score": 8.3000000000000000e+01
     },
     {
       "name": "oppTreeCTStatic",
-      "iterations": 49819,
-      "real_time": 1.4231045685398893e+04,
-      "cpu_time": 1.4230809309701121e+04,
+      "iterations": 34826,
+      "real_time": 2.0628279503593076e+04,
+      "cpu_time": 2.0620019410785051e+04,
       "time_unit": "ns",
       "score": 8.3000000000000000e+01
     },
     {
       "name": "unwrappedDirectCTStatic",
-      "iterations": 1813538,
-      "real_time": 3.8621913298675628e+02,
-      "cpu_time": 3.8616907282891202e+02,
+      "iterations": 1094878,
+      "real_time": 6.4079198595285914e+02,
+      "cpu_time": 6.4053939982354200e+02,
       "time_unit": "ns",
       "score": 8.3000000000000000e+01
     },
     {
       "name": "unwrappedVisitorCallingCTStatic",
-      "iterations": 1798791,
-      "real_time": 3.9403868320318219e+02,
-      "cpu_time": 3.9356615026426101e+02,
+      "iterations": 1028735,
+      "real_time": 6.3182957612389771e+02,
+      "cpu_time": 6.3140493907566076e+02,
+      "time_unit": "ns",
+      "score": 8.3000000000000000e+01
+    },
+    {
+      "name": "tupleCTStatic",
+      "iterations": 437916,
+      "real_time": 1.5242201929226567e+03,
+      "cpu_time": 1.5231670982562873e+03,
       "time_unit": "ns",
       "score": 8.3000000000000000e+01
     }

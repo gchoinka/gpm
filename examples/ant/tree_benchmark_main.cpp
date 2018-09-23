@@ -29,6 +29,7 @@
 #include "common/visitor.hpp"
 
 #include "nodes_opp.hpp"
+#include "nodes_hana_tuple.hpp"
 
 template <typename AntBoardSimT>
 class AntBoardSimDecorator {

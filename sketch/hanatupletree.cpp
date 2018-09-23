@@ -3,6 +3,7 @@
 #include <tuple>
 
 namespace hana = boost::hana;
+using namespace hana::literals; // contains the _c suffix
 
 struct M {};
 struct L {};

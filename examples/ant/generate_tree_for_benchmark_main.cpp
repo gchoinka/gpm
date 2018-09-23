@@ -21,8 +21,8 @@ namespace outcome = OUTCOME_V2_NAMESPACE;
 #include <fmt/format.h>
 #include <fmt/ostream.h>
 
-#include <boost/lexical_cast.hpp>
 #include <boost/program_options.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <gpm/io.hpp>
 #include <gpm/utils/fmtutils.hpp>
@@ -32,13 +32,20 @@ namespace outcome = OUTCOME_V2_NAMESPACE;
 #include "common/santa_fe_board.hpp"
 #include "common/visitor.hpp"
 #include "nodes_opp.hpp"
+#include "nodes_hana_tuple.hpp"
 
+#include "code_generators/viarant_ctstatic.hpp"
+#include "code_generators/variant_dynamic.hpp"
+#include "code_generators/unwrapped_visitorcalling_ctstatic.hpp"
+#include "code_generators/unwrapped_direct_ctstatic.hpp"
 #include "code_generators/oop_tree_dynamic.hpp"
 #include "code_generators/opp_tree_ctstatic.hpp"
-#include "code_generators/unwrapped_direct_ctstatic.hpp"
-#include "code_generators/unwrapped_visitorcalling_ctstatic.hpp"
-#include "code_generators/variant_dynamic.hpp"
-#include "code_generators/viarant_ctstatic.hpp"
+#include "code_generators/tuple_ctstatic.hpp"
+
+
+
+
+
 
 decltype(auto) getRandomAnt() {
   int minHeight = 2;
@@ -60,32 +67,38 @@ decltype(auto) getOptAntFromFile(char const* filename) {
   return gpm::factory<ant::ant_nodes>(gpm::RPNToken_iterator{str});
 }
 
-struct CLIArgs {
+struct CLIArgs
+{
   using ErrorMessage = std::string;
   std::string outfile;
   std::string antrpndef;
 };
 
-outcome::unchecked<CLIArgs, CLIArgs::ErrorMessage> handleCLI(int argc,
-                                                             char** argv) {
+
+
+outcome::unchecked<CLIArgs, CLIArgs::ErrorMessage> handleCLI(int argc, char ** argv)
+{
   using namespace fmt::literals;
   namespace po = boost::program_options;
   auto args = CLIArgs{};
   po::options_description desc("Allowed options");
-  desc.add_options()("help", "produce help message")(
-      "antrpndef", po::value<std::string>(&args.antrpndef)->required(), "")(
-      "outfile", po::value<std::string>(&args.outfile)->required(), "");
+  desc.add_options()
+  ("help", "produce help message")
+  ("antrpndef", po::value<std::string>(&args.antrpndef)->required(), "")
+  ("outfile", po::value<std::string>(&args.outfile)->required(), "")
+  ;
   po::variables_map vm;
-  try {
+  try{
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
-  } catch (std::exception const& e) {
-    if (vm.count("help"))
+  }
+  catch(std::exception const & e){
+    if(vm.count("help"))
       return outcome::failure(boost::lexical_cast<std::string>(desc));
     else
       return outcome::failure(e.what());
   }
-
+   
   if (vm.count("help")) {
     return outcome::failure(boost::lexical_cast<std::string>(desc));
   }
@@ -93,47 +106,45 @@ outcome::unchecked<CLIArgs, CLIArgs::ErrorMessage> handleCLI(int argc,
 }
 
 int main(int argc, char** argv) {
+
   auto cliArgsOutcome = handleCLI(argc, argv);
-  if (!cliArgsOutcome) {
+  if(!cliArgsOutcome)
+  {
     std::cerr << cliArgsOutcome.error() << "\n";
     exit(1);
   }
   auto cliArgs = cliArgsOutcome.value();
 
   auto ant = getRandomAnt();
-
-  auto bm = hana::make_tuple(
-      VariantDynamic{}, VariantCTStatic{}, OOPTreeDynamic{}, OPPTreeCTStatic{},
-      UnwrappedDirectCTStatic{}, UnwrappedVisitorCallingCTStatic{});
-
+  
+  auto bm = hana::make_tuple(VariantDynamic{}, VariantCTStatic{}, OOPTreeDynamic{}, OPPTreeCTStatic{}, UnwrappedDirectCTStatic{}, UnwrappedVisitorCallingCTStatic{}, TupleCTStatic{});
+  
   std::ofstream outf(cliArgs.outfile.c_str());
-
-  outf << fmt::format(
-      "static char const * getAntRPN() {{ return \"{antRPN}\"; }}\n",
-      "antRPN"_a = boost::apply_visitor(gpm::RPNPrinter<std::string>{}, ant));
-  hana::for_each(
-      bm, [&](auto const& codeGenerator) { outf << codeGenerator.body(ant); });
-
+  
+  outf << fmt::format("static char const * getAntRPN() {{ return \"{antRPN}\"; }}\n", "antRPN"_a = boost::apply_visitor(gpm::RPNPrinter<std::string>{}, ant));
+  hana::for_each(bm, [&](auto const & codeGenerator){
+    outf << codeGenerator.body(ant);
+  });
+  
+  
+  
   std::string tupleElements;
   auto delimiter = "\n      ";
-
-  hana::for_each(bm, [&](auto const& codeGenerator) {
-    tupleElements += fmt::format(
-        R"""({Delimiter} std::make_tuple(&{FunctionPointer}<AntBoardSimT>, "{BenchmareName}"))""",
-        "Delimiter"_a = delimiter,
-        "FunctionPointer"_a = codeGenerator.functionName(),
-        "BenchmareName"_a = codeGenerator.name());
+  
+  hana::for_each(bm, [&](auto const & codeGenerator){
+    tupleElements += fmt::format(R"""({Delimiter} std::make_tuple(&{FunctionPointer}<AntBoardSimT>, "{BenchmareName}"))""", "Delimiter"_a = delimiter, "FunctionPointer"_a = codeGenerator.functionName(), "BenchmareName"_a = codeGenerator.name());
     delimiter = "\n    , ";
   });
-
-  fmt::print(outf,
-             R"""(
+  
+  fmt::print(outf, 
+R"""(
 template<typename AntBoardSimT>
 decltype(auto) getAllTreeBenchmarks()
 {{
   return std::make_tuple({tupleElements});
 }}
   
-)""",
-             "tupleElements"_a = tupleElements);
+)"""
+       , "tupleElements"_a = tupleElements
+  );
 }

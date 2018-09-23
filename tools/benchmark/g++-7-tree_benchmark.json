@@ -1,6 +1,6 @@
 {
   "context": {
-    "date": "2018-09-22 21:52:28",
+    "date": "2018-09-23 01:43:56",
     "executable": "/home/gchoinka/src/gpm/build-benchmarks/g++-7/examples/ant/tree_benchmark",
     "num_cpus": 8,
     "mhz_per_cpu": 3500,
@@ -36,49 +36,57 @@
   "benchmarks": [
     {
       "name": "variantDynamic",
-      "iterations": 2973,
-      "real_time": 2.2604770601913927e+05,
-      "cpu_time": 2.2604604944500508e+05,
+      "iterations": 2306,
+      "real_time": 2.9607642280591727e+05,
+      "cpu_time": 2.9250016218560270e+05,
       "time_unit": "ns",
       "score": 8.3000000000000000e+01
     },
     {
       "name": "variantCTStatic",
-      "iterations": 6697,
-      "real_time": 1.0603530013394760e+05,
-      "cpu_time": 1.0603513334328808e+05,
+      "iterations": 4925,
+      "real_time": 1.5288041807063454e+05,
+      "cpu_time": 1.5245552527918783e+05,
       "time_unit": "ns",
       "score": 8.3000000000000000e+01
     },
     {
       "name": "oopTreeDynamic",
-      "iterations": 18269,
-      "real_time": 3.9307550769082482e+04,
-      "cpu_time": 3.9307343751710570e+04,
+      "iterations": 14968,
+      "real_time": 4.7154464524250870e+04,
+      "cpu_time": 4.7154417891501849e+04,
       "time_unit": "ns",
       "score": 8.3000000000000000e+01
     },
     {
       "name": "oppTreeCTStatic",
-      "iterations": 41517,
-      "real_time": 1.7124329888989716e+04,
-      "cpu_time": 1.7124196088349348e+04,
+      "iterations": 31578,
+      "real_time": 2.2292752264180814e+04,
+      "cpu_time": 2.2292909810627647e+04,
       "time_unit": "ns",
       "score": 8.3000000000000000e+01
     },
     {
       "name": "unwrappedDirectCTStatic",
-      "iterations": 1070573,
-      "real_time": 6.4861369845930403e+02,
-      "cpu_time": 6.4861465588988335e+02,
+      "iterations": 888461,
+      "real_time": 7.8902481707470133e+02,
+      "cpu_time": 7.8902919092678212e+02,
       "time_unit": "ns",
       "score": 8.3000000000000000e+01
     },
     {
       "name": "unwrappedVisitorCallingCTStatic",
-      "iterations": 1052176,
-      "real_time": 6.5177065054065440e+02,
-      "cpu_time": 6.5177453201745709e+02,
+      "iterations": 884147,
+      "real_time": 7.8689238892382559e+02,
+      "cpu_time": 7.8689949295761880e+02,
+      "time_unit": "ns",
+      "score": 8.3000000000000000e+01
+    },
+    {
+      "name": "tupleCTStatic",
+      "iterations": 1346808,
+      "real_time": 5.1644843140219200e+02,
+      "cpu_time": 5.1645181644302704e+02,
       "time_unit": "ns",
       "score": 8.3000000000000000e+01
     }
