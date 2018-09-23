@@ -41,6 +41,8 @@ namespace outcome = OUTCOME_V2_NAMESPACE;
 #include "code_generators/oop_tree_dynamic.hpp"
 #include "code_generators/opp_tree_ctstatic.hpp"
 #include "code_generators/tuple_ctstatic.hpp"
+#include "code_generators/dyno_tree_dynamic.hpp"
+#include "code_generators/dyno_tree_ctstatic.hpp"
 
 
 
@@ -117,7 +119,7 @@ int main(int argc, char** argv) {
 
   auto ant = getRandomAnt();
   
-  auto bm = hana::make_tuple(VariantDynamic{}, VariantCTStatic{}, OOPTreeDynamic{}, OPPTreeCTStatic{}, UnwrappedDirectCTStatic{}, UnwrappedVisitorCallingCTStatic{}, TupleCTStatic{});
+  auto bm = hana::make_tuple(VariantDynamic{}, VariantCTStatic{}, OOPTreeDynamic{}, OPPTreeCTStatic{}, UnwrappedDirectCTStatic{}, UnwrappedVisitorCallingCTStatic{}, TupleCTStatic{}, DynoTreeDynamic{}, DynoTreeCTStatic{});
   
   std::ofstream outf(cliArgs.outfile.c_str());
   

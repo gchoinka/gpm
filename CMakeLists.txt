@@ -65,6 +65,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include) # TODO replace this cal
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/ned14_outcome/include)
 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/ldionne_dyno/include)
+
 
 
 if(${GPM_BUILD_TESTS})

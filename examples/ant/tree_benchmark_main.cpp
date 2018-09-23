@@ -30,6 +30,7 @@
 
 #include "nodes_opp.hpp"
 #include "nodes_hana_tuple.hpp"
+#include "nodes_dyno.hpp"
 
 template <typename AntBoardSimT>
 class AntBoardSimDecorator {

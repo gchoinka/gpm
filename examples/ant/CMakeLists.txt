@@ -7,12 +7,15 @@
 #
 
 #move this to somewhere else
-if(MSVC)
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   #set(warning_flags "-Wall")
-else ()
-  set(warning_flags -Wall -Wextra -pedantic -Werror)
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  set(warning_flags -Wall -Wextra -pedantic -Werror -Wno-gnu-string-literal-operator-template)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  set(warning_flags -Wall -Wextra -pedantic -Werror -Wno-gnu-string-literal-operator-template)
 endif()
 
+message(STATUS "${CMAKE_CXX_COMPILER_ID}" )
 
 set(targetName generate_tree_for_benchmark)
 add_executable(${targetName} generate_tree_for_benchmark_main.cpp) 
