@@ -15,5 +15,5 @@ wget -qO- "${URL}" | tar xz -C "${WORK_DIR}"
 cd "${WORK_DIR}"/gcc-?.?.?* 
 ./contrib/download_prerequisites
 ./configure --prefix="${INSTALL_DIR}" --disable-multilib
-make -j2 install
+make install
 rm -rf "${WORK_DIR}"/gcc-?.?.?* 
