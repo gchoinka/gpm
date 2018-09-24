@@ -14,7 +14,7 @@ if os.path.exists(buildDir):
 os.mkdir(buildDir)
 
 compiler=[
-    {"compiler":"g++-7", "dir":"g++-7", "cmake_args":["-DCMAKE_BUILD_TYPE=Release", "-DCMAKE_CXX_FLAGS=-DGPM_BENCHMARK_NAME_PREFIX=\"gcc7\""]}, 
+    {"compiler":"g++-8.2", "dir":"g++-8.2", "cmake_args":["-DCMAKE_BUILD_TYPE=Release", "-DCMAKE_CXX_FLAGS=-DGPM_BENCHMARK_NAME_PREFIX=\"gcc82\""]}, 
     {"compiler":"clang++-7", "dir":"clang++-7", "cmake_args":["-DCMAKE_BUILD_TYPE=Release", "-DCMAKE_CXX_FLAGS=-DGPM_BENCHMARK_NAME_PREFIX=\"clang6\""]}, 
     {"compiler":"clang++-7", "dir":"clang++-7-ASAN", "cmake_args":["-DCMAKE_BUILD_TYPE=Debug", "-DCMAKE_CXX_FLAGS=-fsanitize=address -fno-omit-frame-pointer -DGPM_BENCHMARK_NAME_PREFIX=\"clang6ASAN\"",  "-DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address"]}, 
     {"compiler":"clang++-7", "dir":"clang++-7-USAN", "cmake_args":["-DCMAKE_BUILD_TYPE=Debug", "-DCMAKE_CXX_FLAGS=-fsanitize=undefined -fno-omit-frame-pointer -DGPM_BENCHMARK_NAME_PREFIX=\"clang6USAN\"",  "-DCMAKE_EXE_LINKER_FLAGS=-fsanitize=undefined"]}, 

@@ -10,7 +10,7 @@
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   #set(warning_flags "-Wall")
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-  set(warning_flags -Wall -Wextra -pedantic -Werror -Wno-gnu-string-literal-operator-template)
+  set(warning_flags -Wall -Wextra -pedantic -Werror)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(warning_flags -Wall -Wextra -pedantic -Werror -Wno-gnu-string-literal-operator-template)
 endif()
