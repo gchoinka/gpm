@@ -63,9 +63,9 @@ endif()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include) # TODO replace this calls to include_directories
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/ned14_outcome/include)
+include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/ned14_outcome/include)
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/ldionne_dyno/include)
+include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/ldionne_dyno/include)
 
 
 
