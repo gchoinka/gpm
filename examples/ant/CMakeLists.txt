@@ -35,7 +35,7 @@ set_target_properties(${targetName} PROPERTIES
            CXX_EXTENSIONS OFF
 )
 target_compile_options(${targetName} PRIVATE ${warning_flags})
-target_link_libraries(${targetName} fmt::fmt benchmark::benchmark Boost::boost cxxopts::cxxopts)
+target_link_libraries(${targetName} fmt::fmt benchmark::benchmark Boost::boost)
 
 
 
@@ -46,7 +46,7 @@ set_target_properties(${targetName} PROPERTIES
             CXX_EXTENSIONS OFF
 )
 target_compile_options(${targetName} PRIVATE ${warning_flags})
-target_link_libraries(${targetName} fmt::fmt Boost::boost cxxopts::cxxopts)
+target_link_libraries(${targetName} fmt::fmt Boost::boost)
 
 
 
