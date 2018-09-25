@@ -15,7 +15,14 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(warning_flags -Wall -Wextra -pedantic -Werror -Wno-gnu-string-literal-operator-template)
 endif()
 
-message(STATUS "${CMAKE_CXX_COMPILER_ID}" )
+set(GeneratedBechmarksIncludesDir "${CMAKE_CURRENT_BINARY_DIR}/generated_includes")
+file(MAKE_DIRECTORY "${GeneratedBechmarksIncludesDir}")
+
+add_library(GeneratedBechmarks INTERFACE)
+target_include_directories(GeneratedBechmarks INTERFACE ${GeneratedBechmarksIncludesDir})
+
+
+
 
 set(targetName generate_tree_for_benchmark)
 add_executable(${targetName} generate_tree_for_benchmark_main.cpp) 
@@ -24,7 +31,7 @@ set_target_properties(${targetName} PROPERTIES
             CXX_EXTENSIONS OFF
 )
 target_compile_options(${targetName} PRIVATE ${warning_flags})
-target_link_libraries(${targetName} fmt::fmt Boost::boost Boost::program_options)
+target_link_libraries(${targetName} Gpm fmt::fmt Boost::boost Boost::program_options Outcome)
 
 
 
@@ -35,7 +42,7 @@ set_target_properties(${targetName} PROPERTIES
            CXX_EXTENSIONS OFF
 )
 target_compile_options(${targetName} PRIVATE ${warning_flags})
-target_link_libraries(${targetName} fmt::fmt benchmark::benchmark Boost::boost)
+target_link_libraries(${targetName} Gpm GeneratedBechmarks fmt::fmt benchmark::benchmark Boost::boost Boost::program_options Outcome Dyno)
 
 
 
@@ -46,14 +53,14 @@ set_target_properties(${targetName} PROPERTIES
             CXX_EXTENSIONS OFF
 )
 target_compile_options(${targetName} PRIVATE ${warning_flags})
-target_link_libraries(${targetName} fmt::fmt Boost::boost)
+target_link_libraries(${targetName} Gpm fmt::fmt Boost::boost Boost::program_options Outcome) 
 
 
 
-option(GPM_FORMAT_GENERATED_FILES "Should the files which were generated in ${GeneratedIncludesDir} be formated?(only usefull if someone wants to read them)." OFF)
+option(GPM_FORMAT_GENERATED_FILES "Should the files which were generated in ${GeneratedBechmarksIncludesDir} be formated?(only usefull if someone wants to read them)." OFF)
 
 if(CLANG_FORMAT AND ${GPM_FORMAT_GENERATED_FILES})
-    set(FORMAT_STEP "${CLANG_FORMAT}" -i -style=google "${GeneratedIncludesDir}/ant_simulation_benchmark_generated_functions.cpp")
+    set(FORMAT_STEP "${CLANG_FORMAT_EXECUTABLE}" -i -style=google "${GeneratedBechmarksIncludesDir}/ant_simulation_benchmark_generated_functions.cpp")
 else()
     set(FORMAT_STEP "${CMAKE_COMMAND}" -E echo "skiped formating step")
 endif()
@@ -61,8 +68,8 @@ endif()
 
 
 add_custom_target(make_tree_benchmark 
-    COMMAND ${CMAKE_COMMAND} -E remove "${GeneratedIncludesDir}/ant_simulation_benchmark_generated_functions.cpp"
-    COMMAND "$<TARGET_FILE:generate_tree_for_benchmark>" --antrpndef "${CMAKE_CURRENT_SOURCE_DIR}/data/randomAnt.txt" --outfile "${GeneratedIncludesDir}/ant_simulation_benchmark_generated_functions.cpp"
+    COMMAND ${CMAKE_COMMAND} -E remove "${GeneratedBechmarksIncludesDir}/ant_simulation_benchmark_generated_functions.cpp"
+    COMMAND "$<TARGET_FILE:generate_tree_for_benchmark>" --antrpndef "${CMAKE_CURRENT_SOURCE_DIR}/data/randomAnt.txt" --outfile "${GeneratedBechmarksIncludesDir}/ant_simulation_benchmark_generated_functions.cpp"
     COMMAND ${FORMAT_STEP}
     COMMAND ${CMAKE_COMMAND} -E touch_nocreate "${CMAKE_CURRENT_SOURCE_DIR}/tree_benchmark_main.cpp"
     COMMAND ${CMAKE_COMMAND} --build "${CMAKE_BINARY_DIR}" --target tree_benchmark

@@ -16,19 +16,15 @@ HunterGate(
 
 project(gpm VERSION 0.1.0 LANGUAGES CXX)
 
+include("cmake/CompilerSettings.cmake")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 option(GPM_BUILD_TESTS "Enable to build the tests" ON)
-option(GPM_BUILD_EXAMPLES "Enable to build the tests" ON)
+option(GPM_BUILD_EXAMPLES "Enable to build the tests" ON) # TODO split EXAMPLES and BENCHMARK
 option(GPM_BUILD_BENCHMARK "Enable to build benchmarks" ON)
-option(GPM_BUILD_SKETCH "Enable to build the sketch" OFF)
+option(GPM_BUILD_SKETCH "Enable to build sketch" OFF)
 option(GPM_CXX_COLORED_OUTPUT "Always produce ANSI-colored output (GNU/Clang only)." OFF)
 
-
-include("cmake/CompilerSettings.cmake")
-
-set(GeneratedIncludesDir "${CMAKE_BINARY_DIR}/generated_includes")
-file(MAKE_DIRECTORY "${GeneratedIncludesDir}")
-include_directories("${GeneratedIncludesDir}")
 
 
 hunter_add_package(Boost COMPONENTS program_options)
@@ -49,19 +45,18 @@ if(${GPM_BUILD_BENCHMARK})
     find_package(benchmark CONFIG REQUIRED)
 endif()
 
-find_program(CLANG_FORMAT NAMES clang-format clang-format-9 clang-format-9.0 clang-format-8 clang-format-8.0 clang-format-7 clang-format-7.0 clang-format-6 clang-format-6.0 clang-format-5 clang-format-5.0 clang-format-4 clang-format-4.0 clang-format-3 clang-format-3.0 DOC "Path to clang-format executable")
+find_package(ClangFormat)
 
-if(NOT CLANG_FORMAT)
-  message(STATUS "clang-format not found.")
-else()
-  message(STATUS "clang-format found: ${CLANG_FORMAT}")
-endif()
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include) # TODO replace this calls to include_directories
 
-include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/ned14_outcome/include)
+add_library(Outcome INTERFACE)
+target_include_directories(Outcome SYSTEM INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/ned14_outcome/include)
 
-include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/ldionne_dyno/include)
+add_library(Dyno INTERFACE)
+target_include_directories(Dyno SYSTEM INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/ldionne_dyno/include)
+
+add_library(Gpm INTERFACE)
+target_include_directories(Gpm INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 
 
@@ -73,7 +68,6 @@ if(${GPM_BUILD_EXAMPLES})
     add_subdirectory(examples)
 endif()
 
-
 if(${GPM_BUILD_SKETCH})
     add_subdirectory(sketch)
-endif()    
+endif()
