@@ -14,7 +14,7 @@
 struct DynoTreeDynamic {
   std::string name() const { return "dynoTreeDynamic"; }
   std::string functionName() const { return "dynoTreeDynamic"; }
-  
+
   std::string body(ant::ant_nodes) const {
     return fmt::format(R"""(
 template<typename AntBoardSimT>
@@ -28,7 +28,6 @@ static int dynoTreeDynamic(AntBoardSimT antBoardSim, std::string_view const & sv
   }}
   return antBoardSim.score(); 
 }}
-    )""");
+)""");
   }
 };
-

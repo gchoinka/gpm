@@ -15,20 +15,19 @@
 using namespace fmt::literals;
 
 class AsDynoNotation : public boost::static_visitor<std::string> {
-public:
-
+ public:
   std::string operator()(ant::if_food_ahead const& node) const {
     return fmt::format(
-      R"""(
-        antdyno::IfFood<AntBoardSimT>(
-          {true_branch}
-          , {false_branch}
-    )
-    )""",
-    "true_branch"_a = boost::apply_visitor(*this, node.get(true)),
-                       "false_branch"_a = boost::apply_visitor(*this, node.get(false)));
+        R"""(
+antdyno::IfFood<AntBoardSimT>(
+  {true_branch}
+  , {false_branch}
+)
+)""",
+        "true_branch"_a = boost::apply_visitor(*this, node.get(true)),
+        "false_branch"_a = boost::apply_visitor(*this, node.get(false)));
   }
-  
+
   struct AntNodeToClassName {
     static char const* name(ant::move) { return "Move"; }
     static char const* name(ant::left) { return "Left"; }
@@ -36,7 +35,7 @@ public:
     static char const* name(ant::prog2) { return "Prog2"; }
     static char const* name(ant::prog3) { return "Prog3"; }
   };
-  
+
   template <typename NodeT>
   std::string operator()(NodeT node) const {
     std::string res;
@@ -48,10 +47,10 @@ public:
       }
       res += "\n";
     }
-    
-    res = fmt::format(
-      "antdyno::{nodeName}<AntBoardSimT>({nodeChildren})\n",
-      "nodeName"_a = AntNodeToClassName::name(node), "nodeChildren"_a = res);
+
+    res = fmt::format("antdyno::{nodeName}<AntBoardSimT>({nodeChildren})\n",
+                      "nodeName"_a = AntNodeToClassName::name(node),
+                      "nodeChildren"_a = res);
     return res;
   }
 };
@@ -59,23 +58,21 @@ public:
 struct DynoTreeCTStatic {
   std::string name() const { return "dynoTreeCTStatic"; }
   std::string functionName() const { return "dynoTreeCTStatic"; }
-  
+
   std::string body(ant::ant_nodes ant) const {
-    return fmt::format(R"""(
-      template<typename AntBoardSimT>
-      int dynoTreeCTStatic(AntBoardSimT antBoardSim, std::string_view const &)
-    {{                
-    auto dynoTree = {dynoNotation};
-    
-    while(!antBoardSim.is_finish())
+    return fmt::format(
+        R"""(
+template<typename AntBoardSimT>
+int dynoTreeCTStatic(AntBoardSimT antBoardSim, std::string_view const &)
+{{                
+  auto dynoTree = {dynoNotation};
+  while(!antBoardSim.is_finish())
     {{
     dynoTree.eval(antBoardSim);
   }}
   return antBoardSim.score(); 
-  }}
-    )""",
-    "dynoNotation"_a = boost::apply_visitor(
-      AsDynoNotation{}, ant));
+}}
+)""",
+        "dynoNotation"_a = boost::apply_visitor(AsDynoNotation{}, ant));
   }
 };
-

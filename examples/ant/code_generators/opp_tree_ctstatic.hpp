@@ -24,11 +24,11 @@ class AsOOPNotation : public boost::static_visitor<std::string> {
   std::string operator()(ant::if_food_ahead const& node) const {
     return fmt::format(
         R"""(
-        std::make_unique<antoop::IfFoodAhead<decltype({simulationName})>>(
-          {true_branch}
-          , {false_branch}
-    )
-    )""",
+std::make_unique<antoop::IfFoodAhead<decltype({simulationName})>>(
+  {true_branch}
+  , {false_branch}
+)
+)""",
         "simulationName"_a = simulationName_,
         "true_branch"_a = boost::apply_visitor(*this, node.get(true)),
         "false_branch"_a = boost::apply_visitor(*this, node.get(false)));

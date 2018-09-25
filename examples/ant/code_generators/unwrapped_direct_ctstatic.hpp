@@ -40,12 +40,12 @@ class AsCPPFixedNotation : public boost::static_visitor<std::string> {
     if constexpr (std::is_same_v<ant::if_food_ahead, NodeT>) {
       return fmt::format(
           R"""(
-          if({simulationName}.is_food_in_front()){{
-          {true_branch}
-    }}else{{
-    {false_branch}
-    }}
-      )""",
+if({simulationName}.is_food_in_front()){{
+  {true_branch}
+}}else{{
+  {false_branch}
+}}
+)""",
           "simulationName"_a = simulationName_,
           "true_branch"_a = boost::apply_visitor(*this, node.get(true)),
           "false_branch"_a = boost::apply_visitor(*this, node.get(false)));
@@ -74,7 +74,7 @@ int unwrappedDirectCTStatic(AntBoardSimT antBoardSim, std::string_view const &)
   }}
   return antBoardSim.score();
 }}
-    )""",
+)""",
                        "cppFixedNotation"_a = boost::apply_visitor(
                            AsCPPFixedNotation{"antBoardSim"}, ant)
 

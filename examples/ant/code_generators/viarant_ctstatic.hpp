@@ -20,8 +20,11 @@ class AsRecursiveVariantNotation : public boost::static_visitor<std::string> {
   std::string operator()(ant::if_food_ahead const& node) const {
     return fmt::format(
         R"""(
-        {nodeName}{{{true_branch}, {false_branch}}}
-    )""",
+{nodeName}{{
+  {true_branch}
+  , {false_branch}
+}}
+)""",
         "nodeName"_a = boost::typeindex::type_id_runtime(node).pretty_name(),
         "true_branch"_a = boost::apply_visitor(*this, node.get(true)),
         "false_branch"_a = boost::apply_visitor(*this, node.get(false)));
@@ -65,7 +68,7 @@ static int variantCTStatic(AntBoardSimT antBoardSim, std::string_view const &)
   }}
   return antBoardSim.score(); 
 }}
-    )""",
+)""",
                        "recursiveVariantNotation"_a = boost::apply_visitor(
                            AsRecursiveVariantNotation{}, ant)
 

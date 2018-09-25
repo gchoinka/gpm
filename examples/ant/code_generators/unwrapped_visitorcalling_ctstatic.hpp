@@ -22,12 +22,12 @@ class AsCPPFixedWithVisitorNotation
   std::string operator()(ant::if_food_ahead const& node) const {
     return fmt::format(
         R"""(
-        if(antBoardSim.is_food_in_front()){{
-        {true_branch}
-  }}else{{
+if(antBoardSim.is_food_in_front()){{
+  {true_branch}
+}}else{{
   {false_branch}
-  }}
-    )""",
+}}
+)""",
         "true_branch"_a = boost::apply_visitor(*this, node.get(true)),
         "false_branch"_a = boost::apply_visitor(*this, node.get(false)));
   }
@@ -62,7 +62,7 @@ int unwrappedVisitorCallingCTStatic(AntBoardSimT antBoardSim, std::string_view c
   }}
   return antBoardSim.score(); 
 }}
-    )""",
+)""",
                        "cppFixedWithVisitorNotation"_a = boost::apply_visitor(
                            AsCPPFixedWithVisitorNotation{}, ant));
   }
