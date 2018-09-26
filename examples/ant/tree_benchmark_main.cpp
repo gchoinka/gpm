@@ -15,10 +15,12 @@
 #include <boost/hana.hpp>
 #include <boost/hana/ext/std/tuple.hpp>
 #include <boost/type_index.hpp>
+#include <boost/program_options.hpp>
 
 #include <benchmark/benchmark.h>
 
-#include <cxxopts.hpp>
+#include <outcome.hpp>
+namespace outcome = OUTCOME_V2_NAMESPACE;
 
 #include <gpm/gpm.hpp>
 #include <gpm/io.hpp>
@@ -28,9 +30,9 @@
 #include "common/santa_fe_board.hpp"
 #include "common/visitor.hpp"
 
-#include "nodes_opp.hpp"
-#include "nodes_hana_tuple.hpp"
 #include "nodes_dyno.hpp"
+#include "nodes_hana_tuple.hpp"
+#include "nodes_opp.hpp"
 
 template <typename AntBoardSimT>
 class AntBoardSimDecorator {
@@ -132,14 +134,15 @@ decltype(auto) getAntRandomBoardSim() {
   return antSim;
 }
 
-decltype(auto) getAntBoardSimFromFileName(char const* filename) {
+
+outcome::unchecked<ant::sim::AntBoardSimulationStaticSize<ant::santa_fe::x_size, ant::santa_fe::y_size>, std::string> getAntBoardSimFromFileName(char const* filename) {
   using namespace ant;
   std::string errorMessage;
 
   auto boardInitFunction = [filename, &errorMessage](auto& board) mutable {
     std::ifstream boardFile(filename);
     if (!boardFile.good()) {
-      (errorMessage += "Could not open the file: ") += filename;
+      (errorMessage += "Could not open board file: ") += filename;
       return false;
     }
     size_t x = 0;
@@ -155,7 +158,7 @@ decltype(auto) getAntBoardSimFromFileName(char const* filename) {
       ++x;
     }
     if (x != board.size()) {
-      errorMessage = "not enoth lines int the file.";
+      errorMessage = "not enough lines in the file.";
       return false;
     }
     return true;
@@ -168,10 +171,10 @@ decltype(auto) getAntBoardSimFromFileName(char const* filename) {
           max_steps, max_food, sim::Pos2d{0, 0}, sim::Direction::east,
           boardInitFunction};
 
-  boost::variant<std::string, decltype(antBoardSim)> result{antBoardSim};
-  if (!errorMessage.empty()) result = errorMessage;
+  if (!errorMessage.empty())
+    outcome::failure(errorMessage);
 
-  return result;
+  return antBoardSim;
 }
 
 #if __has_include("ant_simulation_benchmark_generated_functions.cpp")
@@ -188,50 +191,64 @@ decltype(auto) getAllTreeBenchmarks() {
 [[gnu::unused]] static char const* getAntRPN() { return ""; }
 #endif
 
-struct RegisterIfPosible : public boost::static_visitor<void> {
-  void operator()(std::string errorMessage) const {
-    std::cout << errorMessage << "\n";
-  }
 
-  template <typename T>
-  void operator()(T theAntBoardSim) const {
-    auto allTreeBechmarks = getAllTreeBenchmarks<decltype(theAntBoardSim)>();
-
-    boost::hana::for_each(
-        allTreeBechmarks, [theAntBoardSim](auto& treeBenchmarkFunktion) {
-          auto BM_lambda = [treeBenchmarkFunktion,
-                            theAntBoardSim](benchmark::State& state) {
-            auto theAntBoardSimCopy = theAntBoardSim;
-            for (auto _ : state)
-              state.counters["score"] = std::get<0>(treeBenchmarkFunktion)(
-                  theAntBoardSimCopy, getAntRPN());
-          };
-          benchmark::RegisterBenchmark(std::get<1>(treeBenchmarkFunktion),
-                                       BM_lambda);
-        });
-  }
+namespace {
+  
+struct CLIArgs {
+  using ErrorMessage = std::string;
+  std::string boarddef;
 };
+
+outcome::unchecked<CLIArgs, CLIArgs::ErrorMessage> handleCLI(int argc, char** argv) {
+  namespace po = boost::program_options;
+  auto args = CLIArgs{};
+  po::options_description desc("Allowed options");
+  desc.add_options()
+  // clang-format off
+  ("help", "produce help message")
+  ("boarddef", po::value<std::string>(&args.boarddef), "")
+  ;
+  // clang-format on
+  po::parsed_options parsed = po::command_line_parser(argc, argv).options(desc).allow_unregistered().run();
+  
+  return args;
+}
+}
 
 int main(int argc, char** argv) {
   namespace hana = boost::hana;
-
-  cxxopts::Options options("tree_benchmark", "");
-  options.allow_unrecognised_options().add_options()(
-      "b,boarddef", "File name", cxxopts::value<std::string>());
-
-  auto cliArgs = options.parse(argc, argv);
-
-  if (!cliArgs.count("boarddef")) {
-    std::cout << options.help({"", ""}) << std::endl;
-    exit(0);
+  auto cliArgsOutcome = handleCLI(argc, argv);
+  
+  if (!cliArgsOutcome) {
+    std::cerr << cliArgsOutcome.error() << "\n";
+    exit(1);
   }
+  auto cliArgs = cliArgsOutcome.value();
+  
 
-  auto filename = cliArgs["boarddef"].as<std::string>();
+  auto const resultAntBoardSimOutcome = getAntBoardSimFromFileName(cliArgs.boarddef.c_str());
+  if(!resultAntBoardSimOutcome) {
+    std::cerr << resultAntBoardSimOutcome.error() << "\n";
+    exit(1);
+  }
+  
+  auto theAntBoardSim = resultAntBoardSimOutcome.value();
 
-  auto const resultAntBoardSim = getAntBoardSimFromFileName(filename.c_str());
-
-  boost::apply_visitor(RegisterIfPosible{}, resultAntBoardSim);
-
+  auto allTreeBechmarks = getAllTreeBenchmarks<decltype(theAntBoardSim)>();
+  
+  boost::hana::for_each(
+    allTreeBechmarks, [theAntBoardSim](auto& treeBenchmarkFunktion) {
+      auto BM_lambda = [treeBenchmarkFunktion,
+      theAntBoardSim](benchmark::State& state) {
+        auto theAntBoardSimCopy = theAntBoardSim;
+        for (auto _ : state)
+          state.counters["score"] = std::get<0>(treeBenchmarkFunktion)(
+            theAntBoardSimCopy, getAntRPN());
+      };
+      benchmark::RegisterBenchmark(std::get<1>(treeBenchmarkFunktion),
+                                   BM_lambda);
+    });
+  
   benchmark::Initialize(&argc, argv);
   benchmark::RunSpecifiedBenchmarks();
 }
