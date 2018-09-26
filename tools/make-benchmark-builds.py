@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 import os
-import shutil 
+import shutil
+import glob
 from subprocess import check_call
 
 thisDir = os.path.dirname(os.path.abspath(__file__))
@@ -29,6 +30,7 @@ for c in compiler:
     check_call(["cmake", "--build", compilerDir, "--target", "run_tree_benchmark"])
     check_call(["cmake", "--build", compilerDir])
     check_call(["ctest", "--output-on-failure",  "-VV"])
-    shutil.copy(os.path.join(compilerDir, "tree_benchmark.json"), os.path.join(thisDir, "benchmark/%s-tree_benchmark.json" % c["dir"]))
-
-
+    shutil.copy(os.path.join(compilerDir, "examples/ant/tree_benchmark.json"), os.path.join(thisDir, "benchmark/%s-tree_benchmark.json" % c["dir"]))
+    check_call(["cmake", "--build", compilerDir, "--target", "timeing_build_tree_benchmark_all"])
+    for filename in glob.iglob(os.path.join(compilerDir, "examples/ant/buildtime_*.txt")):
+        shutil.copy(filename, os.path.join(thisDir, "benchmark/%s-%s" % (c["dir"], os.path.basename(filename))))
