@@ -1,7 +1,7 @@
 {
   "context": {
-    "date": "2018-09-26 02:04:32",
-    "executable": "/home/gchoinka/src/gpm/build-benchmarks/clang++-7/examples/ant/tree_benchmark",
+    "date": "2018-09-26 02:02:48",
+    "executable": "/home/gchoinka/src/gpm/build-benchmarks/g++-8.2/examples/ant/tree_benchmark",
     "num_cpus": 8,
     "mhz_per_cpu": 3500,
     "cpu_scaling_enabled": true,
@@ -36,73 +36,73 @@
   "benchmarks": [
     {
       "name": "variantDynamic",
-      "iterations": 3177,
-      "real_time": 2.1958673716907360e+05,
-      "cpu_time": 2.1958591910607496e+05,
+      "iterations": 3339,
+      "real_time": 2.1081146720218615e+05,
+      "cpu_time": 2.1081247948487572e+05,
       "time_unit": "ns",
       "score": 8.9000000000000000e+01
     },
     {
       "name": "variantCTStatic",
-      "iterations": 8791,
-      "real_time": 7.6870120918888235e+04,
-      "cpu_time": 7.6867864748037799e+04,
+      "iterations": 9486,
+      "real_time": 7.6412304236968717e+04,
+      "cpu_time": 7.6359878347037738e+04,
       "time_unit": "ns",
       "score": 8.9000000000000000e+01
     },
     {
       "name": "oopTreeDynamic",
-      "iterations": 16577,
-      "real_time": 4.1246422632880152e+04,
-      "cpu_time": 4.1246337696808841e+04,
+      "iterations": 17552,
+      "real_time": 4.0847534014031145e+04,
+      "cpu_time": 4.0846476868732898e+04,
       "time_unit": "ns",
       "score": 8.9000000000000000e+01
     },
     {
       "name": "oppTreeCTStatic",
-      "iterations": 40927,
-      "real_time": 1.6735052483925330e+04,
-      "cpu_time": 1.6735133286094759e+04,
+      "iterations": 40031,
+      "real_time": 1.7532845095352957e+04,
+      "cpu_time": 1.7521060403187534e+04,
       "time_unit": "ns",
       "score": 8.9000000000000000e+01
     },
     {
       "name": "unwrappedDirectCTStatic",
-      "iterations": 1000000,
-      "real_time": 5.0212704497971572e+02,
-      "cpu_time": 5.0212970500000017e+02,
+      "iterations": 960972,
+      "real_time": 7.3660353474520844e+02,
+      "cpu_time": 7.3660754007400897e+02,
       "time_unit": "ns",
       "score": 8.9000000000000000e+01
     },
     {
       "name": "unwrappedVisitorCallingCTStatic",
-      "iterations": 1424711,
-      "real_time": 4.9386512282014968e+02,
-      "cpu_time": 4.9386752611582273e+02,
+      "iterations": 952035,
+      "real_time": 7.3170446673815502e+02,
+      "cpu_time": 7.3117305456206907e+02,
       "time_unit": "ns",
       "score": 8.9000000000000000e+01
     },
     {
       "name": "tupleCTStatic",
-      "iterations": 515338,
-      "real_time": 1.3177085039222386e+03,
-      "cpu_time": 1.3177089191947812e+03,
+      "iterations": 959980,
+      "real_time": 7.1440377194854796e+02,
+      "cpu_time": 7.1440379174566158e+02,
       "time_unit": "ns",
       "score": 8.9000000000000000e+01
     },
     {
       "name": "dynoTreeDynamic",
-      "iterations": 10661,
-      "real_time": 6.6715072318685299e+04,
-      "cpu_time": 6.6715402119876191e+04,
+      "iterations": 10387,
+      "real_time": 6.7768098680761395e+04,
+      "cpu_time": 6.7768447097333177e+04,
       "time_unit": "ns",
       "score": 8.9000000000000000e+01
     },
     {
       "name": "dynoTreeCTStatic",
-      "iterations": 21698,
-      "real_time": 3.2130973637156825e+04,
-      "cpu_time": 3.2130877822840808e+04,
+      "iterations": 20504,
+      "real_time": 3.5782784481300856e+04,
+      "cpu_time": 3.5782715177526319e+04,
       "time_unit": "ns",
       "score": 8.9000000000000000e+01
     }
