@@ -8,10 +8,13 @@
 #include <fstream>
 #include <iostream>
 
-#include <cxxopts.hpp>
+#include <boost/program_options.hpp>
 
 #include <gpm/gpm.hpp>
 #include <gpm/io.hpp>
+
+#include <outcome.hpp>
+namespace outcome = OUTCOME_V2_NAMESPACE;
 
 #include "common/ant_board_simulation.hpp"
 #include "common/nodes.hpp"
@@ -95,26 +98,55 @@ decltype(auto) getAntBoardSim(char const* filename) {
   return antSim;
 }
 
-int main(int argc, char* argv[]) {
-  cxxopts::Options options("ant_board_visualization",
-                           "One line description of MyProgram");
-  options.add_options()("b,boarddef", "File name",
-                        cxxopts::value<std::string>())
-      //("f,file", "File name", cxxopts::value<std::string>())
-      ;
+namespace {
 
-  auto cliArgs = options.parse(argc, argv);
+struct CLIArgs {
+  using ErrorMessage = std::string;
+  std::string boarddef;
+  std::string outfile;
+  std::string antrpndef;
+};
 
-  if (!cliArgs.count("boarddef")) {
-    std::cout << options.help({"", ""}) << std::endl;
-    exit(0);
+outcome::unchecked<CLIArgs, CLIArgs::ErrorMessage> handleCLI(int argc,
+                                                             char** argv) {
+  namespace po = boost::program_options;
+  auto args = CLIArgs{};
+  po::options_description desc("Allowed options");
+  desc.add_options()
+      // clang-format off
+    ("help", "produce help message")
+    ("boarddef", po::value<std::string>(&args.boarddef)->required(), "")
+    ("outfile", po::value<std::string>(&args.outfile)->required(), "")
+    ("antrpndef", po::value<std::string>(&args.antrpndef), "");
+  // clang-format on
+  po::variables_map vm;
+  try {
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
+  } catch (std::exception const& e) {
+    if (vm.count("help")) {
+      return outcome::failure(boost::lexical_cast<std::string>(desc));
+    }
+    return outcome::failure(e.what());
   }
+
+  return args;
+}
+}  // namespace
+
+int main(int argc, char* argv[]) {
+  auto cliArgsOutcome = handleCLI(argc, argv);
+  if (!cliArgsOutcome) {
+    std::cerr << cliArgsOutcome.error() << "\n";
+    exit(1);
+  }
+  auto cliArgs = cliArgsOutcome.value();
 
   char const* optimalAntRPNdef = "m r m if l l p3 r m if if p2 r p2 m if";
   auto optAnt =
       gpm::factory<ant::ant_nodes>(gpm::RPNToken_iterator{optimalAntRPNdef});
-  auto antBoardSim = makeAntBoardSimDecorator(
-      getAntBoardSim(cliArgs["boarddef"].as<std::string>().c_str()));
+  auto antBoardSim =
+      makeAntBoardSimDecorator(getAntBoardSim(cliArgs.boarddef.c_str()));
 
   auto antBoardSimVisitor = ant::AntBoardSimulationVisitor{antBoardSim};
 
