@@ -1,18 +1,18 @@
 	Command being timed: "/usr/bin/cmake --build /home/gchoinka/src/gpm/build-benchmarks/clang++-7 --target tree_benchmark"
-	User time (seconds): 4.93
-	System time (seconds): 0.16
+	User time (seconds): 4.52
+	System time (seconds): 0.18
 	Percent of CPU this job got: 99%
-	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:05.12
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:04.72
 	Average shared text size (kbytes): 0
 	Average unshared data size (kbytes): 0
 	Average stack size (kbytes): 0
 	Average total size (kbytes): 0
-	Maximum resident set size (kbytes): 309968
+	Maximum resident set size (kbytes): 307436
 	Average resident set size (kbytes): 0
 	Major (requiring I/O) page faults: 0
-	Minor (reclaiming a frame) page faults: 76982
+	Minor (reclaiming a frame) page faults: 76787
 	Voluntary context switches: 21
-	Involuntary context switches: 17
+	Involuntary context switches: 12
 	Swaps: 0
 	File system inputs: 0
 	File system outputs: 2216

@@ -60,7 +60,7 @@ namespace {
 //   gpm::factory<ant::ant_nodes>(gpm::RPNToken_iterator{optimalAntRPNdef});
 // }
 
-decltype(auto) getOptAntFromFile(char const* filename) {
+decltype(auto) getAntFromFile(char const* filename) {
   std::ifstream f(filename);
   std::string str;
   std::getline(f, str);
@@ -129,7 +129,7 @@ int main(int argc, char** argv) {
     exit(0);
   }
 
-  auto ant = getOptAntFromFile(cliArgs.antrpndef.c_str());
+  auto ant = getAntFromFile(cliArgs.antrpndef.c_str());
   std::ofstream outf(cliArgs.outfile.c_str());
 
   outf << fmt::format(

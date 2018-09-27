@@ -1,18 +1,18 @@
 	Command being timed: "/usr/bin/cmake --build /home/gchoinka/src/gpm/build-benchmarks/g++-8.2 --target tree_benchmark"
-	User time (seconds): 5.01
-	System time (seconds): 0.23
+	User time (seconds): 4.69
+	System time (seconds): 0.21
 	Percent of CPU this job got: 99%
-	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:05.25
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:04.90
 	Average shared text size (kbytes): 0
 	Average unshared data size (kbytes): 0
 	Average stack size (kbytes): 0
 	Average total size (kbytes): 0
-	Maximum resident set size (kbytes): 550104
+	Maximum resident set size (kbytes): 543004
 	Average resident set size (kbytes): 0
 	Major (requiring I/O) page faults: 0
-	Minor (reclaiming a frame) page faults: 154954
+	Minor (reclaiming a frame) page faults: 153046
 	Voluntary context switches: 26
-	Involuntary context switches: 43
+	Involuntary context switches: 46
 	Swaps: 0
 	File system inputs: 0
 	File system outputs: 2432
