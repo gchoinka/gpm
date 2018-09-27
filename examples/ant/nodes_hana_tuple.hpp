@@ -1,12 +1,11 @@
 #pragma once
 
 #include <boost/hana.hpp>
-// #include <tuple>
-//
-namespace hana = boost::hana;
-using namespace hana::literals;  // contains the _c suffix
 
 namespace tup {
+
+namespace hana = boost::hana;
+using namespace hana::literals;  // contains the _c suffix
 
 namespace tag {
 struct Move {};
@@ -68,38 +67,4 @@ void eval(ContextT& contex,
   eval(contex, node[3_c]);
 }
 
-// template <typename ContextT, typename... T>
-// void Sink(ContextT& contex, hana::tuple<T...>) { }
-
-constexpr auto b =
-    hana::tuple<tag::IfFood,
-                hana::tuple<tag::Prog2, hana::tuple<tag::Move>,
-                            hana::tuple<tag::Prog2, hana::tuple<tag::Move>,
-                                        hana::tuple<tag::Right> > >,
-                hana::tuple<tag::Left> >{};
 }  // namespace tup
-
-template <typename AntBoardSimT>
-static int tupleCTStatic2(AntBoardSimT antBoardSim, std::string_view const&) {
-  using namespace tup;
-  constexpr auto optAnt = hana::tuple<
-      tag::IfFood, hana::tuple<tag::Move>,
-      hana::tuple<
-          tag::Prog2, hana::tuple<tag::Right>,
-          hana::tuple<
-              tag::Prog2,
-              hana::tuple<
-                  tag::IfFood,
-                  hana::tuple<tag::IfFood, hana::tuple<tag::Move>,
-                              hana::tuple<tag::Right> >,
-                  hana::tuple<tag::Prog3, hana::tuple<tag::Left>,
-                              hana::tuple<tag::Left>,
-                              hana::tuple<tag::IfFood, hana::tuple<tag::Move>,
-                                          hana::tuple<tag::Right> > > >,
-              hana::tuple<tag::Move> > > >{};
-
-  while (!antBoardSim.is_finish()) {
-    tup::eval(antBoardSim, optAnt);
-  }
-  return antBoardSim.score();
-}

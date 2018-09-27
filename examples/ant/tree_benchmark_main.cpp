@@ -14,8 +14,8 @@
 
 #include <boost/hana.hpp>
 #include <boost/hana/ext/std/tuple.hpp>
-#include <boost/type_index.hpp>
 #include <boost/program_options.hpp>
+#include <boost/type_index.hpp>
 
 #include <benchmark/benchmark.h>
 
@@ -134,8 +134,10 @@ decltype(auto) getAntRandomBoardSim() {
   return antSim;
 }
 
-
-outcome::unchecked<ant::sim::AntBoardSimulationStaticSize<ant::santa_fe::x_size, ant::santa_fe::y_size>, std::string> getAntBoardSimFromFileName(char const* filename) {
+outcome::unchecked<ant::sim::AntBoardSimulationStaticSize<
+                       ant::santa_fe::x_size, ant::santa_fe::y_size>,
+                   std::string>
+getAntBoardSimFromFileName(char const* filename) {
   using namespace ant;
   std::string errorMessage;
 
@@ -171,8 +173,7 @@ outcome::unchecked<ant::sim::AntBoardSimulationStaticSize<ant::santa_fe::x_size,
           max_steps, max_food, sim::Pos2d{0, 0}, sim::Direction::east,
           boardInitFunction};
 
-  if (!errorMessage.empty())
-    outcome::failure(errorMessage);
+  if (!errorMessage.empty()) outcome::failure(errorMessage);
 
   return antBoardSim;
 }
@@ -191,64 +192,66 @@ decltype(auto) getAllTreeBenchmarks() {
 [[gnu::unused]] static char const* getAntRPN() { return ""; }
 #endif
 
-
 namespace {
-  
+
 struct CLIArgs {
   using ErrorMessage = std::string;
   std::string boarddef;
 };
 
-outcome::unchecked<CLIArgs, CLIArgs::ErrorMessage> handleCLI(int argc, char** argv) {
+outcome::unchecked<CLIArgs, CLIArgs::ErrorMessage> handleCLI(int argc,
+                                                             char** argv) {
   namespace po = boost::program_options;
   auto args = CLIArgs{};
   po::options_description desc("Allowed options");
   desc.add_options()
-  // clang-format off
+      // clang-format off
   ("help", "produce help message")
   ("boarddef", po::value<std::string>(&args.boarddef), "")
   ;
   // clang-format on
-  po::parsed_options parsed = po::command_line_parser(argc, argv).options(desc).allow_unregistered().run();
-  
+  po::parsed_options parsed = po::command_line_parser(argc, argv)
+                                  .options(desc)
+                                  .allow_unregistered()
+                                  .run();
+
   return args;
 }
-}
+}  // namespace
 
 int main(int argc, char** argv) {
   namespace hana = boost::hana;
   auto cliArgsOutcome = handleCLI(argc, argv);
-  
+
   if (!cliArgsOutcome) {
     std::cerr << cliArgsOutcome.error() << "\n";
     exit(1);
   }
   auto cliArgs = cliArgsOutcome.value();
-  
 
-  auto const resultAntBoardSimOutcome = getAntBoardSimFromFileName(cliArgs.boarddef.c_str());
-  if(!resultAntBoardSimOutcome) {
+  auto const resultAntBoardSimOutcome =
+      getAntBoardSimFromFileName(cliArgs.boarddef.c_str());
+  if (!resultAntBoardSimOutcome) {
     std::cerr << resultAntBoardSimOutcome.error() << "\n";
     exit(1);
   }
-  
+
   auto theAntBoardSim = resultAntBoardSimOutcome.value();
 
   auto allTreeBechmarks = getAllTreeBenchmarks<decltype(theAntBoardSim)>();
-  
-  boost::hana::for_each(
-    allTreeBechmarks, [theAntBoardSim](auto& treeBenchmarkFunktion) {
-      auto BM_lambda = [treeBenchmarkFunktion,
-      theAntBoardSim](benchmark::State& state) {
-        auto theAntBoardSimCopy = theAntBoardSim;
-        for (auto _ : state)
-          state.counters["score"] = std::get<0>(treeBenchmarkFunktion)(
-            theAntBoardSimCopy, getAntRPN());
-      };
-      benchmark::RegisterBenchmark(std::get<1>(treeBenchmarkFunktion),
-                                   BM_lambda);
-    });
-  
+
+  boost::hana::for_each(allTreeBechmarks, [theAntBoardSim](
+                                              auto& treeBenchmarkFunktion) {
+    auto BM_lambda = [treeBenchmarkFunktion,
+                      theAntBoardSim](benchmark::State& state) {
+      auto theAntBoardSimCopy = theAntBoardSim;
+      for (auto _ : state)
+        state.counters["score"] =
+            std::get<0>(treeBenchmarkFunktion)(theAntBoardSimCopy, getAntRPN());
+    };
+    benchmark::RegisterBenchmark(std::get<1>(treeBenchmarkFunktion), BM_lambda);
+  });
+
   benchmark::Initialize(&argc, argv);
   benchmark::RunSpecifiedBenchmarks();
 }
