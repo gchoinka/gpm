@@ -18,10 +18,11 @@ struct OOPTreeDynamic {
   std::string body(ant::ant_nodes) const {
     return fmt::format(R"""(
 template<typename AntBoardSimT>
-static int oopTreeDynamic(AntBoardSimT antBoardSim, std::string_view const & sv)
+static int oopTreeDynamic(AntBoardSimT antBoardSim, std::string_view const & sv, BenchmarkPart toMessure)
 {{                
   auto oopTree = antoop::factory<AntBoardSimT>(gpm::RPNToken_iterator{{sv}});
-  
+  if(toMessure == BenchmarkPart::Create) 
+    return 0;
   while(!antBoardSim.is_finish())
   {{
     (*oopTree)(antBoardSim);

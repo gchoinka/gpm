@@ -173,10 +173,12 @@ getAntBoardSimFromFileName(char const* filename) {
           max_steps, max_food, sim::Pos2d{0, 0}, sim::Direction::east,
           boardInitFunction};
 
-  if (!errorMessage.empty()) outcome::failure(errorMessage);
+  if (!errorMessage.empty()) return outcome::failure(errorMessage);
 
   return antBoardSim;
 }
+
+enum class BenchmarkPart { Full, Create };
 
 #if __has_include("ant_simulation_benchmark_generated_functions.cpp")
 #include "ant_simulation_benchmark_generated_functions.cpp"
@@ -203,18 +205,31 @@ outcome::unchecked<CLIArgs, CLIArgs::ErrorMessage> handleCLI(int argc,
                                                              char** argv) {
   namespace po = boost::program_options;
   auto args = CLIArgs{};
-  po::options_description desc("Allowed options");
-  desc.add_options()
-      // clang-format off
-  ("help", "produce help message")
-  ("boarddef", po::value<std::string>(&args.boarddef), "")
+  po::options_description simOptions("Simulation options");
+  simOptions.add_options()
+  // clang-format off
+  ("help,h", "produce help message")
+  ("boarddef,b", po::value<std::string>(&args.boarddef), "")
   ;
   // clang-format on
+
+//   po::options_description bmOptions("Benchmark Settings");
+//   bmOptions.add_options()
+//   // clang-format off
+//   ;
+//   // clang-format on
+  
+  po::options_description allOptions("Allowed options");
+  allOptions.add(simOptions);
+  
   po::parsed_options parsed = po::command_line_parser(argc, argv)
-                                  .options(desc)
+                                  .options(allOptions)
                                   .allow_unregistered()
                                   .run();
 
+  po::variables_map vm;
+  po::store(parsed, vm);
+  po::notify(vm);
   return args;
 }
 }  // namespace
@@ -235,21 +250,34 @@ int main(int argc, char** argv) {
     std::cerr << resultAntBoardSimOutcome.error() << "\n";
     exit(1);
   }
-
   auto theAntBoardSim = resultAntBoardSimOutcome.value();
 
   auto allTreeBechmarks = getAllTreeBenchmarks<decltype(theAntBoardSim)>();
 
-  boost::hana::for_each(allTreeBechmarks, [theAntBoardSim](
-                                              auto& treeBenchmarkFunktion) {
-    auto BM_lambda = [treeBenchmarkFunktion,
-                      theAntBoardSim](benchmark::State& state) {
+  boost::hana::for_each(allTreeBechmarks, [theAntBoardSim, cliArgs](
+                                              auto& treeBenchmarkTuple) {
+    auto nameFull = std::string{std::get<1>(treeBenchmarkTuple)} + "Full";
+    auto toCall = std::get<0>(treeBenchmarkTuple);
+    auto BM_lambdaFull = [toCall,
+    theAntBoardSim](benchmark::State& state) {
+      
       auto theAntBoardSimCopy = theAntBoardSim;
       for (auto _ : state)
         state.counters["score"] =
-            std::get<0>(treeBenchmarkFunktion)(theAntBoardSimCopy, getAntRPN());
+        toCall(theAntBoardSimCopy, getAntRPN(), BenchmarkPart::Full);
     };
-    benchmark::RegisterBenchmark(std::get<1>(treeBenchmarkFunktion), BM_lambda);
+    benchmark::RegisterBenchmark(nameFull.c_str(), BM_lambdaFull);
+    
+    auto nameCreateOnly = std::string{std::get<1>(treeBenchmarkTuple)} + "CreateOnly";
+    auto BM_lambdaCreateOnly = [toCall,
+    theAntBoardSim](benchmark::State& state) {
+      
+      auto theAntBoardSimCopy = theAntBoardSim;
+      for (auto _ : state)
+        state.counters["score"] =
+        toCall(theAntBoardSimCopy, getAntRPN(), BenchmarkPart::Full);
+    };
+    benchmark::RegisterBenchmark(nameCreateOnly.c_str(), BM_lambdaCreateOnly);
   });
 
   benchmark::Initialize(&argc, argv);

@@ -73,6 +73,7 @@ struct CLIArgs {
   std::string antrpndef;
   std::string benchmark;
   bool listBenchmarks = false;
+  bool benchmarkCreationOnly = false;
 };
 
 outcome::unchecked<CLIArgs, CLIArgs::ErrorMessage> handleCLI(int argc,
@@ -80,24 +81,33 @@ outcome::unchecked<CLIArgs, CLIArgs::ErrorMessage> handleCLI(int argc,
   using namespace fmt::literals;
   namespace po = boost::program_options;
   auto args = CLIArgs{};
-  po::options_description desc("Allowed options");
-  desc.add_options()
-      // clang-format off
-    ("help", "produce help message")
-    ("antrpndef", po::value<std::string>(&args.antrpndef)->required(), "")
-    ("outfile", po::value<std::string>(&args.outfile)->required(), "")
-    ("benchmark",po::value<std::string>(&args.benchmark)->default_value("all"),"")
-    ("list-benchmarks", "");
+  po::options_description simOptions("Simulation Settings");
+  simOptions.add_options()
+  // clang-format off
+    ("help,h", "produce help message")
+    ("antrpndef,a", po::value<std::string>(&args.antrpndef), "")
+    ("outfile,o", po::value<std::string>(&args.outfile), "")
+    ;
   // clang-format on
+  po::options_description bmOptions("Benchmark Settings");
+  bmOptions.add_options()
+    // clang-format off
+    ("benchmark",po::value<std::string>(&args.benchmark)->default_value("all"),"")
+    ("benchmark-creation-only",po::bool_switch(&args.benchmarkCreationOnly),"")
+    ("list-benchmarks", po::bool_switch(&args.listBenchmarks), "")
+    ;
+    // clang-format on
+    
+  po::options_description allOptions("Allowed options");
+  allOptions.add(simOptions).add(bmOptions);
   po::variables_map vm;
   try {
-    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::store(po::parse_command_line(argc, argv, allOptions), vm);
     po::notify(vm);
   } catch (std::exception const& e) {
     if (vm.count("help")) {
-      return outcome::failure(boost::lexical_cast<std::string>(desc));
-    } else if (vm.count("list-benchmarks")) {
-      args.listBenchmarks = vm.count("list-benchmarks") != 0;
+      return outcome::failure(boost::lexical_cast<std::string>(allOptions));
+    } else if(args.listBenchmarks) {
       return args;
     }
     return outcome::failure(e.what());
@@ -133,7 +143,7 @@ int main(int argc, char** argv) {
   std::ofstream outf(cliArgs.outfile.c_str());
 
   outf << fmt::format(
-      "static char const * getAntRPN() {{ return \"{antRPN}\"; }}\n",
+      "static inline char const * getAntRPN() {{ return \"{antRPN}\"; }}\n",
       "antRPN"_a = boost::apply_visitor(gpm::RPNPrinter<std::string>{}, ant));
   hana::for_each(bm, [&](auto const& codeGenerator) {
     if (cliArgs.benchmark == "all" || cliArgs.benchmark == codeGenerator.name())

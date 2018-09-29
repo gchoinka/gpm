@@ -63,9 +63,11 @@ struct DynoTreeCTStatic {
     return fmt::format(
         R"""(
 template<typename AntBoardSimT>
-int dynoTreeCTStatic(AntBoardSimT antBoardSim, std::string_view const &)
+int dynoTreeCTStatic(AntBoardSimT antBoardSim, std::string_view const &, BenchmarkPart toMessure)
 {{                
   auto dynoTree = {dynoNotation};
+  if(toMessure == BenchmarkPart::Create) 
+    return 0;
   while(!antBoardSim.is_finish())
     {{
     dynoTree.eval(antBoardSim);

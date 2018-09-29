@@ -65,11 +65,12 @@ struct TupleCTStatic {
     return fmt::format(
         R"""(
 template<typename AntBoardSimT>
-static int tupleCTStatic(AntBoardSimT antBoardSim, std::string_view const &)
+static int tupleCTStatic(AntBoardSimT antBoardSim, std::string_view const &, BenchmarkPart toMessure)
 {{ 
   using namespace tup;
   constexpr auto optAnt = {tupleNotation}{{}};
-
+  if(toMessure == BenchmarkPart::Create) 
+    return 0;
   while(!antBoardSim.is_finish())
   {{
     tup::eval(antBoardSim, optAnt);

@@ -52,10 +52,11 @@ struct UnwrappedVisitorCallingCTStatic {
   std::string body(ant::ant_nodes ant) const {
     return fmt::format(R"""(
 template<typename AntBoardSimT>
-int unwrappedVisitorCallingCTStatic(AntBoardSimT antBoardSim, std::string_view const &)
+int unwrappedVisitorCallingCTStatic(AntBoardSimT antBoardSim, std::string_view const &, BenchmarkPart toMessure)
 {{                
+  if(toMessure == BenchmarkPart::Create) 
+      return 0;
   auto antBoardSimVisitor = ant::AntBoardSimulationVisitor{{antBoardSim}};
-
   while(!antBoardSim.is_finish())
   {{
     {cppFixedWithVisitorNotation}

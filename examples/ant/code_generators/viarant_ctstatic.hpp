@@ -56,10 +56,11 @@ struct VariantCTStatic {
   std::string body(ant::ant_nodes ant) const {
     return fmt::format(R"""(
 template<typename AntBoardSimT>
-static int variantCTStatic(AntBoardSimT antBoardSim, std::string_view const &)
+static int variantCTStatic(AntBoardSimT antBoardSim, std::string_view const &, BenchmarkPart toMessure)
 {{    
   auto optAnt = ant::ant_nodes{{{recursiveVariantNotation}}};
-  
+  if(toMessure == BenchmarkPart::Create) 
+    return 0;
   auto antBoardSimVisitor = ant::AntBoardSimulationVisitor{{antBoardSim}};
   
   while(!antBoardSim.is_finish())
