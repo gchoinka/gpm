@@ -48,11 +48,7 @@ decltype(auto) mapformat(StrT&& fstr, T... args) {
                    std::make_integer_sequence<size_t, sizeof...(args) / 2>());
 }
 
-template <typename StrT, typename A>
-decltype(auto) mf(StrT&& fstr, A a) {
-  //     return fmt::format(std::forward<StrT>(fstr),
-  return fstr;
-}
+
 
 template <typename KeyT, typename ValueT>
 struct argHolder {
@@ -60,28 +56,8 @@ struct argHolder {
   ValueT v;
 };
 
-template <typename... Args>
-int toArgs2(std::initializer_list<Args>... b) {
-  //     if constexpr(sizeof...(args) != 0)
-  //         return toArgs(args...);
-  //     else
-  return 0;
-}
 
-template <typename... Args>
-int toArgs(Args&&... args) {
-  //     if constexpr(sizeof...(args) != 0)
-  //         return toArgs(args...);
-  //     else
-  return 0;
-}
 
-int toArgs() {
-  //     if constexpr(sizeof...(args) != 0)
-  //         return toArgs(args...);
-  //     else
-  return 0;
-}
 
 int main() {
   using namespace gpm::utils;

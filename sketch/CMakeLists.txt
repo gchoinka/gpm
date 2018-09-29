@@ -6,7 +6,7 @@ set_target_properties(mapfmt PROPERTIES
 )
 target_compile_options(mapfmt PRIVATE -Wall -Wextra -pedantic -Werror)
 
-target_link_libraries(mapfmt fmt::fmt Boost::boost)
+target_link_libraries(mapfmt fmt::fmt Boost::boost Gpm)
 
 add_executable(hanatupletree hanatupletree.cpp)
 set_target_properties(hanatupletree PROPERTIES
@@ -24,7 +24,17 @@ set_target_properties(dynoexample PROPERTIES
 )
 target_compile_options(dynoexample PRIVATE -Wall -Wextra -pedantic -Werror)
 
-target_link_libraries(dynoexample fmt::fmt Boost::boost)
+target_link_libraries(dynoexample fmt::fmt Boost::boost Dyno)
+
+
+add_executable(fasterfactories fasterfactories.cpp)
+set_target_properties(fasterfactories PROPERTIES
+            CXX_STANDARD 17
+            CXX_EXTENSIONS OFF
+)
+target_compile_options(fasterfactories PRIVATE -Wall -Wextra -pedantic -Werror)
+
+target_link_libraries(fasterfactories fmt::fmt Boost::boost)
 
 
 add_subdirectory(datastore)
