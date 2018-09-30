@@ -15,27 +15,15 @@
 
 namespace gpm {
 
-template <typename T>
-struct IsInRecursiveWrapper {
-  static constexpr auto value = 0;
-};
-
-template <typename T>
-struct IsInRecursiveWrapper<boost::recursive_wrapper<T>> {
-  static constexpr auto value = 1;
-};
-
-template <typename T>
-constexpr auto isInRecursiveWrapper_v = IsInRecursiveWrapper<T>::value;
 
 template <typename T>
 struct UnpackRecursiveWrapper {
-  static decltype(auto) get(T t) { return t; }
+  static T & get(T & t) { return t; }
 };
 
 template <typename T>
 struct UnpackRecursiveWrapper<boost::recursive_wrapper<T>> {
-  static decltype(auto) get(boost::recursive_wrapper<T> t) { return t.get(); }
+  static T & get(boost::recursive_wrapper<T> & t) { return t.get(); }
 };
 
 template <typename VariantType, typename TerminalNodeFactoryT,
