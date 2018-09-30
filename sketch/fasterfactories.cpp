@@ -34,41 +34,47 @@ decltype(auto) asTuple(boost::variant<T...>)
   return hana::tuple<typename boost::unwrap_recursive<T>::type...>{};
 }
 
-template<typename VariantType, typename IterType>
-using VariantTypeCreateFunction = std::add_pointer_t<VariantType(IterType&)>;
 
 template<typename VariantType, typename IterType>
-std::array<VariantTypeCreateFunction<VariantType, IterType>, maxHash> nodeFactoryField;
-
-
-
-template <typename VariantType, typename Iter>
-VariantType ffactory_imp(Iter &);
-
-
-
-template<typename VariantType, typename IterType>
-decltype(auto) makeHashToNode(VariantType vt)
+class FactoryV2
 {
-  auto tup = asTuple(vt);
-  boost::hana::for_each(tup, [](auto n){
-    using NodeType = decltype(n);
-    nodeFactoryField<VariantType, IterType>[cthash(n.name, std::end(n.name) - 1)] = [](IterType & iter) -> VariantType  {
-      auto node = NodeType{};
-      std::cout << ">>"<<*iter<<"<<" << boost::typeindex::type_id<NodeType>().pretty_name() <<"\n";
-      for(auto & children: node.children)
-      {
-        ++iter;
-        auto token = *iter;
-        std::cout << ">>"<<token<<"<<"<<"\n";
-        children = nodeFactoryField<VariantType, IterType>[cthash(std::begin(token), std::end(token))](iter);
-      }
-      return node; 
-      
-    };
-  });
-  return 0;
-}
+
+  using VariantTypeCreateFunction = std::add_pointer_t<VariantType(IterType&)>;
+
+
+  static std::array<VariantTypeCreateFunction, maxHash> makeHashToNode()
+  {
+    std::array<VariantTypeCreateFunction, maxHash> result;
+    auto tup = asTuple(VariantType{});
+    boost::hana::for_each(tup, [&result](auto n){
+      using NodeType = decltype(n);
+      result[cthash(n.name, std::end(n.name) - 1)] = [](IterType & iter) -> VariantType  {
+        auto node = NodeType{};
+        for(auto & children: node.children)
+        {
+          ++iter;
+          auto token = *iter;
+          children = nodeFactoryField[cthash(std::begin(token), std::end(token))](iter);
+        }
+        return node; 
+        
+      };
+    });
+    return result;
+  }
+  
+  
+  static inline std::array<VariantTypeCreateFunction, maxHash> nodeFactoryField = makeHashToNode();
+  
+public:
+  static VariantType factory(IterType & iter)
+  {
+    auto token = *iter;
+    return nodeFactoryField[cthash(token.begin(), token.end())](iter);
+  }
+  
+};
+
 
 
 
@@ -122,7 +128,7 @@ decltype(auto) makeHashToNode(VariantType vt)
 //   }
 // }
 
-ant::ant_nodes pp(gpm::RPNToken_iterator &){ return ant::prog3{}; }
+
 
 
 
@@ -145,14 +151,14 @@ int main()
 // //   });
 // //   std::cout << std::hex << (int)cthash(p3.name, std::end(p3.name)-1) << "\n";
   
-  gpm::RPNToken_iterator titer{"m l m if l l p3 m if l p3 m if"};
+  gpm::RPNToken_iterator optAntIter{"m l m if l l p3 m if l p3 m if"};
 //   std::string_view token{"if"};
 //   VariantTypeCreateFunction<ant::ant_nodes, gpm::RPNToken_iterator> f = [](gpm::RPNToken_iterator&) -> ant::ant_nodes {return ant::prog3{};};
 //   auto tmp = f(titer);
-  auto token = *titer;
-  makeHashToNode<ant::ant_nodes, gpm::RPNToken_iterator> (ant::ant_nodes{});
-  auto foo = nodeFactoryField<ant::ant_nodes, gpm::RPNToken_iterator>[cthash(token.begin(), token.end())](titer);
-  std::cout << boost::apply_visitor(gpm::RPNPrinter<std::string>{}, foo);
+
+
+  auto optAnt = FactoryV2<ant::ant_nodes, gpm::RPNToken_iterator>::factory(optAntIter);
+  std::cout << boost::apply_visitor(gpm::RPNPrinter<std::string>{}, optAnt);
 //   boost::apply_visitor([](auto const & obj){
 //     std::cout << boost::typeindex::type_id<decltype(obj)>().pretty_name() << "\n";
 //   },
