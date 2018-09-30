@@ -83,7 +83,7 @@ outcome::unchecked<CLIArgs, CLIArgs::ErrorMessage> handleCLI(int argc,
   auto args = CLIArgs{};
   po::options_description simOptions("Simulation Settings");
   simOptions.add_options()
-  // clang-format off
+      // clang-format off
     ("help,h", "produce help message")
     ("antrpndef,a", po::value<std::string>(&args.antrpndef), "")
     ("outfile,o", po::value<std::string>(&args.outfile), "")
@@ -91,13 +91,13 @@ outcome::unchecked<CLIArgs, CLIArgs::ErrorMessage> handleCLI(int argc,
   // clang-format on
   po::options_description bmOptions("Benchmark Settings");
   bmOptions.add_options()
-    // clang-format off
+      // clang-format off
     ("benchmark",po::value<std::string>(&args.benchmark)->default_value("all"),"")
     ("benchmark-creation-only",po::bool_switch(&args.benchmarkCreationOnly),"")
     ("list-benchmarks", po::bool_switch(&args.listBenchmarks), "")
     ;
-    // clang-format on
-    
+  // clang-format on
+
   po::options_description allOptions("Allowed options");
   allOptions.add(simOptions).add(bmOptions);
   po::variables_map vm;
@@ -107,7 +107,7 @@ outcome::unchecked<CLIArgs, CLIArgs::ErrorMessage> handleCLI(int argc,
   } catch (std::exception const& e) {
     if (vm.count("help")) {
       return outcome::failure(boost::lexical_cast<std::string>(allOptions));
-    } else if(args.listBenchmarks) {
+    } else if (args.listBenchmarks) {
       return args;
     }
     return outcome::failure(e.what());

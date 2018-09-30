@@ -207,21 +207,21 @@ outcome::unchecked<CLIArgs, CLIArgs::ErrorMessage> handleCLI(int argc,
   auto args = CLIArgs{};
   po::options_description simOptions("Simulation options");
   simOptions.add_options()
-  // clang-format off
+      // clang-format off
   ("help,h", "produce help message")
   ("boarddef,b", po::value<std::string>(&args.boarddef), "")
   ;
   // clang-format on
 
-//   po::options_description bmOptions("Benchmark Settings");
-//   bmOptions.add_options()
-//   // clang-format off
-//   ;
-//   // clang-format on
-  
+  //   po::options_description bmOptions("Benchmark Settings");
+  //   bmOptions.add_options()
+  //   // clang-format off
+  //   ;
+  //   // clang-format on
+
   po::options_description allOptions("Allowed options");
   allOptions.add(simOptions);
-  
+
   po::parsed_options parsed = po::command_line_parser(argc, argv)
                                   .options(allOptions)
                                   .allow_unregistered()
@@ -254,28 +254,26 @@ int main(int argc, char** argv) {
 
   auto allTreeBechmarks = getAllTreeBenchmarks<decltype(theAntBoardSim)>();
 
-  boost::hana::for_each(allTreeBechmarks, [theAntBoardSim, cliArgs](
-                                              auto& treeBenchmarkTuple) {
+  boost::hana::for_each(allTreeBechmarks, [theAntBoardSim,
+                                           cliArgs](auto& treeBenchmarkTuple) {
     auto nameFull = std::string{std::get<1>(treeBenchmarkTuple)} + "Full";
     auto toCall = std::get<0>(treeBenchmarkTuple);
-    auto BM_lambdaFull = [toCall,
-    theAntBoardSim](benchmark::State& state) {
-      
+    auto BM_lambdaFull = [toCall, theAntBoardSim](benchmark::State& state) {
       auto theAntBoardSimCopy = theAntBoardSim;
       for (auto _ : state)
         state.counters["score"] =
-        toCall(theAntBoardSimCopy, getAntRPN(), BenchmarkPart::Full);
+            toCall(theAntBoardSimCopy, getAntRPN(), BenchmarkPart::Full);
     };
     benchmark::RegisterBenchmark(nameFull.c_str(), BM_lambdaFull);
-    
-    auto nameCreateOnly = std::string{std::get<1>(treeBenchmarkTuple)} + "CreateOnly";
+
+    auto nameCreateOnly =
+        std::string{std::get<1>(treeBenchmarkTuple)} + "CreateOnly";
     auto BM_lambdaCreateOnly = [toCall,
-    theAntBoardSim](benchmark::State& state) {
-      
+                                theAntBoardSim](benchmark::State& state) {
       auto theAntBoardSimCopy = theAntBoardSim;
       for (auto _ : state)
         state.counters["score"] =
-        toCall(theAntBoardSimCopy, getAntRPN(), BenchmarkPart::Full);
+            toCall(theAntBoardSimCopy, getAntRPN(), BenchmarkPart::Full);
     };
     benchmark::RegisterBenchmark(nameCreateOnly.c_str(), BM_lambdaCreateOnly);
   });
