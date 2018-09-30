@@ -34,7 +34,17 @@ set_target_properties(fasterfactories PROPERTIES
 )
 target_compile_options(fasterfactories PRIVATE -Wall -Wextra -pedantic -Werror)
 
-target_link_libraries(fasterfactories fmt::fmt Boost::boost)
+target_link_libraries(fasterfactories fmt::fmt Boost::boost Gpm)
+
+
+add_executable(mybenchmark mybenchmark.cpp)
+set_target_properties(mybenchmark PROPERTIES
+            CXX_STANDARD 17
+            CXX_EXTENSIONS OFF
+)
+target_compile_options(mybenchmark PRIVATE -Wall -Wextra -pedantic -Werror)
+
+target_link_libraries(mybenchmark benchmark::benchmark fmt::fmt Boost::boost Gpm)
 
 
 add_subdirectory(datastore)

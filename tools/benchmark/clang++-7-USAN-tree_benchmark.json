@@ -1,10 +1,10 @@
 {
   "context": {
-    "date": "2018-09-27 22:43:48",
+    "date": "2018-09-30 22:23:45",
     "executable": "/home/gchoinka/src/gpm/build-benchmarks/clang++-7-USAN/examples/ant/tree_benchmark",
     "num_cpus": 8,
     "mhz_per_cpu": 3500,
-    "cpu_scaling_enabled": true,
+    "cpu_scaling_enabled": false,
     "caches": [
       {
         "type": "Data",
@@ -35,76 +35,148 @@
   },
   "benchmarks": [
     {
-      "name": "variantDynamic",
-      "iterations": 272,
-      "real_time": 2.5145103455970995e+06,
-      "cpu_time": 2.5145256433823528e+06,
+      "name": "variantDynamicFull",
+      "iterations": 187,
+      "real_time": 3.5583942728291419e+06,
+      "cpu_time": 3.5560837326203207e+06,
       "time_unit": "ns",
-      "score": 8.9000000000000000e+01
+      "score": 7.8000000000000000e+01
     },
     {
-      "name": "variantCTStatic",
-      "iterations": 811,
-      "real_time": 8.7577636251682532e+05,
-      "cpu_time": 8.7577513316892728e+05,
+      "name": "variantDynamicCreateOnly",
+      "iterations": 197,
+      "real_time": 3.6554950913461633e+06,
+      "cpu_time": 3.5974624314720817e+06,
       "time_unit": "ns",
-      "score": 8.9000000000000000e+01
+      "score": 7.8000000000000000e+01
     },
     {
-      "name": "oopTreeDynamic",
-      "iterations": 704,
-      "real_time": 9.9882531817870180e+05,
-      "cpu_time": 9.9883090340909106e+05,
+      "name": "variantCTStaticFull",
+      "iterations": 574,
+      "real_time": 1.2435065818673084e+06,
+      "cpu_time": 1.2434823257839712e+06,
       "time_unit": "ns",
-      "score": 8.9000000000000000e+01
+      "score": 7.8000000000000000e+01
     },
     {
-      "name": "oppTreeCTStatic",
-      "iterations": 1949,
-      "real_time": 3.5335135864420747e+05,
-      "cpu_time": 3.5335573319651105e+05,
+      "name": "variantCTStaticCreateOnly",
+      "iterations": 542,
+      "real_time": 1.2452374261845166e+06,
+      "cpu_time": 1.2452361088560887e+06,
       "time_unit": "ns",
-      "score": 8.9000000000000000e+01
+      "score": 7.8000000000000000e+01
     },
     {
-      "name": "unwrappedDirectCTStatic",
-      "iterations": 6098,
-      "real_time": 1.1553522171233479e+05,
-      "cpu_time": 1.1553573942276165e+05,
+      "name": "oopTreeDynamicFull",
+      "iterations": 492,
+      "real_time": 1.4430608394403365e+06,
+      "cpu_time": 1.4428142439024393e+06,
       "time_unit": "ns",
-      "score": 8.9000000000000000e+01
+      "score": 7.8000000000000000e+01
     },
     {
-      "name": "unwrappedVisitorCallingCTStatic",
-      "iterations": 5987,
-      "real_time": 1.1795765124386604e+05,
-      "cpu_time": 1.1795923801570076e+05,
+      "name": "oopTreeDynamicCreateOnly",
+      "iterations": 493,
+      "real_time": 1.4666455415782139e+06,
+      "cpu_time": 1.4661606551724137e+06,
       "time_unit": "ns",
-      "score": 8.9000000000000000e+01
+      "score": 7.8000000000000000e+01
     },
     {
-      "name": "tupleCTStatic",
-      "iterations": 4723,
-      "real_time": 1.5013598941443808e+05,
-      "cpu_time": 1.5013782680499690e+05,
+      "name": "oppTreeCTStaticFull",
+      "iterations": 1343,
+      "real_time": 5.1077312062326632e+05,
+      "cpu_time": 5.1064058600148954e+05,
       "time_unit": "ns",
-      "score": 8.9000000000000000e+01
+      "score": 7.8000000000000000e+01
     },
     {
-      "name": "dynoTreeDynamic",
-      "iterations": 130,
-      "real_time": 5.3014774076962983e+06,
-      "cpu_time": 5.3015435076923119e+06,
+      "name": "oppTreeCTStaticCreateOnly",
+      "iterations": 1000,
+      "real_time": 5.2023994398768991e+05,
+      "cpu_time": 5.2023505199999938e+05,
       "time_unit": "ns",
-      "score": 8.9000000000000000e+01
+      "score": 7.8000000000000000e+01
     },
     {
-      "name": "dynoTreeCTStatic",
-      "iterations": 227,
-      "real_time": 2.9518250000008205e+06,
-      "cpu_time": 2.9518299383259914e+06,
+      "name": "unwrappedDirectCTStaticFull",
+      "iterations": 4740,
+      "real_time": 1.5668975295428233e+05,
+      "cpu_time": 1.5668955632911387e+05,
       "time_unit": "ns",
-      "score": 8.9000000000000000e+01
+      "score": 7.8000000000000000e+01
+    },
+    {
+      "name": "unwrappedDirectCTStaticCreateOnly",
+      "iterations": 4615,
+      "real_time": 1.5635135514714138e+05,
+      "cpu_time": 1.5635136316359692e+05,
+      "time_unit": "ns",
+      "score": 7.8000000000000000e+01
+    },
+    {
+      "name": "unwrappedVisitorCallingCTStaticFull",
+      "iterations": 4308,
+      "real_time": 1.5728602948246832e+05,
+      "cpu_time": 1.5725198630454965e+05,
+      "time_unit": "ns",
+      "score": 7.8000000000000000e+01
+    },
+    {
+      "name": "unwrappedVisitorCallingCTStaticCreateOnly",
+      "iterations": 4241,
+      "real_time": 1.6280259679347640e+05,
+      "cpu_time": 1.6272878731431297e+05,
+      "time_unit": "ns",
+      "score": 7.8000000000000000e+01
+    },
+    {
+      "name": "tupleCTStaticFull",
+      "iterations": 3253,
+      "real_time": 2.2931267229523513e+05,
+      "cpu_time": 2.2930781678450698e+05,
+      "time_unit": "ns",
+      "score": 7.8000000000000000e+01
+    },
+    {
+      "name": "tupleCTStaticCreateOnly",
+      "iterations": 3065,
+      "real_time": 2.2364063751519177e+05,
+      "cpu_time": 2.2364037487765067e+05,
+      "time_unit": "ns",
+      "score": 7.8000000000000000e+01
+    },
+    {
+      "name": "dynoTreeDynamicFull",
+      "iterations": 102,
+      "real_time": 7.2568496078590620e+06,
+      "cpu_time": 7.2567840588235296e+06,
+      "time_unit": "ns",
+      "score": 7.8000000000000000e+01
+    },
+    {
+      "name": "dynoTreeDynamicCreateOnly",
+      "iterations": 96,
+      "real_time": 7.2001546250248803e+06,
+      "cpu_time": 7.2000312708333330e+06,
+      "time_unit": "ns",
+      "score": 7.8000000000000000e+01
+    },
+    {
+      "name": "dynoTreeCTStaticFull",
+      "iterations": 172,
+      "real_time": 4.0385227034147284e+06,
+      "cpu_time": 4.0383737093023220e+06,
+      "time_unit": "ns",
+      "score": 7.8000000000000000e+01
+    },
+    {
+      "name": "dynoTreeCTStaticCreateOnly",
+      "iterations": 168,
+      "real_time": 4.1273939584373562e+06,
+      "cpu_time": 4.1263456488095215e+06,
+      "time_unit": "ns",
+      "score": 7.8000000000000000e+01
     }
   ]
 }
