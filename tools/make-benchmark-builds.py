@@ -27,6 +27,10 @@ for c in compiler:
         
     os.chdir(compilerDir)
     check_call(["cmake", "-GNinja", "-DGPM_FORMAT_GENERATED_FILES=ON", "-DCMAKE_CXX_COMPILER="+c["compiler"]] + c["cmake_args"] + [gpmDir])
+    
+for c in compiler:
+    os.chdir(compilerDir)
+
     check_call(["cmake", "--build", compilerDir, "--target", "run_tree_benchmark"])
     check_call(["cmake", "--build", compilerDir])
     check_call(["ctest", "--output-on-failure",  "-VV"])

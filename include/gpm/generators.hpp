@@ -18,12 +18,12 @@ namespace gpm {
 
 template <typename T>
 struct UnpackRecursiveWrapper {
-  static T & get(T & t) { return t; }
+  static T get(T t) { return t; }
 };
 
 template <typename T>
 struct UnpackRecursiveWrapper<boost::recursive_wrapper<T>> {
-  static T & get(boost::recursive_wrapper<T> & t) { return t.get(); }
+  static T get(boost::recursive_wrapper<T> t) { return t.get(); }
 };
 
 template <typename VariantType, typename TerminalNodeFactoryT,

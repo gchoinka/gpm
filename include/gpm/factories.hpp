@@ -16,6 +16,8 @@
 #include <boost/mp11.hpp>
 #include <boost/variant.hpp>
 
+#include <boost/hana.hpp>
+
 namespace gpm {
 
 namespace detail {
@@ -76,3 +78,67 @@ VariantType factory(Iter tokenIter) {
   return detail::factory_imp<VariantType>(tokenIter);
 }
 }  // namespace gpm
+
+
+namespace gpm::experimental
+{
+  constexpr uint8_t cthash(char const * begin, char const * end)
+  {
+    uint8_t r = 0;
+    while( begin < end)
+      r = r ^ *begin++;
+    return r & 0b0001'1111;
+  }
+  
+  constexpr auto maxHash = 2^5;
+  
+  
+  
+  template<typename ...T>
+  decltype(auto) asTuple(boost::variant<T...>)
+  {
+    return boost::hana::tuple<typename boost::unwrap_recursive<T>::type...>{};
+  }
+  
+  
+  template<typename VariantType, typename IterType>
+  class FactoryV2
+  {
+    
+    using VariantTypeCreateFunction = std::add_pointer_t<VariantType(IterType&)>;
+    
+    static inline std::array<VariantTypeCreateFunction, maxHash> nodeFactoryField;
+    
+    static int makeHashToNode()
+    {
+      auto tup = asTuple(VariantType{});
+      boost::hana::for_each(tup, [](auto n){
+        using NodeType = decltype(n);
+        nodeFactoryField[cthash(n.name, std::end(n.name) - 1)] = [](IterType & iter) -> VariantType  {
+          auto node = NodeType{};
+          for(auto & children: node.children)
+          {
+            ++iter;
+            auto token = *iter;
+            children = nodeFactoryField[cthash(std::begin(token), std::end(token))](iter);
+          }
+          return node; 
+        };
+      });
+      return 0;
+    }
+    
+    
+
+    
+  public:
+    static VariantType factory(IterType iter)
+    {
+      static int dummyValue = makeHashToNode();
+      (void)dummyValue;
+      auto token = *iter;
+      return nodeFactoryField[cthash(token.begin(), token.end())](iter);
+    }
+    
+  };
+}
