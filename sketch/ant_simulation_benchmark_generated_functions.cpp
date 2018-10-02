@@ -1,12 +1,14 @@
-
-
-static char const antRPNString[] = {"m r m if l l p3 r m if if p2 r p2 m if"};
+static inline char const *getAntRPN() {
+  return "m l m if l l p3 m if l p3 m if";
+}
 
 template <typename AntBoardSimT>
-static int recursiveVariantTreeFromString(AntBoardSimT antBoardSim) {
-  auto optAnt =
-      gpm::factory<ant::ant_nodes>(gpm::RPNToken_iterator{antRPNString});
-
+static int variantDynamic(AntBoardSimT antBoardSim, std::string_view const &sv,
+                          BenchmarkPart toMessure) {
+  auto optAnt = gpm::experimental::FactoryV2<
+      ant::ant_nodes, gpm::RPNToken_iterator>::factory(gpm::RPNToken_iterator{
+      sv});
+  if (toMessure == BenchmarkPart::Create) return 0;
   auto antBoardSimVisitor = ant::AntBoardSimulationVisitor{antBoardSim};
 
   while (!antBoardSim.is_finish()) {
@@ -15,34 +17,34 @@ static int recursiveVariantTreeFromString(AntBoardSimT antBoardSim) {
   return antBoardSim.score();
 }
 
-static void BM_recursiveVariantTreeFromString(benchmark::State& state) {
-  for (auto _ : state) {
-    state.counters["score"] = recursiveVariantTreeFromString(getAntBoardSim());
-  }
-}
-BENCHMARK(BM_recursiveVariantTreeFromString);
-
 template <typename AntBoardSimT>
-static int recursiveVariantTree(AntBoardSimT antBoardSim) {
+static int variantCTStatic(AntBoardSimT antBoardSim, std::string_view const &,
+                           BenchmarkPart toMessure) {
   auto optAnt = ant::ant_nodes{ant::if_food_ahead{
-      ant::move{},
-      ant::prog<2, gpm::NodeToken<(char)112, (char)50>>{
-          ant::right{},
-          ant::prog<2, gpm::NodeToken<(char)112, (char)50>>{
+      ant::move{}
 
-              ant::if_food_ahead{
-                  ant::if_food_ahead{ant::move{}, ant::right{}},
-                  ant::prog<3, gpm::NodeToken<(char)112, (char)51>>{
-                      ant::left{}, ant::left{},
-                      ant::if_food_ahead{ant::move{}, ant::right{}}
+      ,
+      ant::prog3{ant::left{},
+                 ant::if_food_ahead{ant::move{}
 
-                  }},
-              ant::move{}
+                                    ,
+                                    ant::prog3{ant::left{}, ant::left{},
+                                               ant::if_food_ahead{ant::move{}
 
-          }
+                                                                  ,
+                                                                  ant::left{}
 
-      }}};
+                                               }
 
+                                    }
+
+                 },
+                 ant::move{}
+
+      }
+
+  }};
+  if (toMessure == BenchmarkPart::Create) return 0;
   auto antBoardSimVisitor = ant::AntBoardSimulationVisitor{antBoardSim};
 
   while (!antBoardSim.is_finish()) {
@@ -51,188 +53,201 @@ static int recursiveVariantTree(AntBoardSimT antBoardSim) {
   return antBoardSim.score();
 }
 
-static void BM_recursiveVariantTree(benchmark::State& state) {
-  for (auto _ : state) {
-    state.counters["score"] = recursiveVariantTree(getAntBoardSim());
-  }
-}
-BENCHMARK(BM_recursiveVariantTree);
-
 template <typename AntBoardSimT>
-int cppFixedTree(AntBoardSimT antBoardSim) {
+static int oopTreeDynamic(AntBoardSimT antBoardSim, std::string_view const &sv,
+                          BenchmarkPart toMessure) {
+  auto oopTree = antoop::factory<AntBoardSimT>(gpm::RPNToken_iterator{sv});
+  if (toMessure == BenchmarkPart::Create) return 0;
   while (!antBoardSim.is_finish()) {
-    if (antBoardSim.is_food_in_front()) {
-      antBoardSim.move();
-
-    } else {
-      antBoardSim.right();
-
-      if (antBoardSim.is_food_in_front()) {
-        if (antBoardSim.is_food_in_front()) {
-          antBoardSim.move();
-
-        } else {
-          antBoardSim.right();
-        }
-
-      } else {
-        antBoardSim.left();
-        antBoardSim.left();
-
-        if (antBoardSim.is_food_in_front()) {
-          antBoardSim.move();
-
-        } else {
-          antBoardSim.right();
-        }
-      }
-      antBoardSim.move();
-    }
+    (*oopTree)(antBoardSim);
   }
   return antBoardSim.score();
 }
 
-static void BM_cppFixedTree(benchmark::State& state) {
-  for (auto _ : state) {
-    state.counters["score"] = cppFixedTree(getAntBoardSim());
-  }
-}
-BENCHMARK(BM_cppFixedTree);
-
 template <typename AntBoardSimT>
-int cppFixedWithVisitor(AntBoardSimT antBoardSim) {
-  auto antBoardSimVisitor = ant::AntBoardSimulationVisitor{antBoardSim};
-
-  while (!antBoardSim.is_finish()) {
-    if (antBoardSim.is_food_in_front()) {
-      antBoardSimVisitor(ant::move{});
-
-    } else {
-      antBoardSimVisitor(ant::right{});
-
-      if (antBoardSim.is_food_in_front()) {
-        if (antBoardSim.is_food_in_front()) {
-          antBoardSimVisitor(ant::move{});
-
-        } else {
-          antBoardSimVisitor(ant::right{});
-        }
-
-      } else {
-        antBoardSimVisitor(ant::left{});
-        antBoardSimVisitor(ant::left{});
-
-        if (antBoardSim.is_food_in_front()) {
-          antBoardSimVisitor(ant::move{});
-
-        } else {
-          antBoardSimVisitor(ant::right{});
-        }
-      }
-      antBoardSimVisitor(ant::move{});
-    }
-  }
-  return antBoardSim.score();
-}
-
-static void BM_cppFixedWithVisitor(benchmark::State& state) {
-  for (auto _ : state) {
-    state.counters["score"] = cppFixedWithVisitor(getAntBoardSim());
-  }
-}
-BENCHMARK(BM_cppFixedWithVisitor);
-
-template <typename AntBoardSimT>
-int oopTree(AntBoardSimT antBoardSim) {
+int oppTreeCTStatic(AntBoardSimT antBoardSim, std::string_view const &,
+                    BenchmarkPart toMessure) {
   auto oopTree = std::make_unique<antoop::IfFoodAhead<decltype(antBoardSim)>>(
-      std::make_unique<antoop::Move<decltype(antBoardSim)>>()
+      std::make_unique<antoop::Move<AntBoardSimT>>()
 
           ,
-      std::make_unique<antoop::Prog2<decltype(antBoardSim)>>(
-          std::make_unique<antoop::Right<decltype(antBoardSim)>>(),
-          std::make_unique<antoop::Prog2<decltype(antBoardSim)>>(
+      std::make_unique<antoop::Prog3<AntBoardSimT>>(
+          std::make_unique<antoop::Left<AntBoardSimT>>(),
+          std::make_unique<antoop::IfFoodAhead<decltype(antBoardSim)>>(
+              std::make_unique<antoop::Move<AntBoardSimT>>()
 
-              std::make_unique<antoop::IfFoodAhead<decltype(antBoardSim)>>(
-
+                  ,
+              std::make_unique<antoop::Prog3<AntBoardSimT>>(
+                  std::make_unique<antoop::Left<AntBoardSimT>>(),
+                  std::make_unique<antoop::Left<AntBoardSimT>>(),
                   std::make_unique<antoop::IfFoodAhead<decltype(antBoardSim)>>(
-                      std::make_unique<antoop::Move<decltype(antBoardSim)>>()
+                      std::make_unique<antoop::Move<AntBoardSimT>>()
 
                           ,
-                      std::make_unique<antoop::Right<decltype(antBoardSim)>>()
+                      std::make_unique<antoop::Left<AntBoardSimT>>()
 
                           )
 
-                      ,
-                  std::make_unique<antoop::Prog3<decltype(antBoardSim)>>(
-                      std::make_unique<antoop::Left<decltype(antBoardSim)>>(),
-                      std::make_unique<antoop::Left<decltype(antBoardSim)>>(),
-                      std::make_unique<
-                          antoop::IfFoodAhead<decltype(antBoardSim)>>(
-                          std::make_unique<
-                              antoop::Move<decltype(antBoardSim)>>()
+                      )
 
-                              ,
-                          std::make_unique<
-                              antoop::Right<decltype(antBoardSim)>>()
-
-                              )
-
-                          )
-
-                      ),
-              std::make_unique<antoop::Move<decltype(antBoardSim)>>()
-
-                  )
+                  ),
+          std::make_unique<antoop::Move<AntBoardSimT>>()
 
               )
 
   );
-
+  if (toMessure == BenchmarkPart::Create) return 0;
   while (!antBoardSim.is_finish()) {
     (*oopTree)(antBoardSim);
   }
   return antBoardSim.score();
 }
-
-static void BM_oopTree(benchmark::State& state) {
-  for (auto _ : state) {
-    state.counters["score"] = oopTree(getAntBoardSim());
-  }
-}
-BENCHMARK(BM_oopTree);
 
 template <typename AntBoardSimT>
-int oopTreeFromString(AntBoardSimT antBoardSim) {
-  auto oopTree =
-      antoop::factory<AntBoardSimT>(gpm::RPNToken_iterator{antRPNString});
-
+int unwrappedDirectCTStatic(AntBoardSimT antBoardSim, std::string_view const &,
+                            BenchmarkPart toMessure) {
+  if (toMessure == BenchmarkPart::Create) return 0;
   while (!antBoardSim.is_finish()) {
-    (*oopTree)(antBoardSim);
+    if (antBoardSim.is_food_in_front()) {
+      antBoardSim.move();
+
+    } else {
+      antBoardSim.left();
+
+      if (antBoardSim.is_food_in_front()) {
+        antBoardSim.move();
+
+      } else {
+        antBoardSim.left();
+        antBoardSim.left();
+
+        if (antBoardSim.is_food_in_front()) {
+          antBoardSim.move();
+
+        } else {
+          antBoardSim.left();
+        }
+      }
+      antBoardSim.move();
+    }
   }
   return antBoardSim.score();
 }
-
-static void BM_oopTreeFromString(benchmark::State& state) {
-  for (auto _ : state) {
-    state.counters["score"] = oopTreeFromString(getAntBoardSim());
-  }
-}
-BENCHMARK(BM_oopTreeFromString);
 
 template <typename AntBoardSimT>
-int oopTreeFromExtString(AntBoardSimT antBoardSim) {
-  auto oopTree = antoop::factory<AntBoardSimT>(
-      gpm::RPNToken_iterator{ant::optimalAntRPNExt});
-
+int unwrappedVisitorCallingCTStatic(AntBoardSimT antBoardSim,
+                                    std::string_view const &,
+                                    BenchmarkPart toMessure) {
+  if (toMessure == BenchmarkPart::Create) return 0;
+  auto antBoardSimVisitor = ant::AntBoardSimulationVisitor{antBoardSim};
   while (!antBoardSim.is_finish()) {
-    (*oopTree)(antBoardSim);
+    if (antBoardSim.is_food_in_front()) {
+      antBoardSimVisitor(ant::move{});
+
+    } else {
+      antBoardSimVisitor(ant::left{});
+
+      if (antBoardSim.is_food_in_front()) {
+        antBoardSimVisitor(ant::move{});
+
+      } else {
+        antBoardSimVisitor(ant::left{});
+        antBoardSimVisitor(ant::left{});
+
+        if (antBoardSim.is_food_in_front()) {
+          antBoardSimVisitor(ant::move{});
+
+        } else {
+          antBoardSimVisitor(ant::left{});
+        }
+      }
+      antBoardSimVisitor(ant::move{});
+    }
   }
   return antBoardSim.score();
 }
 
-static void BM_oopTreeFromExtString(benchmark::State& state) {
-  for (auto _ : state) {
-    state.counters["score"] = oopTreeFromExtString(getAntBoardSim());
+template <typename AntBoardSimT>
+static int tupleCTStatic(AntBoardSimT antBoardSim, std::string_view const &,
+                         BenchmarkPart toMessure) {
+  using namespace tup;
+  constexpr auto optAnt = hana::tuple<
+      tag::IfFood, hana::tuple<tag::Move>,
+      hana::tuple<tag::Prog3, hana::tuple<tag::Left>,
+                  hana::tuple<tag::IfFood, hana::tuple<tag::Move>,
+                              hana::tuple<tag::Prog3, hana::tuple<tag::Left>,
+                                          hana::tuple<tag::Left>,
+                                          hana::tuple<tag::IfFood,
+                                                      hana::tuple<tag::Move>,
+                                                      hana::tuple<tag::Left>>>>,
+                  hana::tuple<tag::Move>>>{};
+  if (toMessure == BenchmarkPart::Create) return 0;
+  while (!antBoardSim.is_finish()) {
+    tup::eval(antBoardSim, optAnt);
   }
+  return antBoardSim.score();
 }
-BENCHMARK(BM_oopTreeFromExtString);
+
+template <typename AntBoardSimT>
+static int dynoTreeDynamic(AntBoardSimT antBoardSim, std::string_view const &sv,
+                           BenchmarkPart toMessure) {
+  auto dynoTree = antdyno::factory<AntBoardSimT>(gpm::RPNToken_iterator{sv});
+  if (toMessure == BenchmarkPart::Create) return 0;
+  while (!antBoardSim.is_finish()) {
+    dynoTree.eval(antBoardSim);
+  }
+  return antBoardSim.score();
+}
+
+template <typename AntBoardSimT>
+int dynoTreeCTStatic(AntBoardSimT antBoardSim, std::string_view const &,
+                     BenchmarkPart toMessure) {
+  auto dynoTree = antdyno::IfFood<AntBoardSimT>(
+      antdyno::Move<AntBoardSimT>()
+
+          ,
+      antdyno::Prog3<AntBoardSimT>(
+          antdyno::Left<AntBoardSimT>(),
+          antdyno::IfFood<AntBoardSimT>(
+              antdyno::Move<AntBoardSimT>()
+
+                  ,
+              antdyno::Prog3<AntBoardSimT>(
+                  antdyno::Left<AntBoardSimT>(), antdyno::Left<AntBoardSimT>(),
+                  antdyno::IfFood<AntBoardSimT>(antdyno::Move<AntBoardSimT>()
+
+                                                    ,
+                                                antdyno::Left<AntBoardSimT>()
+
+                                                    )
+
+                      )
+
+                  ),
+          antdyno::Move<AntBoardSimT>()
+
+              )
+
+  );
+  if (toMessure == BenchmarkPart::Create) return 0;
+  while (!antBoardSim.is_finish()) {
+    dynoTree.eval(antBoardSim);
+  }
+  return antBoardSim.score();
+}
+
+template <typename AntBoardSimT>
+decltype(auto) getAllTreeBenchmarks() {
+  return std::make_tuple(
+      std::make_tuple(&variantDynamic<AntBoardSimT>, "variantDynamic"),
+      std::make_tuple(&variantCTStatic<AntBoardSimT>, "variantCTStatic"),
+      std::make_tuple(&oopTreeDynamic<AntBoardSimT>, "oopTreeDynamic"),
+      std::make_tuple(&oppTreeCTStatic<AntBoardSimT>, "oppTreeCTStatic"),
+      std::make_tuple(&unwrappedDirectCTStatic<AntBoardSimT>,
+                      "unwrappedDirectCTStatic"),
+      std::make_tuple(&unwrappedVisitorCallingCTStatic<AntBoardSimT>,
+                      "unwrappedVisitorCallingCTStatic"),
+      std::make_tuple(&tupleCTStatic<AntBoardSimT>, "tupleCTStatic"),
+      std::make_tuple(&dynoTreeDynamic<AntBoardSimT>, "dynoTreeDynamic"),
+      std::make_tuple(&dynoTreeCTStatic<AntBoardSimT>, "dynoTreeCTStatic"));
+}
