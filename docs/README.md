@@ -100,6 +100,38 @@ int unwrappedDirectCTStatic(AntBoardSimT antBoardSim, std::string_view const &) 
     return antBoardSim.score();
 }
 ```
+## unwrappedDirectCTStatic
+```cpp
+template <typename AntBoardSimT>
+int tupleCTStatic(AntBoardSimT antBoardSim, std::string_view const &) {
+    using namespace tup;
+    constexpr auto anAnt = 
+        hana::tuple<tag::IfFood, 
+            hana::tuple<tag::Move>,
+            hana::tuple<tag::Prog3, 
+                hana::tuple<tag::Left>,
+                hana::tuple<tag::IfFood, 
+                    hana::tuple<tag::Move>,
+                    hana::tuple<tag::Prog3, 
+                        hana::tuple<tag::Left>,
+                        hana::tuple<tag::Left>,
+                        hana::tuple<tag::IfFood,
+                            hana::tuple<tag::Move>,
+                            hana::tuple<tag::Left>
+                        >
+                    >
+                >,
+                hana::tuple<tag::Move>
+            >
+        >
+    {};
+
+    while (!antBoardSim.is_finish()) {
+        tup::eval(antBoardSim, anAnt);
+    }
+    return antBoardSim.score();
+}
+```
 # Notes
 At this stage I’m not sure if this library can deliver the promise “close to Metal”, so the M will maybe change meaning.
 
