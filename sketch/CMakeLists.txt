@@ -46,5 +46,14 @@ target_compile_options(mybenchmark PRIVATE -Wall -Wextra -pedantic -Werror)
 
 target_link_libraries(mybenchmark benchmark::benchmark fmt::fmt Boost::boost Gpm)
 
+add_executable(iterators_and_ranges iterators_and_ranges.cpp)
+set_target_properties(iterators_and_ranges PROPERTIES
+            CXX_STANDARD 17
+            CXX_EXTENSIONS OFF
+)
+target_compile_options(iterators_and_ranges PRIVATE -Wall -Wextra -pedantic -Werror)
+
+target_link_libraries(iterators_and_ranges fmt::fmt Boost::boost Gpm)
+
 
 add_subdirectory(datastore)

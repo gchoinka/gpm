@@ -75,7 +75,7 @@ foreach(bmName variantDynamic variantCTStatic oopTreeDynamic oppTreeCTStatic unw
     set(last_target timeing_build_tree_benchmark_${bmName})
 endforeach()
     
-
+#gdb -return-child-result -quiet -batch -ex "source ${TEMPFILE}" -ex run --args "${THIS_DIR}/${TODEBUG}.bin" "$@" |& grep -v '\[BT\] : .*'
 
 add_custom_target(make_tree_benchmark 
     COMMAND "${CMAKE_COMMAND}" -E remove "${GeneratedBechmarksIncludesDir}/ant_simulation_benchmark_generated_functions.cpp"
@@ -84,6 +84,11 @@ add_custom_target(make_tree_benchmark
     COMMAND "${CMAKE_COMMAND}" -E touch_nocreate "${CMAKE_CURRENT_SOURCE_DIR}/tree_benchmark_main.cpp"
     COMMAND /usr/bin/time -v -o "${CMAKE_CURRENT_BINARY_DIR}/buildtime.txt" "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --target tree_benchmark
     DEPENDS generate_tree_for_benchmark
+)
+
+add_custom_target(gdb_run_tree_benchmark 
+    COMMAND gdb -return-child-result -quiet -batch -ex "source ${CMAKE_SOURCE_DIR}/tools/ci/gdbinit.script" -ex run --args "$<TARGET_FILE:tree_benchmark>" --benchmark_out_format=json --benchmark_out="${CMAKE_CURRENT_BINARY_DIR}/tree_benchmark.json" -b "${CMAKE_CURRENT_SOURCE_DIR}/data/santa_fe_board.txt"
+    DEPENDS make_tree_benchmark
 )
 
 add_custom_target(run_tree_benchmark 
