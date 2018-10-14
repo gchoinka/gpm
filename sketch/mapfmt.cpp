@@ -48,16 +48,11 @@ decltype(auto) mapformat(StrT&& fstr, T... args) {
                    std::make_integer_sequence<size_t, sizeof...(args) / 2>());
 }
 
-
-
 template <typename KeyT, typename ValueT>
 struct argHolder {
   KeyT k;
   ValueT v;
 };
-
-
-
 
 int main() {
   using namespace gpm::utils;

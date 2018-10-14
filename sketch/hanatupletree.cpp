@@ -49,7 +49,7 @@ void Sink(ContextT& contex, hana::tuple<R>) {
 }
 
 template <typename ContextT, typename... T>
-void Sink(ContextT& , hana::tuple<T...>) {}
+void Sink(ContextT&, hana::tuple<T...>) {}
 
 template <typename T>
 counter foobar(T tup, counter c) {
