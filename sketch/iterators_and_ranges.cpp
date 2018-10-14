@@ -11,7 +11,7 @@
 
 namespace detail {
 template <typename IterTupleT, auto... Idx>
-bool isSameInputReverseIterImp(IterTupleT iterTuple,
+constexpr bool isSameInputReverseIterImp(IterTupleT iterTuple,
                                std::index_sequence<Idx...>) noexcept {
   auto findNextCharMindingBackspace = [](auto iter, auto endIter) {
     int backspaceCount = 0;
@@ -53,20 +53,20 @@ bool isSameInputReverseIterImp(IterTupleT iterTuple,
 }
 
 template <typename TupleT, auto... Idx>
-auto convertToReverseIter(TupleT t, std::index_sequence<Idx...>) {
+constexpr auto convertToReverseIter(TupleT t, std::index_sequence<Idx...>) {
   return std::tuple_cat(
       std::make_tuple(std::make_reverse_iterator(std::get<Idx * 2 + 1>(t)),
                       std::make_reverse_iterator(std::get<Idx * 2 + 0>(t)))...);
 }
 
 template <typename TupleT0, typename TupleT1, auto... Idx>
-auto interleaveTuple(TupleT0 t0, TupleT1 t1, std::index_sequence<Idx...>) {
+constexpr auto interleaveTuple(TupleT0 t0, TupleT1 t1, std::index_sequence<Idx...>) {
   return std::tuple_cat(
       std::make_tuple(std::get<Idx>(t0), std::get<Idx>(t1))...);
 }
 
 template <typename TupleT0, typename TupleT1>
-auto interleaveTuple(TupleT0 t0, TupleT1 t1) {
+constexpr auto interleaveTuple(TupleT0 t0, TupleT1 t1) {
   return interleaveTuple(
       t0, t1, std::make_index_sequence<std::tuple_size_v<TupleT0>>());
 }
@@ -74,7 +74,7 @@ auto interleaveTuple(TupleT0 t0, TupleT1 t1) {
 }  // namespace detail
 
 template <typename... ItersT>
-auto isSameInput(ItersT... iters) -> typename std::enable_if<
+constexpr auto isSameInput(ItersT... iters) -> typename std::enable_if<
     std::tuple_size<decltype(std::make_tuple(
         typename std::iterator_traits<ItersT>::pointer{}...))>::value != 0,
     bool>::type {
@@ -94,7 +94,7 @@ auto isSameInput(ItersT... iters) -> typename std::enable_if<
 }
 
 template <typename... RangesT>
-auto isSameInput(RangesT... ranges) ->
+constexpr auto isSameInput(RangesT... ranges) ->
     typename std::enable_if<std::tuple_size<decltype(std::make_tuple(
                                 std::crbegin(ranges)...))>::value != 0,
                             bool>::type {
@@ -138,11 +138,11 @@ std::string& numTestString(std::string& buffer, int n, int length,
 
 void manualTest() {
   using namespace std;
-  auto seq1 = string_view{"\b\b\baaa"};
-  auto seq2 = string_view{"aaa\bc\b"};
+  constexpr auto seq1 = string_view{"\b\b\baaa"};
+  constexpr auto seq2 = string_view{"aaa\bc\b"};
 
-  auto isSameIter = isSameInput(begin(seq1), end(seq1), begin(seq2), end(seq2));
-  auto isSameRange = isSameInput(seq1, seq2);
+  constexpr auto isSameIter = isSameInput(begin(seq1), end(seq1), begin(seq2), end(seq2));
+  constexpr auto isSameRange = isSameInput(seq1, seq2);
 
   cout << isSameIter << "\n";
   cout << isSameRange << "\n";
