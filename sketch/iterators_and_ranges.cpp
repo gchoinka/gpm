@@ -11,7 +11,8 @@
 
 namespace detail {
 template <typename IterTupleT, auto... Idx>
-bool isSameInput_imp(IterTupleT iterTuple, std::index_sequence<Idx...>) {
+bool isSameInputReverseIterImp(IterTupleT iterTuple,
+                               std::index_sequence<Idx...>) noexcept {
   auto findNextCharMindingBackspace = [](auto iter, auto endIter) {
     int backspaceCount = 0;
     while (iter != endIter && (*iter == '\b' || backspaceCount > 0)) {
@@ -73,7 +74,10 @@ auto interleaveTuple(TupleT0 t0, TupleT1 t1) {
 }  // namespace detail
 
 template <typename... ItersT>
-bool isSameInput(ItersT... iters) {
+auto isSameInput(ItersT... iters) -> typename std::enable_if<
+    std::tuple_size<decltype(std::make_tuple(
+        typename std::iterator_traits<ItersT>::pointer{}...))>::value != 0,
+    bool>::type {
   static_assert(
       sizeof...(ItersT) >= 4,
       "Not enouth iterators pairs given, expecting 4 arguments (2 pairs) at "
@@ -81,23 +85,24 @@ bool isSameInput(ItersT... iters) {
   static_assert((sizeof...(ItersT) % 2) == 0,
                 "Iterators count is odd, this function need pairs of (begin, "
                 "end) iterators.");
-  auto itPack = detail::convertToReverseIter(
+  auto iteratorPack = detail::convertToReverseIter(
       std::make_tuple(iters...),
       std::make_index_sequence<sizeof...(ItersT) / 2>());
-  return detail::isSameInput_imp(
-      itPack, std::make_index_sequence<sizeof...(ItersT) / 2>());
+
+  return detail::isSameInputReverseIterImp(
+      iteratorPack, std::make_index_sequence<sizeof...(ItersT) / 2>());
 }
 
-template <typename... RangesT,
-          typename std::enable_if<std::tuple_size<decltype(std::make_tuple(
-                                      std::crbegin(RangesT{})...))>::value,
-                                  int>::type = 0>
-bool isSameInput(RangesT... ranges) {
+template <typename... RangesT>
+auto isSameInput(RangesT... ranges) ->
+    typename std::enable_if<std::tuple_size<decltype(std::make_tuple(
+                                std::crbegin(ranges)...))>::value != 0,
+                            bool>::type {
   static_assert(sizeof...(RangesT) >= 2,
                 "Usefull result only posibible with at least 2 ranges");
   auto itPackBegins = std::make_tuple(std::crbegin(ranges)...);
   auto itPackEnds = std::make_tuple(std::crend(ranges)...);
-  return detail::isSameInput_imp(
+  return detail::isSameInputReverseIterImp(
       detail::interleaveTuple(itPackBegins, itPackEnds),
       std::make_index_sequence<sizeof...(RangesT)>());
 }
@@ -131,7 +136,7 @@ std::string& numTestString(std::string& buffer, int n, int length,
   return buffer;
 }
 
-void bruteForceTest() {
+void manualTest() {
   using namespace std;
   auto seq1 = string_view{"\b\b\baaa"};
   auto seq2 = string_view{"aaa\bc\b"};
@@ -153,7 +158,7 @@ void printDiff(std::string s0, std::string s1, int numS0, int numS1,
   fmt::print("\n");
 }
 
-void bruteForecTest() {
+void bruteForceTest() {
   auto length = 6;
   std::string charSet{"abc\b"};
   auto iterationsNeeded = std::pow(charSet.length(), length);
