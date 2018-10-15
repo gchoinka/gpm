@@ -26,7 +26,7 @@ matrix:
             - ubuntu-toolchain-r-test
             - sourceline: 'deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-7 main'
               key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
-          packages: [ "clang-7", "llvm-7-dev", "g++-7", "g++-8", "ninja-build", "xz-utils", "gdb"]
+          packages: [ "clang-7", "llvm-7-dev", "g++-7", "g++-8.2", "ninja-build", "xz-utils", "gdb"]
     - env: CMAKE_BUILD_TYPE=Debug CXXCOMPILER=g++-7 CCOMPILER=gcc-7
       addons: *default_addons
     - env: CMAKE_BUILD_TYPE=Release CXXCOMPILER=g++-8 CCOMPILER=gcc-8
