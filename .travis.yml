@@ -42,7 +42,7 @@ matrix:
 script:
         #  - mkdir /home/travis/opt/
         #  - wget -qO- "https://github.com/gchoinka/gpm/releases/download/v0.2.0/home_travis_opt_gcc-install.tar.xz" | tar xJ -C /home/travis/opt/
-  - test ! -d /home/travis/opt && mkdir /home/travis/opt/ 
+  - test ! -d /home/travis/opt && mkdir /home/travis/opt/ || true
   - export PATH=/usr/lib/llvm-${CLANG_VERS}/bin/:${PATH}
   - export ASAN_OPTIONS=symbolize=1
   - export LSAN_OPTIONS=verbosity=1:log_threads=1
