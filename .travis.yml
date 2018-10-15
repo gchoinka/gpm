@@ -9,12 +9,13 @@
 language: cpp
 os: linux
 dist: trusty
-sudo: true
+sudo: false
 
 cache:
   apt: true
   directories:
     - /home/travis/.hunter
+    - /home/travis/opt
 
 matrix:
   include:
@@ -39,19 +40,21 @@ matrix:
 
 
 script:
+        #  - mkdir /home/travis/opt/
+        #  - wget -qO- "https://github.com/gchoinka/gpm/releases/download/v0.2.0/home_travis_opt_gcc-install.tar.xz" | tar xJ -C /home/travis/opt/
+  - test ! -d /home/travis/opt && mkdir /home/travis/opt/ 
   - export PATH=/usr/lib/llvm-${CLANG_VERS}/bin/:${PATH}
   - export ASAN_OPTIONS=symbolize=1
   - export LSAN_OPTIONS=verbosity=1:log_threads=1
-  - wget -qO- "https://cmake.org/files/v3.12/cmake-3.12.3-Linux-x86_64.tar.gz" | tar xvz -C /home/travis/opt/
   - |
     mkdir build
     cd build
-    "${CMAKE_BIN}" .. -GNinja \
+    cmake .. -GNinja \
       -DCMAKE_CXX_COMPILER="${CXXCOMPILER}" \
       -DCMAKE_C_COMPILER="${CCCOMPILER}" \
       -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
       -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS}" \
       -DCMAKE_EXE_LINKER_FLAGS="${CMAKE_EXE_LINKER_FLAGS}" 
-  - "${CMAKE_BIN}" --build . -- -j2 
-  - "${CTEST_BIN}" --output-on-failure -VV        
-  - "${CMAKE_BIN}" --build . --target run_tree_benchmark
+  - cmake --build . -- -j2 
+  - ctest --output-on-failure -VV        
+  - cmake --build . --target run_tree_benchmark
