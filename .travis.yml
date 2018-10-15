@@ -48,10 +48,11 @@ script:
   - export LSAN_OPTIONS=verbosity=1:log_threads=1
   - wget -qO- "https://cmake.org/files/v3.12/cmake-3.12.3-Linux-x86_64.tar.gz" | tar xvz -C /home/travis/opt/
   - export CMAKE_BIN=/home/travis/opt/cmake-*/bin/cmake
+  - export CTEST_BIN=/home/travis/opt/cmake-*/bin/ctest
   - |
     mkdir build
     cd build
-    cmake .. -GNinja \
+    ${CMAKE_BIN} .. -GNinja \
       -DCMAKE_CXX_COMPILER="${CXXCOMPILER}" \
       -DCMAKE_C_COMPILER="${CCCOMPILER}" \
       -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
