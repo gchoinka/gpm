@@ -134,6 +134,8 @@ decltype(auto) getAntRandomBoardSim() {
   return antSim;
 }
 
+
+
 outcome::unchecked<ant::sim::AntBoardSimulationStaticSize<
                        ant::santa_fe::x_size, ant::santa_fe::y_size>,
                    std::string>
@@ -273,7 +275,7 @@ int main(int argc, char** argv) {
       auto theAntBoardSimCopy = theAntBoardSim;
       for (auto _ : state)
         state.counters["score"] =
-            toCall(theAntBoardSimCopy, getAntRPN(), BenchmarkPart::Full);
+          toCall(theAntBoardSimCopy, getAntRPN(), BenchmarkPart::Create);
     };
     benchmark::RegisterBenchmark(nameCreateOnly.c_str(), BM_lambdaCreateOnly);
   });

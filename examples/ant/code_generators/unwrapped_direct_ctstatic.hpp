@@ -69,7 +69,7 @@ struct UnwrappedDirectCTStatic {
 template<typename AntBoardSimT>
 int unwrappedDirectCTStatic(AntBoardSimT antBoardSim, std::string_view const &, BenchmarkPart toMessure)
 {{
-if(toMessure == BenchmarkPart::Create) 
+  if(toMessure == BenchmarkPart::Create) 
     return 0;
   while(!antBoardSim.is_finish()){{
     {cppFixedNotation}

@@ -71,7 +71,7 @@ struct CLIArgs {
   using ErrorMessage = std::string;
   std::string outfile;
   std::string antrpndef;
-  std::string benchmark;
+  std::vector<std::string> benchmark;
   bool listBenchmarks = false;
   bool benchmarkCreationOnly = false;
 };
@@ -92,7 +92,7 @@ outcome::unchecked<CLIArgs, CLIArgs::ErrorMessage> handleCLI(int argc,
   po::options_description bmOptions("Benchmark Settings");
   bmOptions.add_options()
       // clang-format off
-    ("benchmark",po::value<std::string>(&args.benchmark)->default_value("all"),"")
+    ("benchmark",po::value<std::vector<std::string>>(&args.benchmark)->multitoken(),"")
     ("benchmark-creation-only",po::bool_switch(&args.benchmarkCreationOnly),"")
     ("list-benchmarks", po::bool_switch(&args.listBenchmarks), "")
     ;
@@ -130,6 +130,7 @@ int main(int argc, char** argv) {
       UnwrappedDirectCTStatic{}, UnwrappedVisitorCallingCTStatic{},
       TupleCTStatic{}, DynoTreeDynamic{}, DynoTreeCTStatic{});
 
+
   if (cliArgs.listBenchmarks) {
     std::cout << "\n";
     hana::for_each(bm, [&](auto const& codeGenerator) {
@@ -146,17 +147,23 @@ int main(int argc, char** argv) {
       "static inline char const * getAntRPN() {{ return \"{antRPN}\"; }}\n",
       "antRPN"_a = boost::apply_visitor(gpm::RPNPrinter<std::string>{}, ant));
   hana::for_each(bm, [&](auto const& codeGenerator) {
-    if (cliArgs.benchmark == "all" || cliArgs.benchmark == codeGenerator.name())
-      outf << codeGenerator.body(ant);
+    auto found = std::any_of(cliArgs.benchmark.begin(), cliArgs.benchmark.end(),
+                             [&](auto const& bm) {
+                               return bm == "all" || bm == codeGenerator.name();
+                             });
+
+    if (found) outf << codeGenerator.body(ant);
   });
 
   std::string tupleElements;
   auto delimiter = "\n      ";
 
   hana::for_each(bm, [&](auto const& codeGenerator) {
-    if (!(cliArgs.benchmark == "all" ||
-          cliArgs.benchmark == codeGenerator.name()))
-      return;
+    auto found = std::any_of(cliArgs.benchmark.begin(), cliArgs.benchmark.end(),
+                             [&](auto const& bm) {
+                               return bm == "all" || bm == codeGenerator.name();
+                             });
+    if (!found) return;
     tupleElements += fmt::format(
         R"""({Delimiter} std::make_tuple(&{FunctionPointer}<AntBoardSimT>, "{BenchmareName}"))""",
         "Delimiter"_a = delimiter,

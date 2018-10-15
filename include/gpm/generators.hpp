@@ -15,7 +15,6 @@
 
 namespace gpm {
 
-
 template <typename T>
 struct UnpackRecursiveWrapper {
   static T get(T t) { return t; }

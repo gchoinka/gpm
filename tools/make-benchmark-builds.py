@@ -42,13 +42,13 @@ for c in compiler:
         check_call(["cmake", "--build", compilerDir, "--target", "run_tree_benchmark"])
         check_call(["cmake", "--build", compilerDir])
         check_call(["ctest", "--output-on-failure",  "-VV"])
-    #shutil.copy(os.path.join(compilerDir, "examples/ant/tree_benchmark.json"), os.path.join(thisDir, "benchmark/%s-tree_benchmark.json" % c["dir"]))
+        
     if not fastRun:
         check_call(["cmake", "--build", compilerDir, "--target", "timeing_build_tree_benchmark_all"])
     treeBenchmark = json.load(open(os.path.join(compilerDir, "examples/ant/tree_benchmark.json"), "r"))
     treeBenchmark["BuildTimes"] = {}
     for filename in glob.iglob(os.path.join(compilerDir, "examples/ant/buildtime_*.txt")):
-        #shutil.copy(filename, os.path.join(thisDir, "benchmark/%s-%s" % (c["dir"], os.path.basename(filename))))
+
         fileContent = open(filename).read()
         wallTime = re.findall("Elapsed \(wall clock\) time \(h:mm:ss or m:ss\): (\d:\d\d.\d\d)", fileContent)
         bmName = re.findall("buildtime_(.*).txt", filename)[0]
@@ -59,7 +59,19 @@ for c in compiler:
     for filename in glob.iglob(os.path.join(compilerDir, "examples/ant/bin_size_*.txt")):
         bmName = re.findall("bin_size_(.*).txt", filename)[0]
         treeBenchmark["BuildSize"][bmName] = int(open(filename).read())
-        #shutil.copy(filename, os.path.join(thisDir, "benchmark/%s-%s" % (c["dir"], os.path.basename(filename))))
+
+    createOnlyOrFull = {"Full_median":{}, "CreateOnly_median":{}, "Eval_median":{}}
+    for b in treeBenchmark["benchmarks"]:
+      name = re.findall("(.*)(CreateOnly_median|Full_median)", b["name"])
+      if len(name) == 0:
+        continue
+      createOnlyOrFull[name[0][1]][name[0][0]] = b;
+      
+    for bmName in createOnlyOrFull["Full_median"]:
+      createOnlyOrFull["Eval_median"][bmName] = {"cpu_time": createOnlyOrFull["Full_median"][bmName]["cpu_time"] - createOnlyOrFull["CreateOnly_median"][bmName]["cpu_time"]}
+      
+    
+    treeBenchmark["EvalTimes"] = createOnlyOrFull
     with open(os.path.join(thisDir, "benchmark/%s-tree_benchmark.json" % c["dir"]), "w") as f:
       json.dump(treeBenchmark, f, indent=4)
     

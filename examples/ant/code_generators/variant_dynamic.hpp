@@ -18,14 +18,14 @@ struct VariantDynamic {
 template<typename AntBoardSimT>
 static int variantDynamic(AntBoardSimT antBoardSim, std::string_view const & sv, BenchmarkPart toMessure)
 {{    
-  auto optAnt = gpm::experimental::FactoryV2<ant::ant_nodes, gpm::RPNToken_iterator>::factory(gpm::RPNToken_iterator{{sv}});
+  auto anAnt = gpm::factory<ant::ant_nodes>(gpm::RPNToken_iterator{{sv}});
   if(toMessure == BenchmarkPart::Create) 
     return 0;
   auto antBoardSimVisitor = ant::AntBoardSimulationVisitor{{antBoardSim}};
 
   while(!antBoardSim.is_finish())
   {{
-    boost::apply_visitor(antBoardSimVisitor, optAnt);
+    boost::apply_visitor(antBoardSimVisitor, anAnt);
   }}
   return antBoardSim.score(); 
 }}
