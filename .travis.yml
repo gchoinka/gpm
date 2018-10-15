@@ -39,7 +39,6 @@ matrix:
 
 
 script:
-  - test ! -d /home/travis/opt && mkdir /home/travis/opt/ 
   - export PATH=/usr/lib/llvm-${CLANG_VERS}/bin/:${PATH}
   - export ASAN_OPTIONS=symbolize=1
   - export LSAN_OPTIONS=verbosity=1:log_threads=1
