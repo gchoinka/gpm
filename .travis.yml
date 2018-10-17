@@ -9,12 +9,13 @@
 language: cpp
 os: linux
 dist: trusty
-sudo: true
+sudo: false
 
 cache:
   apt: true
   directories:
     - /home/travis/.hunter
+    - /home/travis/opt
 
 matrix:
   include:
@@ -25,13 +26,11 @@ matrix:
             - ubuntu-toolchain-r-test
             - sourceline: 'deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-7 main'
               key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
-          packages: [ "clang-7", "llvm-7-dev", "g++-7", "ninja-build", "xz-utils", "gdb"]
+          packages: [ "clang-7", "llvm-7-dev", "g++-7", "g++-8", "ninja-build", "xz-utils", "gdb"]
     - env: CMAKE_BUILD_TYPE=Debug CXXCOMPILER=g++-7 CCOMPILER=gcc-7
       addons: *default_addons
-    - env: CMAKE_BUILD_TYPE=Release CXXCOMPILER=g++-7 CCOMPILER=gcc-7
-      addons: *default_addons
-      #- env: CMAKE_BUILD_TYPE=Debug CXXCOMPILER=g++-8 CMAKE_CXX_FLAGS="-fsanitize=address -fno-omit-frame-pointer" CMAKE_EXE_LINKER_FLAGS="-fsanitize=address -fuse-ld=gold" CCOMPILER=gcc-8
-      #  addons: *default_addons
+    #- env: CMAKE_BUILD_TYPE=Release CXXCOMPILER=g++-8 CCOMPILER=gcc-8
+    #  addons: *default_addons
     - env: CMAKE_BUILD_TYPE=Debug CXXCOMPILER=clang++-7 CMAKE_CXX_FLAGS="-fsanitize=undefined -fno-omit-frame-pointer" CMAKE_EXE_LINKER_FLAGS="-fsanitize=undefined" CLANG_VERS="7" CCOMPILER=clang-7 
       addons: *default_addons
     - env: CMAKE_BUILD_TYPE=Release CXXCOMPILER=clang++-7 CCOMPILER=clang-7 CLANG_VERS="7"
@@ -41,18 +40,22 @@ matrix:
 script:
         #  - mkdir /home/travis/opt/
         #  - wget -qO- "https://github.com/gchoinka/gpm/releases/download/v0.2.0/home_travis_opt_gcc-install.tar.xz" | tar xJ -C /home/travis/opt/
+  - test ! -d /home/travis/opt && mkdir /home/travis/opt/ || true
   - export PATH=/usr/lib/llvm-${CLANG_VERS}/bin/:${PATH}
   - export ASAN_OPTIONS=symbolize=1
   - export LSAN_OPTIONS=verbosity=1:log_threads=1
+  - wget -qO- "https://cmake.org/files/v3.12/cmake-3.12.3-Linux-x86_64.tar.gz" | tar xz -C /home/travis/opt/ &> /dev/null
+  - export CMAKE_BIN=/home/travis/opt/cmake-*/bin/cmake
+  - export CTEST_BIN=/home/travis/opt/cmake-*/bin/ctest
   - |
     mkdir build
     cd build
-    cmake .. -GNinja \
+    ${CMAKE_BIN} .. -GNinja \
       -DCMAKE_CXX_COMPILER="${CXXCOMPILER}" \
       -DCMAKE_C_COMPILER="${CCCOMPILER}" \
       -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
       -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS}" \
       -DCMAKE_EXE_LINKER_FLAGS="${CMAKE_EXE_LINKER_FLAGS}" 
-  - cmake --build . -- -j2 
+  - ${CMAKE_BIN} --build . -- -j2 
   - ctest --output-on-failure -VV        
-  - cmake --build . --target run_tree_benchmark
+  - ${CMAKE_BIN} --build . --target run_tree_benchmark
