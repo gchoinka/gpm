@@ -50,6 +50,15 @@ target_compile_options(ant_board_visualization PRIVATE ${warning_flags})
 target_link_libraries(ant_board_visualization Gpm fmt::fmt Boost::boost Boost::program_options Outcome) 
 
 
+add_executable(ant_genetic_programming ant_genetic_programming_main.cpp) 
+set_target_properties(ant_genetic_programming PROPERTIES
+            CXX_STANDARD 17
+            CXX_EXTENSIONS OFF
+)
+target_compile_options(ant_genetic_programming PRIVATE ${warning_flags})
+target_link_libraries(ant_genetic_programming Gpm fmt::fmt Boost::boost Boost::program_options Outcome) 
+
+
 
 option(GPM_FORMAT_GENERATED_FILES "Should the files which were generated in ${GeneratedBechmarksIncludesDir} be formated?(only usefull if someone wants to read them)." OFF)
 
@@ -94,7 +103,7 @@ add_custom_target(make_tree_benchmark
 
 
 add_custom_target(run_tree_benchmark 
-    COMMAND "$<TARGET_FILE:tree_benchmark>" --benchmark_repetitions=10 --benchmark_out_format=json --benchmark_out="${CMAKE_CURRENT_BINARY_DIR}/tree_benchmark.json" -b "${CMAKE_CURRENT_SOURCE_DIR}/data/santa_fe_board.txt"
+    COMMAND "$<TARGET_FILE:tree_benchmark>" --benchmark_report_aggregates_only=true --benchmark_repetitions=10 --benchmark_out_format=json --benchmark_out="${CMAKE_CURRENT_BINARY_DIR}/tree_benchmark.json" -b "${CMAKE_CURRENT_SOURCE_DIR}/data/santa_fe_board.txt"
     DEPENDS make_tree_benchmark
 )
 
