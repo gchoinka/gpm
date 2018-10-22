@@ -8,6 +8,7 @@
 #include <tuple>
 #include <type_traits>
 #include <vector>
+#include <array>
 
 namespace detail {
 template <typename IterTupleT, auto... Idx>
@@ -126,12 +127,15 @@ bool isSameInputRegExp(std::string s1, std::string s2) {
   return s1 == s2;
 }
 
-std::string& numTestString(std::string& buffer, int n, int length,
-                           std::string const& charSet) {
+template<typename CharSetT>
+auto numTestString(int n, int length, CharSetT charSet) {
+  std::string buffer;
+  buffer.reserve(length);
   for (int i = 0; i < length; ++i) {
-    auto toSelect = n % charSet.length();
-    n = n / charSet.length();
-    buffer[i] = charSet[toSelect];
+    auto toSelect = n % std::size(charSet);
+    n = n / std::size(charSet);
+    if(charSet[toSelect] != '\0')
+      buffer.push_back(charSet[toSelect]);
   }
   return buffer;
 }
@@ -141,43 +145,67 @@ void manualTest() {
   constexpr auto seq1 = string_view{"\b\b\baaa"};
   constexpr auto seq2 = string_view{"aaa\bc\b"};
 
-  constexpr auto isSameIter = isSameInput(begin(seq1), end(seq1), begin(seq2), end(seq2));
-  constexpr auto isSameRange = isSameInput(seq1, seq2);
+  constexpr auto isSameWithIterators = isSameInput(begin(seq1), end(seq1), begin(seq2), end(seq2));
+  constexpr auto isSameWithRanges = isSameInput(seq1, seq2);
 
-  cout << isSameIter << "\n";
-  cout << isSameRange << "\n";
+  cout << isSameWithIterators << "\n";
+  cout << isSameWithRanges << "\n";
 }
 
-void printDiff(std::string s0, std::string s1, int numS0, int numS1,
-               bool resultCall0, int resultCall1) {
-  fmt::print("found diff {} {} resultCall0{} resultCall1{}\n\t", numS0, numS1,
-             resultCall0, resultCall1);
-  for (auto c : s0) fmt::print("{:02x} ", c);
-  fmt::print("\n\t");
-  for (auto c : s1) fmt::print("{:02x} ", c);
-  fmt::print("\n");
+template<std::size_t N>
+void printDiff(std::array<std::string,N> const & inputs, std::array<int, N> const & stateNumbers, bool resultCall0, int resultCall1) {
+  fmt::print("found diff ");
+  for(auto const & sn: stateNumbers)
+    fmt::print("{}", sn);
+  
+  
+  fmt::print("resultCall0{} resultCall1{}\n\t", resultCall0, resultCall1);
+  for(auto const & i: inputs)
+  {
+    for (auto c : i) fmt::print("{:02x} ", c);
+    fmt::print("\n\t");
+  }
 }
+
+
 
 void bruteForceTest() {
-  auto length = 6;
-  std::string charSet{"abc\b"};
-  auto iterationsNeeded = std::pow(charSet.length(), length);
-  std::string inputSequence[2];
-  for (auto& s : inputSequence) s.resize(length);
+  constexpr auto nSequences = 3;
+  constexpr auto sequenceMaxLength = 4;
+  constexpr std::array<char,4> charSet = {'a', 'Z',  '\b', '\0'};
+  constexpr auto stringStateN = int(std::pow(std::size(charSet), sequenceMaxLength));
+  auto iterationsNeeded = std::pow(stringStateN, nSequences);
+
+
+  
   for (int i = 0; i < iterationsNeeded; ++i) {
-    inputSequence[0] = numTestString(inputSequence[0], i, length, charSet);
-    for (int k = 0; k < iterationsNeeded; ++k) {
-      inputSequence[1] = numTestString(inputSequence[1], k, length, charSet);
-      auto isSameInputRegExpResult =
-          isSameInputRegExp(inputSequence[0], inputSequence[1]);
-      auto isSameInputResult = isSameInput(inputSequence[0], inputSequence[1]);
-      if (isSameInputRegExpResult != isSameInputResult) {
-        printDiff(inputSequence[0], inputSequence[1], i, k,
-                  isSameInputRegExpResult, isSameInputResult);
-      }
+    std::array<int, nSequences> stateNumbers;
+    int currentNumber = i;
+    for(auto & n: stateNumbers){
+      n = currentNumber  % stringStateN;
+      currentNumber /= stringStateN;
     }
-    if ((i % 100) == 0) {
-      std::cout << i << "/" << iterationsNeeded << "\n";
+    
+    std::array<std::string, nSequences>  inputs;
+    auto stateNumberIter = stateNumbers.cbegin();
+    for(auto & i:inputs)
+      i = numTestString(*stateNumberIter++, sequenceMaxLength, charSet);
+    auto isSameInputRegExpResult = true;
+    for(auto const & i: inputs)
+      isSameInputRegExpResult = isSameInputRegExpResult && isSameInputRegExp(inputs[0],  i);
+  
+    auto isSameInputArryCall = []<auto ...Idx>(auto const & Cont, std::index_sequence<Idx...>){
+      return isSameInput(std::get<Idx>(Cont)...);
+    };
+
+    auto isSameInputResult = isSameInputArryCall(inputs, std::make_index_sequence<nSequences>());
+    if (isSameInputRegExpResult != isSameInputResult) {
+        printDiff(inputs, stateNumbers,
+                    isSameInputRegExpResult, isSameInputResult);
+      break;
+    }
+    if (!(i % 10000)) {
+      fmt::print("{:f}\n", i / iterationsNeeded);
     }
   }
 }
