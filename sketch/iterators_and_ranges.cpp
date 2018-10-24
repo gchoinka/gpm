@@ -2,6 +2,9 @@
 #include <algorithm>
 #include <array>
 #include <boost/range.hpp>
+#include <boost/range/irange.hpp>
+#include <thread>
+#include <mutex>
 #include <iostream>
 #include <iterator>
 #include <regex>
@@ -172,7 +175,7 @@ void bruteForceTest() {
   constexpr std::array<char, 4> charSet = {'a', 'Z', '\b', '\0'};
   constexpr auto kIntputStatesN =
       int(std::pow(std::size(charSet), kSequenceMaxLength));
-  constexpr auto kIterationsNeeded = std::pow(kIntputStatesN, kSequenceCount);
+  constexpr auto kIterationsNeeded = int(std::pow(kIntputStatesN, kSequenceCount));
 
   auto makeInputSet =
       [&](int stateNumber) -> std::array<std::string, kSequenceCount> {
@@ -190,28 +193,35 @@ void bruteForceTest() {
     return sequences;
   };
 
-  for (int i = 0; i < kIterationsNeeded; ++i) {
-    auto sequences = makeInputSet(i);
-    auto isSameInputRegExpResult = true;
-    for (auto const& i : sequences)
-      isSameInputRegExpResult =
-          isSameInputRegExpResult && isSameInputRegExp(sequences[0], i);
 
-    auto isSameInputArryCall =
-        []<auto... Idx>(auto const& Cont, std::index_sequence<Idx...>) {
-      return isSameInput(std::get<Idx>(Cont)...);
-    };
-
-    auto isSameInputResult = isSameInputArryCall(
+  std::mutex outMutex;
+  
+  auto worker = [makeInputSet,&outMutex](auto indexRange){
+    for(auto i: indexRange){
+      auto sequences = makeInputSet(i);
+      auto isSameInputRegExpResult = true;
+      for (auto const& i : sequences)
+        isSameInputRegExpResult =
+        isSameInputRegExpResult && isSameInputRegExp(sequences[0], i);
+      
+      auto isSameInputArryCall =
+      []<auto... Idx>(auto const& Cont, std::index_sequence<Idx...>) {
+        return isSameInput(std::get<Idx>(Cont)...);
+      };
+      
+      auto isSameInputResult = isSameInputArryCall(
         sequences, std::make_index_sequence<kSequenceCount>());
-    if (isSameInputRegExpResult != isSameInputResult) {
-      printDiff(sequences, isSameInputRegExpResult, isSameInputResult);
-      break;
+      if (isSameInputRegExpResult != isSameInputResult) {
+        std::lock_guard lg{outMutex};
+        printDiff(sequences, isSameInputRegExpResult, isSameInputResult);
+        break;
+      }
+//       if (!(i % 10000)) {
+//         fmt::print("{:f}\n", double(i) / kIterationsNeeded);
+//       }
     }
-    if (!(i % 10000)) {
-      fmt::print("{:f}\n", i / kIterationsNeeded);
-    }
-  }
+  };
+  worker(boost::irange(0, kIterationsNeeded));
 }
 
 int main() {
