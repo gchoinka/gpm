@@ -12,6 +12,7 @@
 #include <tuple>
 #include <type_traits>
 #include <vector>
+#include <atomic>
 
 namespace detail {
 template <typename IterTupleT, auto... Idx>
@@ -177,7 +178,6 @@ void bruteForceTest() {
       int(std::pow(std::size(charSet), kSequenceMaxLength));
   constexpr auto kIterationsNeeded = int(std::pow(kIntputStatesN, kSequenceCount));
 
-  std::cout << kIterationsNeeded << "\n";
   auto makeInputSet =
       [&](int stateNumber) -> std::array<std::string, kSequenceCount> {
     std::array<int, kSequenceCount> subStateNumbers;
@@ -197,7 +197,12 @@ void bruteForceTest() {
 
   std::mutex outMutex;
   
-  auto worker = [makeInputSet,&outMutex](auto indexRange){
+  std::atomic<int> iterationDone = 0;
+  std::atomic<bool> prematurelyStop = false;
+  
+  auto worker = [makeInputSet,&outMutex,&iterationDone, &prematurelyStop](auto indexRange){
+    auto progressCounter = 0;
+    auto progressCounterMax = 1000;
     for(auto i: indexRange){
       auto sequences = makeInputSet(i);
       auto isSameInputRegExpResult = true;
@@ -215,21 +220,44 @@ void bruteForceTest() {
       if (isSameInputRegExpResult != isSameInputResult) {
         std::lock_guard lg{outMutex};
         printDiff(sequences, isSameInputRegExpResult, isSameInputResult);
+        prematurelyStop.store(true);
         break;
       }
-//       if (!(i % 10000)) {
-//         fmt::print("{:f}\n", double(i) / kIterationsNeeded);
-//       }
+      if (++progressCounter == progressCounterMax) {
+        progressCounter = 0;
+        iterationDone.fetch_add(progressCounterMax);
+        if(prematurelyStop.load())
+          break;
+      }
     }
   };
-  unsigned int nthreads = std::thread::hardware_concurrency();
+  auto nthreads = std::min(int(std::thread::hardware_concurrency()), kIterationsNeeded);
   std::vector<std::thread> threads;
-  for(auto threadNumber: boost::irange(0, int(nthreads)))
-  {
-    threads.emplace_back([worker, threadNumber, nthreads](){ worker(boost::irange(0+threadNumber, kIterationsNeeded, nthreads)); });
-  }
+  for(auto threadNumber: boost::irange(0, nthreads))
+    threads.emplace_back([worker, threadNumber, nthreads](){ 
+      worker(boost::irange(0+threadNumber, kIterationsNeeded, nthreads)); 
+    });
+  
+
+  std::atomic<bool> stopPrintingThread = false;
+  std::thread printPorgressThread{[&outMutex, &iterationDone, &stopPrintingThread, &prematurelyStop](){
+    int oldValue = iterationDone.load();
+    while(!stopPrintingThread.load()){
+      std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+      if(oldValue != iterationDone.load() && !prematurelyStop.load())
+      {
+        oldValue = iterationDone.load();
+        std::lock_guard lg{outMutex};
+        fmt::print("{:f}\n", double(iterationDone.load())/kIterationsNeeded);
+      }
+    }
+  }};
   for(auto & th:threads)
     th.join();
+  
+  stopPrintingThread.store(true);
+  printPorgressThread.join();
+  
 }
 
 int main() {
