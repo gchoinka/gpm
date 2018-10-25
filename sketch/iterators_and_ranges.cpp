@@ -177,6 +177,7 @@ void bruteForceTest() {
       int(std::pow(std::size(charSet), kSequenceMaxLength));
   constexpr auto kIterationsNeeded = int(std::pow(kIntputStatesN, kSequenceCount));
 
+  std::cout << kIterationsNeeded << "\n";
   auto makeInputSet =
       [&](int stateNumber) -> std::array<std::string, kSequenceCount> {
     std::array<int, kSequenceCount> subStateNumbers;
@@ -221,7 +222,14 @@ void bruteForceTest() {
 //       }
     }
   };
-  worker(boost::irange(0, kIterationsNeeded));
+  unsigned int nthreads = std::thread::hardware_concurrency();
+  std::vector<std::thread> threads;
+  for(auto threadNumber: boost::irange(0, int(nthreads)))
+  {
+    threads.emplace_back([worker, threadNumber, nthreads](){ worker(boost::irange(0+threadNumber, kIterationsNeeded, nthreads)); });
+  }
+  for(auto & th:threads)
+    th.join();
 }
 
 int main() {

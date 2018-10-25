@@ -47,7 +47,7 @@ endif()
 
 find_package(ClangFormat)
 
-
+find_package(Threads)
 
 add_library(Outcome INTERFACE)
 target_include_directories(Outcome SYSTEM INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/ned14_outcome/include)

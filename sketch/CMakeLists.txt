@@ -53,7 +53,7 @@ set_target_properties(iterators_and_ranges PROPERTIES
 )
 target_compile_options(iterators_and_ranges PRIVATE -Wall -Wextra -pedantic -Werror)
 
-target_link_libraries(iterators_and_ranges fmt::fmt Boost::boost Gpm)
+target_link_libraries(iterators_and_ranges fmt::fmt Boost::boost Gpm Threads::Threads)
 
 
 add_subdirectory(datastore)
