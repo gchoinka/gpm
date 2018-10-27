@@ -155,8 +155,11 @@ void manualTest() {
       isSameInput(begin(seq1), end(seq1), begin(seq2), end(seq2));
   constexpr auto isSameWithRanges = isSameInput(seq1, seq2);
 
-  cout << isSameWithIterators << "\n";
-  cout << isSameWithRanges << "\n";
+  if(isSameWithIterators != isSameWithRanges)
+  {
+    cout << isSameWithIterators << "\n";
+    cout << isSameWithRanges << "\n";
+  }
 }
 
 template <std::size_t N>
@@ -173,14 +176,14 @@ std::string formatDiff(std::array<std::string, N> const& inputs,
 }
 
 namespace CheckerResult {
-struct ReturnAfterPrematurelyStopRequest {};
-struct NoDifferenceFound {};
+struct NoDifferenceFound {
+  int processedCount = 0;
+};
 struct DifferenceFound {
   std::string message;
 };
 
-using Return_t = std::variant<ReturnAfterPrematurelyStopRequest,
-                              NoDifferenceFound, DifferenceFound>;
+using Return_t = std::variant<NoDifferenceFound, DifferenceFound>;
 
 }  // namespace CheckerResult
 
@@ -216,13 +219,9 @@ void bruteForceTest() {
     return sequences;
   };
 
-  std::atomic<int> iterationDone = 0;
-  std::atomic<bool> prematurelyStop = false;
-
-  auto algorithmusChecker = [makeInputSet, &iterationDone, &prematurelyStop](
-                                auto indexRange) -> CheckerResult::Return_t {
-    auto progressCounter = 0;
-    auto progressCounterMax = 5000;
+  auto algorithmusChecker =
+      [makeInputSet](auto indexRange) -> CheckerResult::Return_t {
+    auto processedCounter = 0;
     for (auto i : indexRange) {
       auto sequences = makeInputSet(i);
       auto isSameInputRegExpResult = true;
@@ -241,74 +240,81 @@ void bruteForceTest() {
         return CheckerResult::DifferenceFound{
             formatDiff(sequences, isSameInputRegExpResult)};
       }
-      if (++progressCounter == progressCounterMax && prematurelyStop.load()) {
-        return CheckerResult::ReturnAfterPrematurelyStopRequest{};
-      }
-
-      if (++progressCounter == progressCounterMax) {
-        progressCounter = 0;
-        iterationDone.fetch_add(progressCounterMax);
-      }
+      ++processedCounter;
     }
-    return CheckerResult::NoDifferenceFound{};
+    return CheckerResult::NoDifferenceFound{processedCounter};
   };
-  auto asyncWorkersCount =
-      std::min(int(std::thread::hardware_concurrency()), kIterationsNeeded);
+  
+  auto asyncWorkersCount = std::min(
+      int(std::thread::hardware_concurrency()) * 100, kIterationsNeeded);
   auto algorithmusCheckerAsyncWrapper =
       [algorithmusChecker, asyncWorkersCount](int rangeBeginOffset) {
         return algorithmusChecker(boost::irange(
             0 + rangeBeginOffset, kIterationsNeeded, asyncWorkersCount));
       };
 
-  std::vector<std::future<CheckerResult::Return_t>> asyncWokers;
+  std::vector<std::function<std::future<CheckerResult::Return_t>()>>
+      asyncWokersFactory;
   for (auto workerNumber : boost::irange(0, asyncWorkersCount)) {
-    asyncWokers.emplace_back(std::async(
-        std::launch::async, algorithmusCheckerAsyncWrapper, workerNumber));
+    asyncWokersFactory.emplace_back(
+        [algorithmusCheckerAsyncWrapper, workerNumber]() {
+          return std::async(std::launch::async, algorithmusCheckerAsyncWrapper,
+                            workerNumber);
+        });
   }
+  
+  auto concurentRunningWorkersCount = std::min(
+    int(std::thread::hardware_concurrency()), kIterationsNeeded);
+  std::vector<std::future<CheckerResult::Return_t>> asyncWokers;
 
-  int oldValue = iterationDone.load();
-  constexpr int updateIntervalMs = 1000;
+  auto asyncWokersFactoryIter = std::begin(asyncWokersFactory);
+  while (asyncWokersFactoryIter != std::end(asyncWokersFactory) && int(asyncWokers.size()) < concurentRunningWorkersCount) 
+    asyncWokers.emplace_back((*asyncWokersFactoryIter++)());
+
+  constexpr int updateIntervalMicro = 20'000'000;
   auto const singelWorkerWaitTime =
-      std::chrono::milliseconds(updateIntervalMs / std::size(asyncWokers));
-  auto allHaveFinished = [&singelWorkerWaitTime](auto& workerCont) {
-    return std::all_of(std::begin(workerCont), std::end(workerCont),
-                       [&singelWorkerWaitTime](auto& fu) {
-                         return fu.wait_for(singelWorkerWaitTime) ==
-                                std::future_status::ready;
-                       });
-  };
+      std::chrono::microseconds(updateIntervalMicro / std::size(asyncWokers));
 
-  auto checkForErrors = [&prematurelyStop](auto& workerCont,
-                                           auto errorSink) -> bool {
-    bool errorFound = false;
+  auto checkForErrors = [singelWorkerWaitTime](auto& workerCont, auto errorSink) -> int {
+    int proccessedCount = 0;
     for (auto& w : workerCont) {
-      auto workerResult = w.wait_for(std::chrono::seconds(0));
+      if (!w.valid()) continue;
+      auto workerResult = w.wait_for(singelWorkerWaitTime);
       if (workerResult == std::future_status::ready) {
         std::visit(
-            overloaded{[](CheckerResult::ReturnAfterPrematurelyStopRequest) {},
-                       [](CheckerResult::NoDifferenceFound) {},
-                       [&prematurelyStop, &errorSink,
-                        &errorFound](CheckerResult::DifferenceFound const& df) {
-                         errorSink(df.message);
-                         prematurelyStop.store(true);
-                         errorFound = true;
-                       }},
+            overloaded{
+                [&proccessedCount](
+                    CheckerResult::NoDifferenceFound const& noDiffFound) {
+                  proccessedCount += noDiffFound.processedCount;
+                },
+                [&errorSink](CheckerResult::DifferenceFound const& df) {
+                  errorSink(df.message);
+                }},
             w.get());
       }
     }
-    return errorFound;
+    workerCont.erase(
+        std::remove_if(std::begin(workerCont), std::end(workerCont),
+                       [](auto const& w) { return !w.valid(); }),
+        std::end(workerCont));
+    return proccessedCount;
   };
-  while (!allHaveFinished(asyncWokers)) {
-    auto errorFound = checkForErrors(asyncWokers, [](auto const& errorMessage) {
-      fmt::print("{}\n", errorMessage);
-    });
+  int proccessedCount = 0;
+  while (asyncWokers.size() > 0) {
+    auto errorFound = false;
+    proccessedCount +=
+        checkForErrors(asyncWokers, [&errorFound](auto const& errorMessage) {
+          fmt::print("\n{}\n", errorMessage);
+          errorFound = true;
+        });
     if (errorFound) break;
 
-    if (oldValue != iterationDone.load()) {
-      oldValue = iterationDone.load();
-      fmt::print("{:f}\n", double(iterationDone.load()) / kIterationsNeeded);
-    }
+    fmt::print("{:f}\n",
+               double(proccessedCount) / kIterationsNeeded);
+    while (asyncWokersFactoryIter != std::end(asyncWokersFactory) && int(asyncWokers.size()) < concurentRunningWorkersCount) 
+      asyncWokers.emplace_back((*asyncWokersFactoryIter++)());
   }
+
 }
 
 int main() {
