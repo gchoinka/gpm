@@ -1,18 +1,18 @@
 #include <fmt/printf.h>
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <boost/range.hpp>
 #include <boost/range/irange.hpp>
-#include <thread>
-#include <mutex>
+#include <future>
 #include <iostream>
 #include <iterator>
 #include <regex>
 #include <sstream>
 #include <tuple>
 #include <type_traits>
+#include <variant>
 #include <vector>
-#include <atomic>
 
 namespace detail {
 template <typename IterTupleT, auto... Idx>
@@ -160,15 +160,36 @@ void manualTest() {
 }
 
 template <std::size_t N>
-void printDiff(std::array<std::string, N> const& inputs, bool resultCall0,
-               int resultCall1) {
-  fmt::print("found diff resultCall0{} resultCall1{}\n\t", resultCall0,
-             resultCall1);
+std::string formatDiff(std::array<std::string, N> const& inputs,
+                       bool regExpCallReturnCode) {
+  std::stringstream sstr;
+  fmt::print(sstr, "found diff regExpCallReturnCode:{}\n\t",
+             regExpCallReturnCode);
   for (auto const& i : inputs) {
-    for (auto c : i) fmt::print("{:02x} ", c);
-    fmt::print("\n\t");
+    for (auto c : i) fmt::print(sstr, "{:02x} ", c);
+    fmt::print(sstr, "\n\t");
   }
+  return sstr.str();
 }
+
+namespace CheckerResult {
+struct ReturnAfterPrematurelyStopRequest {};
+struct NoDifferenceFound {};
+struct DifferenceFound {
+  std::string message;
+};
+
+using Return_t = std::variant<ReturnAfterPrematurelyStopRequest,
+                              NoDifferenceFound, DifferenceFound>;
+
+}  // namespace CheckerResult
+
+template <class... Ts>
+struct overloaded : Ts... {
+  using Ts::operator()...;
+};
+template <class... Ts>
+overloaded(Ts...)->overloaded<Ts...>;
 
 void bruteForceTest() {
   constexpr auto kSequenceCount = 3;
@@ -176,7 +197,8 @@ void bruteForceTest() {
   constexpr std::array<char, 4> charSet = {'a', 'Z', '\b', '\0'};
   constexpr auto kIntputStatesN =
       int(std::pow(std::size(charSet), kSequenceMaxLength));
-  constexpr auto kIterationsNeeded = int(std::pow(kIntputStatesN, kSequenceCount));
+  constexpr auto kIterationsNeeded =
+      int(std::pow(kIntputStatesN, kSequenceCount));
 
   auto makeInputSet =
       [&](int stateNumber) -> std::array<std::string, kSequenceCount> {
@@ -194,70 +216,99 @@ void bruteForceTest() {
     return sequences;
   };
 
-
-  std::mutex outMutex;
-  
   std::atomic<int> iterationDone = 0;
   std::atomic<bool> prematurelyStop = false;
-  
-  auto worker = [makeInputSet,&outMutex,&iterationDone, &prematurelyStop](auto indexRange){
+
+  auto algorithmusChecker = [makeInputSet, &iterationDone, &prematurelyStop](
+                                auto indexRange) -> CheckerResult::Return_t {
     auto progressCounter = 0;
-    auto progressCounterMax = 1000;
-    for(auto i: indexRange){
+    auto progressCounterMax = 5000;
+    for (auto i : indexRange) {
       auto sequences = makeInputSet(i);
       auto isSameInputRegExpResult = true;
-      for (auto const& i : sequences)
+      for (auto const& i : sequences) {
         isSameInputRegExpResult =
-        isSameInputRegExpResult && isSameInputRegExp(sequences[0], i);
-      
+            isSameInputRegExpResult && isSameInputRegExp(sequences[0], i);
+      }
       auto isSameInputArryCall =
-      []<auto... Idx>(auto const& Cont, std::index_sequence<Idx...>) {
+          []<auto... Idx>(auto const& Cont, std::index_sequence<Idx...>) {
         return isSameInput(std::get<Idx>(Cont)...);
       };
-      
+
       auto isSameInputResult = isSameInputArryCall(
-        sequences, std::make_index_sequence<kSequenceCount>());
+          sequences, std::make_index_sequence<kSequenceCount>());
       if (isSameInputRegExpResult != isSameInputResult) {
-        std::lock_guard lg{outMutex};
-        printDiff(sequences, isSameInputRegExpResult, isSameInputResult);
-        prematurelyStop.store(true);
-        break;
+        return CheckerResult::DifferenceFound{
+            formatDiff(sequences, isSameInputRegExpResult)};
       }
+      if (++progressCounter == progressCounterMax && prematurelyStop.load()) {
+        return CheckerResult::ReturnAfterPrematurelyStopRequest{};
+      }
+
       if (++progressCounter == progressCounterMax) {
         progressCounter = 0;
         iterationDone.fetch_add(progressCounterMax);
-        if(prematurelyStop.load())
-          break;
       }
     }
+    return CheckerResult::NoDifferenceFound{};
   };
-  auto nthreads = std::min(int(std::thread::hardware_concurrency()), kIterationsNeeded);
-  std::vector<std::thread> threads;
-  for(auto threadNumber: boost::irange(0, nthreads))
-    threads.emplace_back([worker, threadNumber, nthreads](){ 
-      worker(boost::irange(0+threadNumber, kIterationsNeeded, nthreads)); 
-    });
-  
+  auto asyncWorkersCount =
+      std::min(int(std::thread::hardware_concurrency()), kIterationsNeeded);
+  auto algorithmusCheckerAsyncWrapper =
+      [algorithmusChecker, asyncWorkersCount](int rangeBeginOffset) {
+        return algorithmusChecker(boost::irange(
+            0 + rangeBeginOffset, kIterationsNeeded, asyncWorkersCount));
+      };
 
-  std::atomic<bool> stopPrintingThread = false;
-  std::thread printPorgressThread{[&outMutex, &iterationDone, &stopPrintingThread, &prematurelyStop](){
-    int oldValue = iterationDone.load();
-    while(!stopPrintingThread.load()){
-      std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-      if(oldValue != iterationDone.load() && !prematurelyStop.load())
-      {
-        oldValue = iterationDone.load();
-        std::lock_guard lg{outMutex};
-        fmt::print("{:f}\n", double(iterationDone.load())/kIterationsNeeded);
+  std::vector<std::future<CheckerResult::Return_t>> asyncWokers;
+  for (auto workerNumber : boost::irange(0, asyncWorkersCount)) {
+    asyncWokers.emplace_back(std::async(
+        std::launch::async, algorithmusCheckerAsyncWrapper, workerNumber));
+  }
+
+  int oldValue = iterationDone.load();
+  constexpr int updateIntervalMs = 1000;
+  auto const singelWorkerWaitTime =
+      std::chrono::milliseconds(updateIntervalMs / std::size(asyncWokers));
+  auto allHaveFinished = [&singelWorkerWaitTime](auto& workerCont) {
+    return std::all_of(std::begin(workerCont), std::end(workerCont),
+                       [&singelWorkerWaitTime](auto& fu) {
+                         return fu.wait_for(singelWorkerWaitTime) ==
+                                std::future_status::ready;
+                       });
+  };
+
+  auto checkForErrors = [&prematurelyStop](auto& workerCont,
+                                           auto errorSink) -> bool {
+    bool errorFound = false;
+    for (auto& w : workerCont) {
+      auto workerResult = w.wait_for(std::chrono::seconds(0));
+      if (workerResult == std::future_status::ready) {
+        std::visit(
+            overloaded{[](CheckerResult::ReturnAfterPrematurelyStopRequest) {},
+                       [](CheckerResult::NoDifferenceFound) {},
+                       [&prematurelyStop, &errorSink,
+                        &errorFound](CheckerResult::DifferenceFound const& df) {
+                         errorSink(df.message);
+                         prematurelyStop.store(true);
+                         errorFound = true;
+                       }},
+            w.get());
       }
     }
-  }};
-  for(auto & th:threads)
-    th.join();
-  
-  stopPrintingThread.store(true);
-  printPorgressThread.join();
-  
+    return errorFound;
+  };
+  while (!allHaveFinished(asyncWokers)) {
+    auto errorFound = checkForErrors(asyncWokers, [](auto const& errorMessage) {
+      fmt::print("{}\n", errorMessage);
+    });
+    if (errorFound) break;
+
+    if (oldValue != iterationDone.load()) {
+      oldValue = iterationDone.load();
+      fmt::print("{:f}\n", double(iterationDone.load()) / kIterationsNeeded);
+    }
+  }
 }
 
 int main() {
