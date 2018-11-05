@@ -195,24 +195,24 @@ template <class... Ts>
 overloaded(Ts...)->overloaded<Ts...>;
 
 void bruteForceTest() {
-  constexpr auto kSequenceCount = 3;
+  constexpr auto kSequencesCount = 3;
   constexpr auto kSequenceMaxLength = 4;
   constexpr std::array<char, 4> charSet = {'a', 'Z', '\b', '\0'};
-  constexpr auto kIntputStatesN =
+  constexpr auto kSequenceStates =
       int(std::pow(std::size(charSet), kSequenceMaxLength));
   constexpr auto kIterationsNeeded =
-      int(std::pow(kIntputStatesN, kSequenceCount));
+      int(std::pow(kSequenceStates, kSequencesCount));
 
-  auto makeInputSet =
-      [&](int stateNumber) -> std::array<std::string, kSequenceCount> {
-    std::array<int, kSequenceCount> subStateNumbers;
+  auto makeInput =
+      [&](int stateNumber) -> std::array<std::string, kSequencesCount> {
+    std::array<int, kSequencesCount> subStateNumbers;
     int currentNumber = stateNumber;
     for (auto& n : subStateNumbers) {
-      n = currentNumber % kIntputStatesN;
-      currentNumber /= kIntputStatesN;
+      n = currentNumber % kSequenceStates;
+      currentNumber /= kSequenceStates;
     }
 
-    std::array<std::string, kSequenceCount> sequences;
+    std::array<std::string, kSequencesCount> sequences;
     auto subStateNumberIter = subStateNumbers.cbegin();
     for (auto& i : sequences)
       i = numTestString(*subStateNumberIter++, kSequenceMaxLength, charSet);
@@ -220,10 +220,10 @@ void bruteForceTest() {
   };
 
   auto algorithmusChecker =
-      [makeInputSet](auto indexRange) -> CheckerResult::Return_t {
+  [makeInput](auto indexRange) -> CheckerResult::Return_t {
     auto processedCounter = 0;
     for (auto i : indexRange) {
-      auto sequences = makeInputSet(i);
+      auto sequences = makeInput(i);
       auto isSameInputRegExpResult = true;
       for (auto const& i : sequences) {
         isSameInputRegExpResult =
@@ -235,7 +235,7 @@ void bruteForceTest() {
       };
 
       auto isSameInputResult = isSameInputArryCall(
-          sequences, std::make_index_sequence<kSequenceCount>());
+          sequences, std::make_index_sequence<kSequencesCount>());
       if (isSameInputRegExpResult != isSameInputResult) {
         return CheckerResult::DifferenceFound{
             formatDiff(sequences, isSameInputRegExpResult)};
@@ -246,7 +246,7 @@ void bruteForceTest() {
   };
   
   auto asyncWorkersCount = std::min(
-      int(std::thread::hardware_concurrency()) * 100, kIterationsNeeded);
+      int(std::thread::hardware_concurrency()) * 1000, kIterationsNeeded);
   auto algorithmusCheckerAsyncWrapper =
       [algorithmusChecker, asyncWorkersCount](int rangeBeginOffset) {
         return algorithmusChecker(boost::irange(
@@ -275,7 +275,7 @@ void bruteForceTest() {
   auto const singelWorkerWaitTime =
       std::chrono::microseconds(updateIntervalMicro / std::size(asyncWokers));
 
-  auto checkForErrors = [singelWorkerWaitTime](auto& workerCont, auto errorSink) -> int {
+  auto checkResults = [singelWorkerWaitTime](auto& workerCont, auto errorSink) -> int {
     int proccessedCount = 0;
     for (auto& w : workerCont) {
       if (!w.valid()) continue;
@@ -303,7 +303,7 @@ void bruteForceTest() {
   while (asyncWokers.size() > 0) {
     auto errorFound = false;
     proccessedCount +=
-        checkForErrors(asyncWokers, [&errorFound](auto const& errorMessage) {
+    checkResults(asyncWokers, [&errorFound](auto const& errorMessage) {
           fmt::print("\n{}\n", errorMessage);
           errorFound = true;
         });
