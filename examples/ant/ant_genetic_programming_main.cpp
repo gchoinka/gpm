@@ -129,7 +129,7 @@ int main()
   constexpr auto minHeight = 2;
   constexpr auto maxHeight = 11;
 
-  size_t const generation_max = 5000;
+//   size_t const generation_max = 5000;
 //   double const number_elite = 4;
 //   double const mutation_rate = 0.8;
 //   double const crossover_rate = 0.8;
