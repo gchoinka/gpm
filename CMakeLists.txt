@@ -10,8 +10,8 @@ cmake_minimum_required(VERSION 3.12.1)
 
 include("cmake/HunterGate.cmake")
 HunterGate(
-    URL "https://github.com/ruslo/hunter/archive/v0.23.27.tar.gz"
-    SHA1 "70d75a25f895df3da00d8382417e8c2a08c93173"
+    URL "https://github.com/ruslo/hunter/archive/v0.23.44.tar.gz"
+    SHA1 "c4cfcc0cd39fdae8de08f6205b7f34cab4a7ba79"
 )
 
 project(gpm VERSION 0.1.0 LANGUAGES CXX)
@@ -33,6 +33,10 @@ find_package(Boost ${BOOST_MIN_VERSION} COMPONENTS program_options REQUIRED)
 
 hunter_add_package(fmt)
 find_package(fmt CONFIG REQUIRED)
+
+hunter_add_package(spdlog)
+find_package(spdlog CONFIG REQUIRED)
+
 
 if(${GPM_BUILD_TESTS})
     hunter_add_package(Catch)

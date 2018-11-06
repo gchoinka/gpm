@@ -9,6 +9,9 @@
 #include <boost/range/irange.hpp>
 
 #include <fmt/printf.h>
+#define SPDLOG_TRACE_ON
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
 
 #include "common/ant_board_simulation.hpp"
 #include "common/nodes.hpp"
@@ -108,9 +111,12 @@ decltype(auto) getAntSataFeStaticBoardSim() {
 
 int main()
 {
-  char const* optimalAntRPNdef = "m r m if l l p3 r m if if p2 r p2 m if";
-  auto optAnt =
-  gpm::factory<ant::ant_nodes>(gpm::RPNToken_iterator{optimalAntRPNdef});
+  auto console = spdlog::stdout_color_mt("console");
+  console->info("Welcome to spdlog version {}.{}.{} !", SPDLOG_VER_MAJOR, SPDLOG_VER_MINOR, SPDLOG_VER_PATCH);
+  
+//   char const* optimalAntRPNdef = "m r m if l l p3 r m if if p2 r p2 m if";
+//   auto optAnt =
+//   gpm::factory<ant::ant_nodes>(gpm::RPNToken_iterator{optimalAntRPNdef});
 //   fmt::print("{}\n", boost::apply_visitor(CountNodes{}, optAnt)); 
 // 
 //   
@@ -127,7 +133,7 @@ int main()
 //   }
 //   
   
-  constexpr auto populationSize = 5000;
+  constexpr auto populationSize = 50000;
   constexpr auto minHeight = 2;
   constexpr auto maxHeight = 11;
 
@@ -158,13 +164,13 @@ int main()
   
   auto population = std::vector<ant::ant_nodes>{} ;
   population.reserve(populationSize);
-  auto populationScore = std::vector<ScoreIdxPair>{};
-  populationScore.reserve(populationSize);
+  auto fitness = std::vector<ScoreIdxPair>{};
+  fitness.reserve(populationSize);
   
   auto nextPopulation = std::vector<ant::ant_nodes>{};
   nextPopulation.reserve(population.size());
-  auto nextPopulationScore = std::vector<ScoreIdxPair>{};
-  nextPopulationScore.reserve(population.size());
+  auto nextFitness = std::vector<ScoreIdxPair>{};
+  nextFitness.reserve(population.size());
   
   std::random_device rd;
   auto rndNodeGen = gpm::BasicGenerator<ant::ant_nodes>{minHeight, maxHeight, rd()};
@@ -174,53 +180,67 @@ int main()
   auto asyncWorkersCount = std::min(
     std::size_t(std::thread::hardware_concurrency()), std::size_t(populationSize));
   
-  struct StripedRangeT { std::size_t b, e, s; };
-  auto stripeedRanges = std::vector<StripedRangeT>{};
+
+  auto stridedRanges = std::vector<boost::strided_integer_range<std::size_t>>{};
   for(auto workerNum : boost::irange(asyncWorkersCount)){
-    stripeedRanges.push_back(StripedRangeT{0 + workerNum, population.size(), asyncWorkersCount});
+    stridedRanges.emplace_back(boost::irange(0 + workerNum, population.size(), asyncWorkersCount));
   }
+  
+  auto workFu = [fittnessFun, &population, &fitness](auto range){
+    for(auto i: range){
+      fitness[i] = ScoreIdxPair{fittnessFun(population[i]), i};
+    }
+  };
   
   for([[gnu::unused]]auto generation: boost::irange(generationMax))
   {
-    populationScore.resize(population.size());
-    {
+    console->info("fitness calc");
+    fitness.resize(population.size());
+    [&stridedRanges, &workFu](){
       std::vector<std::future<void>> worker;
-      for(auto subRange: stripeedRanges) {
-        worker.emplace_back(std::async(std::launch::async, [fittnessFun, &population, subRange, &populationScore](){
-          for(auto i: boost::irange(subRange.b, subRange.e, subRange.s)){
-            populationScore[i] = ScoreIdxPair{fittnessFun(population[i]), i};
-          }
-        }));
-        
+      for(auto subTaskRanke: stridedRanges) {
+        worker.emplace_back(std::async(std::launch::async, workFu, subTaskRanke));
       }
-    }
+    }();
     
-    std::sort(std::begin(populationScore), std::end(populationScore), [](auto const & lhs, auto const & rhs) {
+    console->info("evaluation");
+    std::sort(std::begin(fitness), std::end(fitness), [](auto const & lhs, auto const & rhs) {
       return lhs.score < rhs.score;
     });
     
-    nextPopulationScore.clear();
+    console->info("evaluation");
+    nextFitness.clear();
     nextPopulation.clear();
     for(std::size_t i = 0; i < numberOfElite; ++i){
-      nextPopulationScore.emplace_back(ScoreIdxPair{populationScore[i].score, i});
-      nextPopulation.emplace_back(population[populationScore[i].index]);
+      nextFitness.emplace_back(ScoreIdxPair{fitness[i].score, i});
+      nextPopulation.emplace_back(population[fitness[i].index]);
     }
 
-    
-    auto s = boost::apply_visitor(gpm::RPNPrinter<std::string>{}, population[populationScore.front().index]);
-    fmt::print("score:{} ant:{}\n", populationScore.front().score, s); 
-  
     population.swap(nextPopulation);
-    populationScore.swap(nextPopulationScore);
+    fitness.swap(nextFitness);
     
-    for(auto i = population.size(); i < populationSize; ++i)
-      population.emplace_back(rndNodeGen());
+    console->info("refill");
+    population.resize(populationSize);
+
+    [&population, &rndNodeGen](){
+      auto asyncWorkersCount = std::min(
+        std::size_t(std::thread::hardware_concurrency()), std::size_t(populationSize) - population.size());
+
+      std::vector<std::future<void>> worker;
+      for(auto workerNum: boost::irange(asyncWorkersCount)) {
+        worker.emplace_back(std::async(std::launch::async, [&population, &rndNodeGen](auto range){
+          for(auto i:range){
+            population[i] = rndNodeGen();
+          }
+        }, boost::irange(workerNum, population.size(), asyncWorkersCount)));
+      }
+    }();
   }
   
 
 //   
-//   s = boost::apply_visitor(gpm::RPNPrinter<std::string>{}, population[std::get<1>(populationScore.back())]);
-//   fmt::print("score:{} ant:{}\n", std::get<0>(populationScore.back()), s); 
+//   s = boost::apply_visitor(gpm::RPNPrinter<std::string>{}, population[std::get<1>(fitness.back())]);
+//   fmt::print("score:{} ant:{}\n", std::get<0>(fitness.back()), s); 
   
 //   auto g2 = boost::apply_visitor(FlattenTree{optAnt}, optAnt);
 //   fmt::print("{}\n", g2.size()); 
