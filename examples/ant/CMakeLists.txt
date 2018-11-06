@@ -56,7 +56,7 @@ set_target_properties(ant_genetic_programming PROPERTIES
             CXX_EXTENSIONS OFF
 )
 target_compile_options(ant_genetic_programming PRIVATE ${warning_flags})
-target_link_libraries(ant_genetic_programming Gpm fmt::fmt Boost::boost Boost::program_options Outcome) 
+target_link_libraries(ant_genetic_programming Gpm fmt::fmt Boost::boost Boost::program_options Outcome Threads::Threads) 
 
 
 

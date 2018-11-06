@@ -1,6 +1,8 @@
 #include <vector>
 #include <functional>
 #include <optional>
+#include <thread>
+#include <future>
 
 #include <boost/variant.hpp>
 #include <boost/function_output_iterator.hpp>
@@ -140,54 +142,79 @@ int main()
 //   size_t const max_tree_height = 17;
 //   size_t const tournament_size = 4;
   
+  auto fittnessFun = [](auto const & anAnt){
+    auto sim = getAntSataFeStaticBoardSim();
+    auto antBoardSimVisitor = ant::AntBoardSimulationVisitor{sim};
+    
+    while(!sim.is_finish())
+    {
+      boost::apply_visitor(antBoardSimVisitor, anAnt);
+    }
+    return sim.score();
+  };
   
-  std::vector<ant::ant_nodes> population;
+  using FittnessReturnType = decltype(fittnessFun(ant::ant_nodes{}));
+  struct ScoreIdxPair { FittnessReturnType score; std::size_t index; };
+  
+  auto population = std::vector<ant::ant_nodes>{} ;
   population.reserve(populationSize);
-  struct ScoreIdxPair { double score; std::size_t index; };
-  std::vector<ScoreIdxPair> populationScore;
+  auto populationScore = std::vector<ScoreIdxPair>{};
   populationScore.reserve(populationSize);
+  
+  auto nextPopulation = std::vector<ant::ant_nodes>{};
+  nextPopulation.reserve(population.size());
+  auto nextPopulationScore = std::vector<ScoreIdxPair>{};
+  nextPopulationScore.reserve(population.size());
   
   std::random_device rd;
   auto rndNodeGen = gpm::BasicGenerator<ant::ant_nodes>{minHeight, maxHeight, rd()};
   
-  for(auto generation = 0; generation < generationMax; ++generation)
+  for(auto i = population.size(); i < populationSize; ++i)
+    population.emplace_back(rndNodeGen());
+  auto asyncWorkersCount = std::min(
+    std::size_t(std::thread::hardware_concurrency()), std::size_t(populationSize));
+  
+  struct StripedRangeT { std::size_t b, e, s; };
+  auto stripeedRanges = std::vector<StripedRangeT>{};
+  for(auto workerNum : boost::irange(asyncWorkersCount)){
+    stripeedRanges.push_back(StripedRangeT{0 + workerNum, population.size(), asyncWorkersCount});
+  }
+  
+  for([[gnu::unused]]auto generation: boost::irange(generationMax))
   {
-    for(auto i = population.size(); i < populationSize; ++i)
-      population.push_back(rndNodeGen());
-    
-    auto idx = 0u;
-    for(auto const & anAnt : population){
-      auto sim = getAntSataFeStaticBoardSim();
-      auto antBoardSimVisitor = ant::AntBoardSimulationVisitor{sim};
-      
-      while(!sim.is_finish())
-      {
-        boost::apply_visitor(antBoardSimVisitor, anAnt);
+    populationScore.resize(population.size());
+    {
+      std::vector<std::future<void>> worker;
+      for(auto subRange: stripeedRanges) {
+        worker.emplace_back(std::async(std::launch::async, [fittnessFun, &population, subRange, &populationScore](){
+          for(auto i: boost::irange(subRange.b, subRange.e, subRange.s)){
+            populationScore[i] = ScoreIdxPair{fittnessFun(population[i]), i};
+          }
+        }));
+        
       }
-      populationScore.push_back(ScoreIdxPair{double(sim.score()), idx++}); 
     }
     
     std::sort(std::begin(populationScore), std::end(populationScore), [](auto const & lhs, auto const & rhs) {
       return lhs.score < rhs.score;
     });
     
-    auto nextPopulation = std::vector<ant::ant_nodes>{};
-    nextPopulation.reserve(population.size());
-    auto nextPopulationScore = std::vector<ScoreIdxPair>{};
-    nextPopulationScore.reserve(population.size());
+    nextPopulationScore.clear();
+    nextPopulation.clear();
     for(std::size_t i = 0; i < numberOfElite; ++i){
       nextPopulationScore.emplace_back(ScoreIdxPair{populationScore[i].score, i});
       nextPopulation.emplace_back(population[populationScore[i].index]);
     }
 
-  
     
     auto s = boost::apply_visitor(gpm::RPNPrinter<std::string>{}, population[populationScore.front().index]);
     fmt::print("score:{} ant:{}\n", populationScore.front().score, s); 
   
-    population = std::move(nextPopulation);
-    populationScore = std::move(nextPopulationScore);
+    population.swap(nextPopulation);
+    populationScore.swap(nextPopulationScore);
     
+    for(auto i = population.size(); i < populationSize; ++i)
+      population.emplace_back(rndNodeGen());
   }
   
 
