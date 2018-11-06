@@ -129,8 +129,8 @@ int main()
   constexpr auto minHeight = 2;
   constexpr auto maxHeight = 11;
 
-//   size_t const generation_max = 5000;
-//   double const number_elite = 4;
+  constexpr auto generationMax = 5000;
+  constexpr auto numberOfElite = std::min(4, populationSize);
 //   double const mutation_rate = 0.8;
 //   double const crossover_rate = 0.8;
 //   double const crossover_internal_point_rate = 0.9;
@@ -143,37 +143,57 @@ int main()
   
   std::vector<ant::ant_nodes> population;
   population.reserve(populationSize);
-
-  std::random_device rd;
-  auto rndNodeGen = gpm::BasicGenerator<ant::ant_nodes>{minHeight, maxHeight, rd()};
-  for([[gnu::unused]]auto const &i: boost::irange(populationSize))
-    population.push_back(rndNodeGen());
-  
-  
-  std::vector<std::tuple<int,std::size_t>> populationScore;
+  struct ScoreIdxPair { double score; std::size_t index; };
+  std::vector<ScoreIdxPair> populationScore;
   populationScore.reserve(populationSize);
   
-  auto idx = 0u;
-  for(auto const & anAnt : population){
-    auto sim = getAntSataFeStaticBoardSim();
-    auto antBoardSimVisitor = ant::AntBoardSimulationVisitor{sim};
+  std::random_device rd;
+  auto rndNodeGen = gpm::BasicGenerator<ant::ant_nodes>{minHeight, maxHeight, rd()};
+  
+  for(auto generation = 0; generation < generationMax; ++generation)
+  {
+    for(auto i = population.size(); i < populationSize; ++i)
+      population.push_back(rndNodeGen());
     
-    while(!sim.is_finish())
-    {
-      boost::apply_visitor(antBoardSimVisitor, anAnt);
+    auto idx = 0u;
+    for(auto const & anAnt : population){
+      auto sim = getAntSataFeStaticBoardSim();
+      auto antBoardSimVisitor = ant::AntBoardSimulationVisitor{sim};
+      
+      while(!sim.is_finish())
+      {
+        boost::apply_visitor(antBoardSimVisitor, anAnt);
+      }
+      populationScore.push_back(ScoreIdxPair{double(sim.score()), idx++}); 
     }
-    populationScore.push_back(std::make_tuple(sim.score(), idx++)); 
+    
+    std::sort(std::begin(populationScore), std::end(populationScore), [](auto const & lhs, auto const & rhs) {
+      return lhs.score < rhs.score;
+    });
+    
+    auto nextPopulation = std::vector<ant::ant_nodes>{};
+    nextPopulation.reserve(population.size());
+    auto nextPopulationScore = std::vector<ScoreIdxPair>{};
+    nextPopulationScore.reserve(population.size());
+    for(std::size_t i = 0; i < numberOfElite; ++i){
+      nextPopulationScore.emplace_back(ScoreIdxPair{populationScore[i].score, i});
+      nextPopulation.emplace_back(population[populationScore[i].index]);
+    }
+
+  
+    
+    auto s = boost::apply_visitor(gpm::RPNPrinter<std::string>{}, population[populationScore.front().index]);
+    fmt::print("score:{} ant:{}\n", populationScore.front().score, s); 
+  
+    population = std::move(nextPopulation);
+    populationScore = std::move(nextPopulationScore);
+    
   }
   
-  std::sort(std::begin(populationScore), std::end(populationScore), [](auto const & lhs, auto const & rhs) {
-    return std::get<0>(lhs) < std::get<0>(rhs);
-  });
-  
-  auto s = boost::apply_visitor(gpm::RPNPrinter<std::string>{}, population[std::get<1>(populationScore.front())]);
-  fmt::print("score:{} ant:{}\n", std::get<0>(populationScore.front()), s); 
-  
-  s = boost::apply_visitor(gpm::RPNPrinter<std::string>{}, population[std::get<1>(populationScore.back())]);
-  fmt::print("score:{} ant:{}\n", std::get<0>(populationScore.back()), s); 
+
+//   
+//   s = boost::apply_visitor(gpm::RPNPrinter<std::string>{}, population[std::get<1>(populationScore.back())]);
+//   fmt::print("score:{} ant:{}\n", std::get<0>(populationScore.back()), s); 
   
 //   auto g2 = boost::apply_visitor(FlattenTree{optAnt}, optAnt);
 //   fmt::print("{}\n", g2.size()); 
