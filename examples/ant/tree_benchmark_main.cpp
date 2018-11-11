@@ -22,6 +22,7 @@
 #include <outcome.hpp>
 namespace outcome = OUTCOME_V2_NAMESPACE;
 
+#include <fmt/format.h>
 #include <gpm/gpm.hpp>
 #include <gpm/io.hpp>
 
@@ -31,6 +32,7 @@ namespace outcome = OUTCOME_V2_NAMESPACE;
 #include "common/visitor.hpp"
 
 #include "nodes_dyno.hpp"
+#include "nodes_funcptr.hpp"
 #include "nodes_hana_tuple.hpp"
 #include "nodes_opp.hpp"
 
@@ -133,8 +135,6 @@ decltype(auto) getAntRandomBoardSim() {
 
   return antSim;
 }
-
-
 
 outcome::unchecked<ant::sim::AntBoardSimulationStaticSize<
                        ant::santa_fe::x_size, ant::santa_fe::y_size>,
@@ -275,7 +275,7 @@ int main(int argc, char** argv) {
       auto theAntBoardSimCopy = theAntBoardSim;
       for (auto _ : state)
         state.counters["score"] =
-          toCall(theAntBoardSimCopy, getAntRPN(), BenchmarkPart::Create);
+            toCall(theAntBoardSimCopy, getAntRPN(), BenchmarkPart::Create);
     };
     benchmark::RegisterBenchmark(nameCreateOnly.c_str(), BM_lambdaCreateOnly);
   });

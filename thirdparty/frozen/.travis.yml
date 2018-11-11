@@ -1,0 +1,27 @@
+language: cpp
+
+addons:
+    apt:
+        sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-5.0
+        packages:
+            - g++-6
+            - clang-5.0
+matrix:
+    include:
+        - os: linux
+          env: CXX_COMPILER=clang++-5.0
+        - os: linux
+          env: CXX_COMPILER=g++-6
+        - os: osx
+          osx_image: xcode8.3
+          env: CXX_COMPILER=clang++
+
+script:
+  - mkdir build
+  - cd build
+  - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=${CXX_COMPILER} -DCMAKE_VERBOSE_MAKEFILE=ON ..
+  - cmake --build .
+  - ctest -V
+

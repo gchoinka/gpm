@@ -31,11 +31,13 @@ namespace outcome = OUTCOME_V2_NAMESPACE;
 #include "common/nodes.hpp"
 #include "common/santa_fe_board.hpp"
 #include "common/visitor.hpp"
+#include "nodes_funcptr.hpp"
 #include "nodes_hana_tuple.hpp"
 #include "nodes_opp.hpp"
 
 #include "code_generators/dyno_tree_ctstatic.hpp"
 #include "code_generators/dyno_tree_dynamic.hpp"
+#include "code_generators/funcptr_dynamic.hpp"
 #include "code_generators/oop_tree_dynamic.hpp"
 #include "code_generators/opp_tree_ctstatic.hpp"
 #include "code_generators/tuple_ctstatic.hpp"
@@ -73,7 +75,6 @@ struct CLIArgs {
   std::string antrpndef;
   std::vector<std::string> benchmark;
   bool listBenchmarks = false;
-  bool benchmarkCreationOnly = false;
 };
 
 outcome::unchecked<CLIArgs, CLIArgs::ErrorMessage> handleCLI(int argc,
@@ -93,7 +94,6 @@ outcome::unchecked<CLIArgs, CLIArgs::ErrorMessage> handleCLI(int argc,
   bmOptions.add_options()
       // clang-format off
     ("benchmark",po::value<std::vector<std::string>>(&args.benchmark)->multitoken(),"")
-    ("benchmark-creation-only",po::bool_switch(&args.benchmarkCreationOnly),"")
     ("list-benchmarks", po::bool_switch(&args.listBenchmarks), "")
     ;
   // clang-format on
@@ -128,8 +128,7 @@ int main(int argc, char** argv) {
   auto bm = hana::make_tuple(
       VariantDynamic{}, VariantCTStatic{}, OOPTreeDynamic{}, OPPTreeCTStatic{},
       UnwrappedDirectCTStatic{}, UnwrappedVisitorCallingCTStatic{},
-      TupleCTStatic{}, DynoTreeDynamic{}, DynoTreeCTStatic{});
-
+      TupleCTStatic{}, DynoTreeDynamic{}, DynoTreeCTStatic{}, FuncPtrDynamic{});
 
   if (cliArgs.listBenchmarks) {
     std::cout << "\n";

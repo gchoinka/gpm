@@ -62,6 +62,8 @@ target_include_directories(Dyno SYSTEM INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/thi
 add_library(Gpm INTERFACE)
 target_include_directories(Gpm INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
+add_library(Frozen INTERFACE)
+target_include_directories(Frozen INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/frozen/include)
 
 
 if(${GPM_BUILD_TESTS})

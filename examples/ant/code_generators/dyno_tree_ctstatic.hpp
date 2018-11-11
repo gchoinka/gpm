@@ -7,8 +7,9 @@
  */
 #pragma once
 #include <fmt/format.h>
-#include <boost/variant.hpp>
 #include <string>
+
+#include <boost/variant.hpp>
 
 #include "../common/nodes.hpp"
 

@@ -38,7 +38,7 @@ set_target_properties(tree_benchmark PROPERTIES
            CXX_EXTENSIONS OFF
 )
 target_compile_options(tree_benchmark PRIVATE ${warning_flags})
-target_link_libraries(tree_benchmark Gpm GeneratedBechmarks fmt::fmt benchmark::benchmark Boost::boost Boost::program_options Outcome Dyno)
+target_link_libraries(tree_benchmark Gpm GeneratedBechmarks fmt::fmt benchmark::benchmark Boost::boost Boost::program_options Outcome Dyno Frozen)
 
 
 add_executable(ant_board_visualization ant_board_visualization.cpp) 
@@ -47,16 +47,16 @@ set_target_properties(ant_board_visualization PROPERTIES
             CXX_EXTENSIONS OFF
 )
 target_compile_options(ant_board_visualization PRIVATE ${warning_flags})
-target_link_libraries(ant_board_visualization Gpm fmt::fmt Boost::boost Boost::program_options Outcome) 
+target_link_libraries(ant_board_visualization Gpm fmt::fmt Boost::boost Boost::program_options Outcome Frozen) 
 
 
 add_executable(ant_genetic_programming ant_genetic_programming_main.cpp) 
 set_target_properties(ant_genetic_programming PROPERTIES
-            CXX_STANDARD 17
+            CXX_STANDARD 20
             CXX_EXTENSIONS OFF
 )
 target_compile_options(ant_genetic_programming PRIVATE ${warning_flags})
-target_link_libraries(ant_genetic_programming Gpm fmt::fmt Boost::boost Boost::program_options Outcome Threads::Threads) 
+target_link_libraries(ant_genetic_programming Gpm Threads::Threads fmt::fmt Boost::boost Boost::program_options Outcome) 
 
 
 
@@ -71,7 +71,7 @@ endif()
 add_custom_target(timeing_build_tree_benchmark_all)
 
 set(last_target timeing_build_tree_benchmark_all)
-foreach(bmName variantDynamic variantCTStatic oopTreeDynamic oppTreeCTStatic unwrappedDirectCTStatic unwrappedVisitorCallingCTStatic tupleCTStatic dynoTreeDynamic dynoTreeCTStatic None)
+foreach(bmName funcPtrDynamic variantDynamic variantCTStatic oopTreeDynamic oppTreeCTStatic unwrappedDirectCTStatic unwrappedVisitorCallingCTStatic tupleCTStatic dynoTreeDynamic dynoTreeCTStatic None)
     add_custom_target(timeing_build_tree_benchmark_${bmName}
       COMMAND "${CMAKE_COMMAND}" -E remove "${GeneratedBechmarksIncludesDir}/ant_simulation_benchmark_generated_functions.cpp"
       COMMAND "$<TARGET_FILE:generate_tree_for_benchmark>" --benchmark ${bmName} --antrpndef "${CMAKE_CURRENT_SOURCE_DIR}/data/randomAnt.txt" --outfile "${GeneratedBechmarksIncludesDir}/ant_simulation_benchmark_generated_functions.cpp"

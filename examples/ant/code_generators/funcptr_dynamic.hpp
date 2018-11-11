@@ -10,24 +10,25 @@
 #include <fmt/format.h>
 #include <string>
 
-struct DynoTreeDynamic {
-  std::string name() const { return "dynoTreeDynamic"; }
-  std::string functionName() const { return "dynoTreeDynamic"; }
-
+struct FuncPtrDynamic {
+  std::string name() const { return "funcPtrDynamic"; }
+  std::string functionName() const { return "funcPtrDynamic"; }
   std::string body(ant::ant_nodes) const {
     return fmt::format(R"""(
 template<typename AntBoardSimT>
-static int dynoTreeDynamic(AntBoardSimT antBoardSim, std::string_view const & sv, BenchmarkPart toMessure)
-{{                
-  auto dynoTree = antdyno::factory<AntBoardSimT>(gpm::RPNToken_iterator{{sv}});
+static int funcPtrDynamic(AntBoardSimT antBoardSim, std::string_view const & sv, BenchmarkPart toMessure)
+{{    
+  auto anAnt = funcptr::factory<AntBoardSimT>(gpm::RPNToken_iterator{{sv}});
   if(toMessure == BenchmarkPart::Create) 
-    return 0;
+    return anAnt.children_.size();
+
+
   while(!antBoardSim.is_finish())
   {{
-    dynoTree.eval(antBoardSim);
+    anAnt(anAnt, antBoardSim);
   }}
   return antBoardSim.score(); 
 }}
-)""");
+    )""");
   }
 };
