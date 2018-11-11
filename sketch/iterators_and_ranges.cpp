@@ -193,23 +193,10 @@ struct overloaded : Ts... {
 template <class... Ts>
 overloaded(Ts...)->overloaded<Ts...>;
 
-// template<int base, int exponent>
-// struct StaticPowHelper{
-//   constexpr static int value = exponent == 0 ? 1 : base * StaticPowHelper<base, exponent-1>::value;  
-// };
-// 
-// template<int base, int exponent>
-// struct StaticPowHelper{
-//   constexpr static int value = exponent == 0 ? 1 : base * StaticPowHelper<base, exponent-1>::value;  
-// };
-// 
-// template<int base, int exponent>
-// int StaticPow = StaticPowHelper<base, exponent>::value;
 
-
-constexpr int ctpow(int x, int y)
+constexpr int ctpow(int base, int iexp)
 {
-  return y == 0 ? 1.0 : x * ctpow(x, y-1);
+  return iexp == 0 ? 1 : base * ctpow(base, iexp-1);
 }
 
 void bruteForceTest() {
