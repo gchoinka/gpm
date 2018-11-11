@@ -155,8 +155,7 @@ void manualTest() {
       isSameInput(begin(seq1), end(seq1), begin(seq2), end(seq2));
   constexpr auto isSameWithRanges = isSameInput(seq1, seq2);
 
-  if(isSameWithIterators != isSameWithRanges)
-  {
+  if (isSameWithIterators != isSameWithRanges) {
     cout << isSameWithIterators << "\n";
     cout << isSameWithRanges << "\n";
   }
@@ -220,7 +219,7 @@ void bruteForceTest() {
   };
 
   auto algorithmusChecker =
-  [makeInput](auto indexRange) -> CheckerResult::Return_t {
+      [makeInput](auto indexRange) -> CheckerResult::Return_t {
     auto processedCounter = 0;
     for (auto i : indexRange) {
       auto sequences = makeInput(i);
@@ -244,7 +243,7 @@ void bruteForceTest() {
     }
     return CheckerResult::NoDifferenceFound{processedCounter};
   };
-  
+
   auto asyncWorkersCount = std::min(
       int(std::thread::hardware_concurrency()) * 1000, kIterationsNeeded);
   auto algorithmusCheckerAsyncWrapper =
@@ -262,20 +261,22 @@ void bruteForceTest() {
                             workerNumber);
         });
   }
-  
-  auto concurentRunningWorkersCount = std::min(
-    int(std::thread::hardware_concurrency()), kIterationsNeeded);
+
+  auto concurentRunningWorkersCount =
+      std::min(int(std::thread::hardware_concurrency()), kIterationsNeeded);
   std::vector<std::future<CheckerResult::Return_t>> asyncWokers;
 
   auto asyncWokersFactoryIter = std::begin(asyncWokersFactory);
-  while (asyncWokersFactoryIter != std::end(asyncWokersFactory) && int(asyncWokers.size()) < concurentRunningWorkersCount) 
+  while (asyncWokersFactoryIter != std::end(asyncWokersFactory) &&
+         int(asyncWokers.size()) < concurentRunningWorkersCount)
     asyncWokers.emplace_back((*asyncWokersFactoryIter++)());
 
   constexpr int updateIntervalMicro = 20'000'000;
   auto const singelWorkerWaitTime =
       std::chrono::microseconds(updateIntervalMicro / std::size(asyncWokers));
 
-  auto checkResults = [singelWorkerWaitTime](auto& workerCont, auto errorSink) -> int {
+  auto checkResultsAndRemove = [singelWorkerWaitTime](auto& workerCont,
+                                             auto errorSink) -> int {
     int proccessedCount = 0;
     for (auto& w : workerCont) {
       if (!w.valid()) continue;
@@ -303,18 +304,17 @@ void bruteForceTest() {
   while (asyncWokers.size() > 0) {
     auto errorFound = false;
     proccessedCount +=
-    checkResults(asyncWokers, [&errorFound](auto const& errorMessage) {
+    checkResultsAndRemove(asyncWokers, [&errorFound](auto const& errorMessage) {
           fmt::print("\n{}\n", errorMessage);
           errorFound = true;
         });
     if (errorFound) break;
 
-    fmt::print("{:f}\n",
-               double(proccessedCount) / kIterationsNeeded);
-    while (asyncWokersFactoryIter != std::end(asyncWokersFactory) && int(asyncWokers.size()) < concurentRunningWorkersCount) 
+    fmt::print("{:f}\n", double(proccessedCount) / kIterationsNeeded);
+    while (asyncWokersFactoryIter != std::end(asyncWokersFactory) &&
+           int(asyncWokers.size()) < concurentRunningWorkersCount)
       asyncWokers.emplace_back((*asyncWokersFactoryIter++)());
   }
-
 }
 
 int main() {
