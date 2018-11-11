@@ -46,8 +46,7 @@ auto getAntNodes() -> decltype(auto) {
             childCount(2)},
       NodeT{"m", [](NodeT const &, ContexType &c) { c.move(); }, childCount(0)},
       NodeT{"l", [](NodeT const &, ContexType &c) { c.left(); }, childCount(0)},
-      NodeT{"r", [](NodeT const &, ContexType &c) { c.right(); },
-            childCount(0)},
+      NodeT{"r", [](NodeT const &, ContexType &c) { c.right(); }, childCount(0)},
       NodeT{"p2",
             [](NodeT const &self, ContexType &c) {
               for (auto &child : self.children) child(child, c);

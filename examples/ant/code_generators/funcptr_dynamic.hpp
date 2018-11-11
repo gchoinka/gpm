@@ -20,7 +20,7 @@ static int funcPtrDynamic(AntBoardSimT antBoardSim, std::string_view const & sv,
 {{    
   auto anAnt = funcptr::factory<AntBoardSimT>(gpm::RPNToken_iterator{{sv}});
   if(toMessure == BenchmarkPart::Create) 
-    return anAnt.children_.size();
+    return anAnt.children.size();
 
 
   while(!antBoardSim.is_finish())
