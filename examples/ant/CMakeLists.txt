@@ -29,7 +29,7 @@ set_target_properties(generate_tree_for_benchmark PROPERTIES
             CXX_EXTENSIONS OFF
 )
 target_compile_options(generate_tree_for_benchmark PRIVATE ${warning_flags})
-target_link_libraries(generate_tree_for_benchmark Gpm fmt::fmt Boost::boost Boost::program_options Outcome)
+target_link_libraries(generate_tree_for_benchmark Gpm fmt::fmt Boost::boost Boost::program_options Outcome Frozen)
 
 
 add_executable(tree_benchmark tree_benchmark_main.cpp) 

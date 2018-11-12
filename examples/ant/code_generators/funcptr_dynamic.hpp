@@ -22,7 +22,6 @@ static int funcPtrDynamic(AntBoardSimT antBoardSim, std::string_view const & sv,
   if(toMessure == BenchmarkPart::Create) 
     return anAnt.children.size();
 
-
   while(!antBoardSim.is_finish())
   {{
     anAnt(anAnt, antBoardSim);
