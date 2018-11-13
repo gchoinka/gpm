@@ -47,6 +47,7 @@ script:
   - wget -qO- "https://cmake.org/files/v3.12/cmake-3.12.4-Linux-x86_64.tar.gz" | tar xz -C /home/travis/opt/ &> /dev/null
   - export CMAKE_BIN=/home/travis/opt/cmake-*/bin/cmake
   - export CTEST_BIN=/home/travis/opt/cmake-*/bin/ctest
+  - echo "cmake bin:${CMAKE_BIN}"
   - |
     mkdir build
     cd build
