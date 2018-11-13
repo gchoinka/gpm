@@ -193,17 +193,16 @@ struct overloaded : Ts... {
 template <class... Ts>
 overloaded(Ts...)->overloaded<Ts...>;
 
-
-constexpr int ctpow(int base, int iexp)
-{
-  return iexp == 0 ? 1 : base * ctpow(base, iexp-1);
+constexpr int ctpow(int base, int iexp) {
+  return iexp == 0 ? 1 : base * ctpow(base, iexp - 1);
 }
 
 void bruteForceTest() {
   constexpr auto kSequencesCount = 3;
   constexpr auto kSequenceMaxLength = 4;
   constexpr std::array<char, 4> charSet = {'a', 'Z', '\b', '\0'};
-  constexpr auto kSequenceStates = ctpow(std::tuple_size<decltype(charSet)>::value, kSequenceMaxLength);
+  constexpr auto kSequenceStates =
+      ctpow(std::tuple_size<decltype(charSet)>::value, kSequenceMaxLength);
   constexpr auto kIterationsNeeded = ctpow(kSequenceStates, kSequencesCount);
 
   auto makeInput =
@@ -280,7 +279,7 @@ void bruteForceTest() {
       std::chrono::microseconds(updateIntervalMicro / std::size(asyncWokers));
 
   auto checkResultsAndRemove = [singelWorkerWaitTime](auto& workerCont,
-                                             auto errorSink) -> int {
+                                                      auto errorSink) -> int {
     int proccessedCount = 0;
     for (auto& w : workerCont) {
       if (!w.valid()) continue;
@@ -307,8 +306,8 @@ void bruteForceTest() {
   int proccessedCount = 0;
   while (asyncWokers.size() > 0) {
     auto errorFound = false;
-    proccessedCount +=
-    checkResultsAndRemove(asyncWokers, [&errorFound](auto const& errorMessage) {
+    proccessedCount += checkResultsAndRemove(
+        asyncWokers, [&errorFound](auto const& errorMessage) {
           fmt::print("\n{}\n", errorMessage);
           errorFound = true;
         });
