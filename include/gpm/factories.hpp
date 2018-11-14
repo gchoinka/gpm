@@ -21,61 +21,64 @@
 namespace gpm {
 
 namespace detail {
-template <typename VariantType, typename Iter>
-VariantType factory_imp(Iter &);
+template <typename VariantType, typename CursorType>
+VariantType factory_imp(CursorType &);
 
-template <typename VariantType, typename Iter>
+template <typename VariantType, typename CursorType>
 using FactoryMap =
     boost::container::flat_map<std::string_view,
-                               std::function<VariantType(Iter &)>>;
+                               std::function<VariantType(CursorType &)>>;
 
-template <typename VariantType, typename Iter>
+template <typename VariantType, typename CursorType>
 struct FactoryMapInsertHelper {
-  FactoryMap<VariantType, Iter> &factoryMap;
+  FactoryMap<VariantType, CursorType> &factoryMap;
 
   template <class T>
   void operator()(T) {
-    factoryMap[T::name] = [](Iter &tokenIter) {
+    factoryMap[T::name] = [](CursorType &tokenCursor) {
       T ret;
       if constexpr (ret.children.size() != 0)
-        for (auto &n : ret.children) n = factory_imp<VariantType>(++tokenIter);
+        for (auto &n : ret.children)
+          n = factory_imp<VariantType>(tokenCursor.next());
       return ret;
     };
   }
 
   template <class T>
   void operator()(boost::recursive_wrapper<T>) {
-    factoryMap[T::name] = [](Iter &tokenIter) {
+    factoryMap[T::name] = [](CursorType &tokenCursor) {
       T ret;
       if constexpr (ret.children.size() != 0)
-        for (auto &n : ret.children) n = factory_imp<VariantType>(++tokenIter);
+        for (auto &n : ret.children)
+          n = factory_imp<VariantType>(tokenCursor.next());
       return ret;
     };
   }
 };
 
-template <typename VariantType, typename Iter>
-FactoryMap<VariantType, Iter> makeFactoryMap() {
-  FactoryMap<VariantType, Iter> factoryMap;
-  auto insertHelper = FactoryMapInsertHelper<VariantType, Iter>{factoryMap};
+template <typename VariantType, typename CursorType>
+FactoryMap<VariantType, CursorType> makeFactoryMap() {
+  FactoryMap<VariantType, CursorType> factoryMap;
+  auto insertHelper =
+      FactoryMapInsertHelper<VariantType, CursorType>{factoryMap};
   boost::mp11::mp_for_each<VariantType>(insertHelper);
   return factoryMap;
 }
 
-template <typename VariantType, typename Iter>
-VariantType factory_imp(Iter &tokenIter) {
-  static auto nodeCreateFunMap = makeFactoryMap<VariantType, Iter>();
-  auto token = *tokenIter;
+template <typename VariantType, typename CursorType>
+VariantType factory_imp(CursorType &tokenCursor) {
+  static auto nodeCreateFunMap = makeFactoryMap<VariantType, CursorType>();
+  auto token = tokenCursor.token();
   BOOST_ASSERT_MSG(nodeCreateFunMap.count(token) > 0,
                    "can not find factory function for token");
 
-  return nodeCreateFunMap[token](tokenIter);
+  return nodeCreateFunMap[token](tokenCursor);
 }
 }  // namespace detail
 
-template <typename VariantType, typename Iter>
-VariantType factory(Iter tokenIter) {
-  return detail::factory_imp<VariantType>(tokenIter);
+template <typename VariantType, typename CursorType>
+VariantType factory(CursorType tokenCursor) {
+  return detail::factory_imp<VariantType>(tokenCursor);
 }
 }  // namespace gpm
 
@@ -93,9 +96,10 @@ decltype(auto) asTuple(boost::variant<T...>) {
   return boost::hana::tuple<typename boost::unwrap_recursive<T>::type...>{};
 }
 
-template <typename VariantType, typename IterType>
+template <typename VariantType, typename CursorType>
 class FactoryV2 {
-  using VariantTypeCreateFunction = std::add_pointer_t<VariantType(IterType &)>;
+  using VariantTypeCreateFunction =
+      std::add_pointer_t<VariantType(CursorType &)>;
 
   static inline std::array<VariantTypeCreateFunction, maxHash> nodeFactoryField{
       nullptr};
@@ -105,13 +109,13 @@ class FactoryV2 {
     boost::hana::for_each(tup, [](auto n) {
       using NodeType = decltype(n);
       auto ind = cthash(n.name, std::end(n.name) - 1);
-      nodeFactoryField[ind] = [](IterType &iter) -> VariantType {
+      nodeFactoryField[ind] = [](CursorType &tokenCursor) -> VariantType {
         auto node = NodeType{};
         for (auto &children : node.children) {
-          ++iter;
-          auto token = *iter;
+          tokenCursor.next();
+          auto token = tokenCursor.token();
           auto index = cthash(std::begin(token), std::end(token));
-          children = nodeFactoryField[index](iter);
+          children = nodeFactoryField[index](tokenCursor);
         }
         return node;
       };
@@ -120,12 +124,12 @@ class FactoryV2 {
   }
 
  public:
-  static VariantType factory(IterType iter) {
+  static VariantType factory(CursorType tokenCursor) {
     static int dummyValue = makeHashToNode();
     (void)dummyValue;
-    auto token = *iter;
+    auto token = tokenCursor.token();
     auto index = cthash(std::begin(token), std::end(token));
-    return nodeFactoryField[index](iter);
+    return nodeFactoryField[index](tokenCursor);
   }
 };
 }  // namespace gpm::experimental

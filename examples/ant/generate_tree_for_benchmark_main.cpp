@@ -59,14 +59,14 @@ namespace {
 // decltype(auto) getOptAnt() {
 //   char const* optimalAntRPNdef = "m r m if l l p3 r m if if p2 r p2 m if";
 //   return
-//   gpm::factory<ant::ant_nodes>(gpm::RPNToken_iterator{optimalAntRPNdef});
+//   gpm::factory<ant::ant_nodes>(gpm::RPNTokenCursor{optimalAntRPNdef});
 // }
 
 decltype(auto) getAntFromFile(char const* filename) {
   std::ifstream f(filename);
   std::string str;
   std::getline(f, str);
-  return gpm::factory<ant::ant_nodes>(gpm::RPNToken_iterator{str});
+  return gpm::factory<ant::ant_nodes>(gpm::RPNTokenCursor{str});
 }
 
 struct CLIArgs {

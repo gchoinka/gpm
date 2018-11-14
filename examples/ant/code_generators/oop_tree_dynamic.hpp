@@ -20,7 +20,7 @@ struct OOPTreeDynamic {
 template<typename AntBoardSimT>
 static int oopTreeDynamic(AntBoardSimT antBoardSim, std::string_view const & sv, BenchmarkPart toMessure)
 {{                
-  auto oopTree = antoop::factory<AntBoardSimT>(gpm::RPNToken_iterator{{sv}});
+  auto oopTree = antoop::factory<AntBoardSimT>(gpm::RPNTokenCursor{{sv}});
   if(toMessure == BenchmarkPart::Create) 
     return 0;
   while(!antBoardSim.is_finish())

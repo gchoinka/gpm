@@ -18,7 +18,7 @@ struct VariantDynamic {
 template<typename AntBoardSimT>
 static int variantDynamic(AntBoardSimT antBoardSim, std::string_view const & sv, BenchmarkPart toMessure)
 {{    
-  auto anAnt = gpm::factory<ant::ant_nodes>(gpm::RPNToken_iterator{{sv}});
+  auto anAnt = gpm::factory<ant::ant_nodes>(gpm::RPNTokenCursor{{sv}});
   if(toMessure == BenchmarkPart::Create) 
     return 0;
   auto antBoardSimVisitor = ant::AntBoardSimulationVisitor{{antBoardSim}};

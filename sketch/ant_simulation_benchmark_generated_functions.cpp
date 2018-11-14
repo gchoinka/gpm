@@ -6,8 +6,7 @@ template <typename AntBoardSimT>
 static int variantDynamic(AntBoardSimT antBoardSim, std::string_view const &sv,
                           BenchmarkPart toMessure) {
   auto optAnt = gpm::experimental::FactoryV2<
-      ant::ant_nodes, gpm::RPNToken_iterator>::factory(gpm::RPNToken_iterator{
-      sv});
+      ant::ant_nodes, gpm::RPNTokenCursor>::factory(gpm::RPNTokenCursor{sv});
   if (toMessure == BenchmarkPart::Create) return 0;
   auto antBoardSimVisitor = ant::AntBoardSimulationVisitor{antBoardSim};
 
@@ -56,7 +55,7 @@ static int variantCTStatic(AntBoardSimT antBoardSim, std::string_view const &,
 template <typename AntBoardSimT>
 static int oopTreeDynamic(AntBoardSimT antBoardSim, std::string_view const &sv,
                           BenchmarkPart toMessure) {
-  auto oopTree = antoop::factory<AntBoardSimT>(gpm::RPNToken_iterator{sv});
+  auto oopTree = antoop::factory<AntBoardSimT>(gpm::RPNTokenCursor{sv});
   if (toMessure == BenchmarkPart::Create) return 0;
   while (!antBoardSim.is_finish()) {
     (*oopTree)(antBoardSim);
@@ -191,7 +190,7 @@ static int tupleCTStatic(AntBoardSimT antBoardSim, std::string_view const &,
 template <typename AntBoardSimT>
 static int dynoTreeDynamic(AntBoardSimT antBoardSim, std::string_view const &sv,
                            BenchmarkPart toMessure) {
-  auto dynoTree = antdyno::factory<AntBoardSimT>(gpm::RPNToken_iterator{sv});
+  auto dynoTree = antdyno::factory<AntBoardSimT>(gpm::RPNTokenCursor{sv});
   if (toMessure == BenchmarkPart::Create) return 0;
   while (!antBoardSim.is_finish()) {
     dynoTree.eval(antBoardSim);

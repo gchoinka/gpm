@@ -13,6 +13,8 @@
 #include <gpm/gpm.hpp>
 #include <gpm/io.hpp>
 
+#include <fmt/format.h>
+
 #include <outcome.hpp>
 namespace outcome = OUTCOME_V2_NAMESPACE;
 
@@ -20,6 +22,8 @@ namespace outcome = OUTCOME_V2_NAMESPACE;
 #include "common/nodes.hpp"
 #include "common/santa_fe_board.hpp"
 #include "common/visitor.hpp"
+
+#include "nodes_funcptr.hpp"
 
 template <typename AntBoardSimT>
 class AntBoardSimDecorator {
@@ -144,14 +148,41 @@ int main(int argc, char* argv[]) {
 
   char const* optimalAntRPNdef = "m r m if l l p3 r m if if p2 r p2 m if";
   auto optAnt =
-      gpm::factory<ant::ant_nodes>(gpm::RPNToken_iterator{optimalAntRPNdef});
+      gpm::factory<ant::ant_nodes>(gpm::RPNTokenCursor{optimalAntRPNdef});
   auto antBoardSim =
       makeAntBoardSimDecorator(getAntBoardSim(cliArgs.boarddef.c_str()));
 
-  auto antBoardSimVisitor = ant::AntBoardSimulationVisitor{antBoardSim};
+  //   using namespace funcptr;
+  //   using ContexType = decltype(antBoardSim);
+  //   auto aNode = make_Node<ContexType>("if", [](Node<ContexType> const & n,
+  //   ContexType & c){
+  //         if(c.is_food_in_front())
+  //           n.children_[0](n.children_[0], c);
+  //         else
+  //           n.children_[1](n.children_[1], c);
+  //       },
+  //       2
+  //   );
+
+  auto funcNode = funcptr::factory<decltype(antBoardSim)>(
+      gpm::RPNTokenCursor{optimalAntRPNdef});
+  auto funcNod2e = funcptr::factory<decltype(antBoardSim)>(
+      gpm::RPNTokenCursor{optimalAntRPNdef});
+
+  // funcNode(funcNode, antBoardSim);
+
+  //   auto fmap = funcptr::getAntNodesMap<decltype(antBoardSim)>();
+  //
+  //   fmt::print("{}\n", fmap.at("m").name);
 
   while (!antBoardSim.is_finish()) {
-    boost::apply_visitor(antBoardSimVisitor, optAnt);
+    funcNode(funcNode, antBoardSim);
   }
-  return antBoardSim.score();
+
+  //   auto antBoardSimVisitor = ant::AntBoardSimulationVisitor{antBoardSim};
+  //
+  //   while (!antBoardSim.is_finish()) {
+  //     boost::apply_visitor(antBoardSimVisitor, optAnt);
+  //   }
+  //   return antBoardSim.score();
 }

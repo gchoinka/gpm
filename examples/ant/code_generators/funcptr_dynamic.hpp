@@ -18,7 +18,7 @@ struct FuncPtrDynamic {
 template<typename AntBoardSimT>
 static int funcPtrDynamic(AntBoardSimT antBoardSim, std::string_view const & sv, BenchmarkPart toMessure)
 {{    
-  auto anAnt = funcptr::factory<AntBoardSimT>(gpm::RPNToken_iterator{{sv}});
+  auto anAnt = funcptr::factory<AntBoardSimT>(gpm::RPNTokenCursor{{sv}});
   if(toMessure == BenchmarkPart::Create) 
     return anAnt.children.size();
 

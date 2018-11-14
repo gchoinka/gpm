@@ -57,13 +57,13 @@ struct PNPrinter : public boost::static_visitor<StringT> {
   }
 };
 
-class RPNToken_iterator {
+class RPNTokenCursor {
   std::string_view sv_;
   std::string_view::size_type tokenBegin_;
   std::string_view::size_type tokenEnd_;
 
  public:
-  RPNToken_iterator(std::string_view sv) : sv_{sv} {
+  RPNTokenCursor(std::string_view sv) : sv_{sv} {
     tokenBegin_ = sv_.size();
     --tokenBegin_;
     for (; tokenBegin_ > 0; --tokenBegin_) {
@@ -81,11 +81,11 @@ class RPNToken_iterator {
     }
   }
 
-  std::string_view operator*() {
+  std::string_view token() {
     return sv_.substr(tokenBegin_, tokenEnd_ - tokenBegin_);
   }
 
-  RPNToken_iterator& operator++() {
+  RPNTokenCursor& next() {
     --tokenBegin_;
     if (tokenBegin_ > 0) {
       --tokenBegin_;
@@ -106,22 +106,22 @@ class RPNToken_iterator {
   }
 };
 
-class PNToken_iterator {
+class PNTokenCursor {
   std::string_view sv_;
   std::string_view::size_type tokenBegin_;
   std::string_view::size_type tokenEnd_;
 
  public:
-  PNToken_iterator(std::string_view sv) : sv_{sv}, tokenBegin_{0} {
+  PNTokenCursor(std::string_view sv) : sv_{sv}, tokenBegin_{0} {
     tokenEnd_ = tokenBegin_ + 1;
     while (tokenEnd_ < sv_.size() && sv_[tokenEnd_] != ' ') ++tokenEnd_;
   }
 
-  std::string_view operator*() const {
+  std::string_view token() const {
     return sv_.substr(tokenBegin_, tokenEnd_ - tokenBegin_);
   }
 
-  PNToken_iterator& operator++() {
+  PNTokenCursor& next() {
     while (tokenBegin_ < sv_.size() && sv_[tokenBegin_] != ' ') ++tokenBegin_;
     ++tokenBegin_;
     tokenEnd_ = tokenBegin_ + 1;

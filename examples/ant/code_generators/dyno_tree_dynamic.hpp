@@ -19,7 +19,7 @@ struct DynoTreeDynamic {
 template<typename AntBoardSimT>
 static int dynoTreeDynamic(AntBoardSimT antBoardSim, std::string_view const & sv, BenchmarkPart toMessure)
 {{                
-  auto dynoTree = antdyno::factory<AntBoardSimT>(gpm::RPNToken_iterator{{sv}});
+  auto dynoTree = antdyno::factory<AntBoardSimT>(gpm::RPNTokenCursor{{sv}});
   if(toMessure == BenchmarkPart::Create) 
     return 0;
   while(!antBoardSim.is_finish())

@@ -116,7 +116,7 @@ int main() {
 
   //   char const* optimalAntRPNdef = "m r m if l l p3 r m if if p2 r p2 m if";
   //   auto optAnt =
-  //   gpm::factory<ant::ant_nodes>(gpm::RPNToken_iterator{optimalAntRPNdef});
+  //   gpm::factory<ant::ant_nodes>(gpm::RPNTokenCursor{optimalAntRPNdef});
   //   fmt::print("{}\n", boost::apply_visitor(CountNodes{}, optAnt));
   //
   //

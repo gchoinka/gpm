@@ -92,56 +92,57 @@ class Right : public BaseNodeWithChildren<ContexType, 0, 'r'> {
 };
 
 namespace detail {
-template <typename ContexType, typename Iter>
-std::unique_ptr<BaseNode<ContexType>> factory_imp(Iter &);
+template <typename ContexType, typename CursorType>
+std::unique_ptr<BaseNode<ContexType>> factory_imp(CursorType &);
 
-template <typename ContexType, typename Iter>
+template <typename ContexType, typename CursorType>
 using FactoryMap = boost::container::flat_map<
     std::string_view,
-    std::function<std::unique_ptr<BaseNode<ContexType>>(Iter &)>>;
+    std::function<std::unique_ptr<BaseNode<ContexType>>(CursorType &)>>;
 
-template <typename ContexType, typename Iter>
+template <typename ContexType, typename CursorType>
 struct FactoryMapInsertHelper {
-  FactoryMap<ContexType, Iter> &factoryMap;
+  FactoryMap<ContexType, CursorType> &factoryMap;
 
   template <class T>
   void operator()(T) {
-    factoryMap[T::name] = [](Iter &tokenIter) {
+    factoryMap[T::name] = [](CursorType &tokenCursor) {
       auto ret = std::make_unique<T>();
 
       for (auto &n : ret->children_)
-        n = std::move(factory_imp<ContexType>(++tokenIter));
+        n = std::move(factory_imp<ContexType>(tokenCursor.next()));
       return std::move(ret);
     };
   }
 };
 
-template <typename ContexType, typename Iter>
-FactoryMap<ContexType, Iter> makeFactoryMap() {
-  FactoryMap<ContexType, Iter> factoryMap;
-  auto insertHelper = FactoryMapInsertHelper<ContexType, Iter>{factoryMap};
+template <typename ContexType, typename CursorType>
+FactoryMap<ContexType, CursorType> makeFactoryMap() {
+  FactoryMap<ContexType, CursorType> factoryMap;
+  auto insertHelper =
+      FactoryMapInsertHelper<ContexType, CursorType>{factoryMap};
   boost::mp11::mp_for_each<boost::mp11::mp_list<
       Prog3<ContexType>, Prog2<ContexType>, IfFoodAhead<ContexType>,
       Move<ContexType>, Left<ContexType>, Right<ContexType>>>(insertHelper);
   return factoryMap;
 }
 
-template <typename ContexType, typename Iter>
-std::unique_ptr<BaseNode<ContexType>> factory_imp(Iter &tokenIter) {
-  static auto nodeCreateFunMap = makeFactoryMap<ContexType, Iter>();
-  auto token = *tokenIter;
+template <typename ContexType, typename CursorType>
+std::unique_ptr<BaseNode<ContexType>> factory_imp(CursorType &tokenCursor) {
+  static auto nodeCreateFunMap = makeFactoryMap<ContexType, CursorType>();
+  auto token = tokenCursor.token();
   if (!nodeCreateFunMap.count(token)) {
     throw std::runtime_error{
         std::string{"cant find factory function for token >>"} +
         std::string{token} + "<<"};
   }
 
-  return nodeCreateFunMap[token](tokenIter);
+  return nodeCreateFunMap[token](tokenCursor);
 }
 }  // namespace detail
 
-template <typename ContexType, typename Iter>
-std::unique_ptr<BaseNode<ContexType>> factory(Iter tokenIter) {
-  return detail::factory_imp<ContexType>(tokenIter);
+template <typename ContexType, typename CursorType>
+std::unique_ptr<BaseNode<ContexType>> factory(CursorType tokenCursor) {
+  return detail::factory_imp<ContexType>(tokenCursor);
 }
 }  // namespace antoop

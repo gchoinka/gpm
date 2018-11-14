@@ -27,9 +27,9 @@ decltype(auto) asTuple(boost::variant<T...>) {
   return hana::tuple<typename boost::unwrap_recursive<T>::type...>{};
 }
 
-template <typename VariantType, typename IterType>
+template <typename VariantType, typename CursorType>
 class FactoryV2 {
-  using VariantTypeCreateFunction = std::add_pointer_t<VariantType(IterType&)>;
+  using VariantTypeCreateFunction = std::add_pointer_t<VariantType(CursorType&)>;
 
   static std::array<VariantTypeCreateFunction, maxHash> makeHashToNode() {
     std::array<VariantTypeCreateFunction, maxHash> result;
@@ -37,14 +37,14 @@ class FactoryV2 {
     boost::hana::for_each(tup, [&result](auto n) {
       using NodeType = decltype(n);
       result[cthash(n.name, std::end(n.name) - 1)] =
-          [](IterType& iter) -> VariantType {
+          [](CursorType& tokenCursor) -> VariantType {
         auto node = NodeType{};
         for (auto& children : node.children) {
-          ++iter;
-          auto token = *iter;
+          tokenCursor.next();
+          auto token = tokenCursor.token();
           children =
               nodeFactoryField[cthash(std::begin(token), std::end(token))](
-                  iter);
+                  tokenCursor);
         }
         return node;
       };
@@ -56,15 +56,15 @@ class FactoryV2 {
       nodeFactoryField = makeHashToNode();
 
  public:
-  static VariantType factory(IterType& iter) {
-    auto token = *iter;
-    return nodeFactoryField[cthash(token.begin(), token.end())](iter);
+  static VariantType factory(CursorType& tokenCursor) {
+    auto token = tokenCursor.token();
+    return nodeFactoryField[cthash(token.begin(), token.end())](tokenCursor);
   }
 };
 
-// template <typename VariantType, typename IterType>
-// std::array<VariantTypeCreateFunction<VariantType, IterType>, maxHash>
-// HashToNode = makeHashToNode<VariantType, IterType>(VariantType{});
+// template <typename VariantType, typename CursorType>
+// std::array<VariantTypeCreateFunction<VariantType, CursorType>, maxHash>
+// HashToNode = makeHashToNode<VariantType, CursorType>(VariantType{});
 
 //   template <class T>
 //   void operator()(T) {
@@ -132,14 +132,14 @@ int main() {
   // //   std::cout << std::hex << (int)cthash(p3.name, std::end(p3.name)-1) <<
   // "\n";
 
-  gpm::RPNToken_iterator optAntIter{"m l m if l l p3 m if l p3 m if"};
+  gpm::RPNTokenCursor optAntIter{"m l m if l l p3 m if l p3 m if"};
   //   std::string_view token{"if"};
-  //   VariantTypeCreateFunction<ant::ant_nodes, gpm::RPNToken_iterator> f =
-  //   [](gpm::RPNToken_iterator&) -> ant::ant_nodes {return ant::prog3{};};
-  //   auto tmp = f(titer);
+  //   VariantTypeCreateFunction<ant::ant_nodes, gpm::RPNTokenCursor> f =
+  //   [](gpm::RPNTokenCursor&) -> ant::ant_nodes {return ant::prog3{};};
+  //   auto tmp = f(ttokenCursor);
 
   auto optAnt =
-      FactoryV2<ant::ant_nodes, gpm::RPNToken_iterator>::factory(optAntIter);
+      FactoryV2<ant::ant_nodes, gpm::RPNTokenCursor>::factory(optAntIter);
   std::cout << boost::apply_visitor(gpm::RPNPrinter<std::string>{}, optAnt);
   //   boost::apply_visitor([](auto const & obj){
   //     std::cout << boost::typeindex::type_id<decltype(obj)>().pretty_name()

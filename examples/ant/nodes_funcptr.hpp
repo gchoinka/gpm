@@ -13,6 +13,7 @@
 #include <functional>
 #include <string_view>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace funcptr {
@@ -62,23 +63,22 @@ auto getAntNodes() -> decltype(auto) {
             childCount(3)}};
 }
 
-
 namespace detail {
 
-template <typename ContexType, typename IterType>
+template <typename ContexType, typename CursorType>
 struct FactoryHelper {
-  using FactoryFunc = std::function<Node<ContexType>(IterType &)>;
+  using FactoryFunc = std::function<Node<ContexType>(CursorType &)>;
   using FactoryMap = frozen::unordered_map<frozen::string, FactoryFunc, 6>;
 
   static FactoryFunc makeFactoryFunc(Node<ContexType> templateNode) {
-    return [templateNode](IterType &tokenIter) {
+    return [templateNode](CursorType &tokenCursor) {
       auto currentNode =
           Node<ContexType>{templateNode.name, templateNode.behavior, {}};
       for ([[gnu::unused]] auto const &foo : templateNode.children) {
-        ++tokenIter;
-        auto token = *tokenIter;
+        tokenCursor.next();
+        auto token = tokenCursor.token();
         auto key = frozen::string{token.data(), token.size()};
-        currentNode.children.emplace_back(factoryMap.at(key)(tokenIter));
+        currentNode.children.emplace_back(factoryMap.at(key)(tokenCursor));
       }
       return currentNode;
     };
@@ -98,25 +98,25 @@ struct FactoryHelper {
 
   static FactoryMap makeFactoryMap() {
     auto antNodes = getAntNodes<ContexType>();
-    return FactoryHelper<ContexType, IterType>::makeFactoryMap2(
+    return FactoryHelper<ContexType, CursorType>::makeFactoryMap2(
         antNodes,
         std::make_index_sequence<std::tuple_size_v<decltype(antNodes)>>());
   }
   // std::make_index_sequence<std::tuple_size_v<TupleT0>>()
   static inline FactoryMap factoryMap =
-      FactoryHelper<ContexType, IterType>::makeFactoryMap();
+      FactoryHelper<ContexType, CursorType>::makeFactoryMap();
 
-  static Node<ContexType> factory(IterType &tokenIter) {
-    auto token = *tokenIter;
+  static Node<ContexType> factory(CursorType &tokenCursor) {
+    auto token = tokenCursor.token();
     auto key = frozen::string{token.data(), token.size()};
-    return factoryMap.at(key)(tokenIter);
+    return factoryMap.at(key)(tokenCursor);
   }
 };
 }  // namespace detail
 
-template <typename ContexType, typename IterTypeType>
-Node<ContexType> factory(IterTypeType tokenIterType) {
-  return detail::FactoryHelper<ContexType, IterTypeType>::factory(
-      tokenIterType);
+template <typename ContexType, typename CursorTypeType>
+Node<ContexType> factory(CursorTypeType tokenCursorType) {
+  return detail::FactoryHelper<ContexType, CursorTypeType>::factory(
+      tokenCursorType);
 }
 }  // namespace funcptr
