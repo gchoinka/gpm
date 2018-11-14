@@ -149,3 +149,46 @@ int main() {
   //   );
   //
 }
+
+#if 0
+#include <array>
+#include <experimental/array>
+#include <string_view>
+#include <utility>
+#include <tuple>
+
+namespace std{ using namespace std::experimental; }
+
+constexpr auto kNodeNames = std::make_array<std::string_view>("if", "m", "r", "l", "p2", "p3", "p4", "p5");
+
+
+constexpr uint8_t cthash(std::string_view s) {
+  uint8_t r = 0;
+  for (auto begin = std::begin(s), end = std::end(s); begin != end; ++begin) {
+    r = (r ^ (*begin));
+  }
+  return r & 0b0001'1111;
+}
+
+template<typename T, auto ...Idx>
+constexpr bool checkForDupHashes(T nodeNames, std::index_sequence<Idx...>)
+{
+    std::array<uint8_t, std::tuple_size_v<T>> hashList{cthash(std::get<Idx>(nodeNames))...};
+
+    for(std::size_t i = 0; i  <hashList.size(); ++i){
+        auto searchValue = hashList[i];
+        for(std::size_t h = i+1; h < hashList.size(); ++h){
+            if(searchValue == hashList[h])
+                return true;
+        }
+    }
+    return false;
+}
+
+template <auto N> constexpr auto force_compute_at_compile_time() -> decltype(auto) { return N; };
+
+int main()
+{
+    return checkForDupHashes(kNodeNames, std::make_index_sequence<std::tuple_size_v<decltype(kNodeNames)>>{});
+}
+#endif
