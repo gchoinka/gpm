@@ -83,53 +83,77 @@ VariantType factory(CursorType tokenCursor) {
 }  // namespace gpm
 
 namespace gpm::experimental {
-constexpr uint8_t cthash(char const *begin, char const *end) {
-  uint8_t r = 0;
-  while (begin < end) r = r ^ *begin++;
-  return r & 0b1111'1111;
-}
-
-constexpr auto maxHash = 2 ^ 5;
-
-template <typename... T>
-decltype(auto) asTuple(boost::variant<T...>) {
-  return boost::hana::tuple<typename boost::unwrap_recursive<T>::type...>{};
-}
-
-template <typename VariantType, typename CursorType>
-class FactoryV2 {
-  using VariantTypeCreateFunction =
-      std::add_pointer_t<VariantType(CursorType &)>;
-
-  static inline std::array<VariantTypeCreateFunction, maxHash> nodeFactoryField{
-      nullptr};
-
-  static int makeHashToNode() {
-    auto tup = asTuple(VariantType{});
-    boost::hana::for_each(tup, [](auto n) {
-      using NodeType = decltype(n);
-      auto ind = cthash(n.name, std::end(n.name) - 1);
-      nodeFactoryField[ind] = [](CursorType &tokenCursor) -> VariantType {
-        auto node = NodeType{};
-        for (auto &children : node.children) {
-          tokenCursor.next();
-          auto token = tokenCursor.token();
-          auto index = cthash(std::begin(token), std::end(token));
-          children = nodeFactoryField[index](tokenCursor);
-        }
-        return node;
-      };
-    });
+  template<uint8_t kMaxHash, typename BeginIterType, typename EndIterType>
+  constexpr uint8_t simpleHash(BeginIterType begin, EndIterType end) {
+    uint8_t r = 0;
+    while (begin != end) r = r ^ *begin++;
+    return r & (kMaxHash-1);
+  }
+  
+  
+  template<typename RangeType>
+  constexpr uint8_t simpleHash(RangeType range) {
+    return simpleHash(std::begin(range), std::end(range));
+  }
+  
+  template<uint8_t kMaxHash, typename ...T>
+  constexpr int checkForColision(boost::hana::tuple<T...>)
+  {
+    using hashes = boost::mp11::mp_list<std::integral_constant<uint8_t,
+    simpleHash<kMaxHash>(std::begin(T::name), std::end(T::name)-1)>...>;
+    
+    using unique_hashes = boost::mp11::mp_unique<hashes>;
+    
+    using size_hashes = boost::mp11::mp_size<hashes>;
+    using size_unique_hashes = boost::mp11::mp_size<unique_hashes>;
+    
+    static_assert(std::is_same_v<size_hashes, size_unique_hashes>,
+                  "colision detected in hash function, please change hash function");
     return 0;
   }
-
- public:
-  static VariantType factory(CursorType tokenCursor) {
-    static int dummyValue = makeHashToNode();
-    (void)dummyValue;
-    auto token = tokenCursor.token();
-    auto index = cthash(std::begin(token), std::end(token));
-    return nodeFactoryField[index](tokenCursor);
+  
+  template <typename... T>
+  decltype(auto) variantToTuple(boost::variant<T...>) {
+    return boost::hana::tuple<typename boost::unwrap_recursive<T>::type...>{};
   }
-};
+  
+  template <typename VariantType, typename CursorType, uint8_t kMaxHash>
+  class FactoryV2 {
+    
+    using VariantTypeCreateFunction = std::add_pointer_t<VariantType(CursorType&)>;
+    
+    static std::array<VariantTypeCreateFunction, kMaxHash> makeHashToNode() {
+      std::array<VariantTypeCreateFunction, kMaxHash> creatFunctionLUT{nullptr};
+      auto nodesAsTuple = variantToTuple(VariantType{});
+      checkForColision<kMaxHash>(nodesAsTuple);
+      boost::hana::for_each(nodesAsTuple, [&creatFunctionLUT](auto n) {
+        using NodeType = decltype(n);
+        auto hash = simpleHash<kMaxHash>(std::begin(n.name), std::end(n.name) - 1);
+        
+        creatFunctionLUT[hash] = [](CursorType& tokenCursor) -> VariantType {
+          auto node = NodeType{};
+          for (auto& child : node.children) {
+            tokenCursor.next();
+            child = FactoryV2<VariantType,CursorType,kMaxHash>::factory(tokenCursor);
+          }
+          return node;
+        };
+      });
+      return creatFunctionLUT;
+    }
+    
+    
+    template<typename TokenType>
+    static VariantTypeCreateFunction getCreateFuntion(TokenType token){
+      static std::array<VariantTypeCreateFunction, kMaxHash> creatFunctionLUT = makeHashToNode();
+      
+      return creatFunctionLUT[simpleHash<kMaxHash>(token.begin(), token.end())];
+    }
+    
+  public:
+    static VariantType factory(CursorType tokenCursor) {
+      auto token = tokenCursor.token();
+      return getCreateFuntion(token)(tokenCursor);
+    }
+  };
 }  // namespace gpm::experimental

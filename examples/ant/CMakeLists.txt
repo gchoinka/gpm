@@ -71,7 +71,7 @@ endif()
 add_custom_target(timeing_build_tree_benchmark_all)
 
 set(last_target timeing_build_tree_benchmark_all)
-foreach(bmName funcPtrDynamic variantDynamic variantCTStatic oopTreeDynamic oppTreeCTStatic unwrappedDirectCTStatic unwrappedVisitorCallingCTStatic tupleCTStatic dynoTreeDynamic dynoTreeCTStatic None)
+foreach(bmName funcPtrDynamic variantDynamic variantDynamic2 variantCTStatic oopTreeDynamic oppTreeCTStatic unwrappedDirectCTStatic unwrappedVisitorCallingCTStatic tupleCTStatic dynoTreeDynamic dynoTreeCTStatic None)
     add_custom_target(timeing_build_tree_benchmark_${bmName}
       COMMAND "${CMAKE_COMMAND}" -E remove "${GeneratedBechmarksIncludesDir}/ant_simulation_benchmark_generated_functions.cpp"
       COMMAND "$<TARGET_FILE:generate_tree_for_benchmark>" --benchmark ${bmName} --antrpndef "${CMAKE_CURRENT_SOURCE_DIR}/data/randomAnt.txt" --outfile "${GeneratedBechmarksIncludesDir}/ant_simulation_benchmark_generated_functions.cpp"

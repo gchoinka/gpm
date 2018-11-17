@@ -44,6 +44,7 @@ namespace outcome = OUTCOME_V2_NAMESPACE;
 #include "code_generators/unwrapped_direct_ctstatic.hpp"
 #include "code_generators/unwrapped_visitorcalling_ctstatic.hpp"
 #include "code_generators/variant_dynamic.hpp"
+#include "code_generators/variant_dynamic2.hpp"
 #include "code_generators/viarant_ctstatic.hpp"
 
 namespace {
@@ -126,7 +127,7 @@ int main(int argc, char** argv) {
   auto cliArgs = cliArgsOutcome.value();
 
   auto bm = hana::make_tuple(
-      VariantDynamic{}, VariantCTStatic{}, OOPTreeDynamic{}, OPPTreeCTStatic{},
+      VariantDynamic{}, VariantDynamic2{}, VariantCTStatic{}, OOPTreeDynamic{}, OPPTreeCTStatic{},
       UnwrappedDirectCTStatic{}, UnwrappedVisitorCallingCTStatic{},
       TupleCTStatic{}, DynoTreeDynamic{}, DynoTreeCTStatic{}, FuncPtrDynamic{});
 
