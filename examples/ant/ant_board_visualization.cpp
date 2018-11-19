@@ -148,7 +148,7 @@ int main(int argc, char* argv[]) {
 
   char const* optimalAntRPNdef = "m r m if l l p3 r m if if p2 r p2 m if";
   auto optAnt =
-      gpm::factory<ant::ant_nodes>(gpm::RPNTokenCursor{optimalAntRPNdef});
+      gpm::factory<ant::NodesVariant>(gpm::RPNTokenCursor{optimalAntRPNdef});
   auto antBoardSim =
       makeAntBoardSimDecorator(getAntBoardSim(cliArgs.boarddef.c_str()));
 

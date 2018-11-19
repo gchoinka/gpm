@@ -10,39 +10,39 @@
 
 namespace ant {
 
-struct move
+struct Move
     : public gpm::BaseNode<gpm::AnyTypeNullSink, 0, gpm::NodeToken<'m'>> {};
 
-struct right
+struct Right
     : public gpm::BaseNode<gpm::AnyTypeNullSink, 0, gpm::NodeToken<'r'>> {};
 
-struct left
+struct Left
     : public gpm::BaseNode<gpm::AnyTypeNullSink, 0, gpm::NodeToken<'l'>> {};
 
-struct if_food_ahead;
+struct IfFoodAhead;
 
-struct prog2;
+struct Prog2;
 
-struct prog3;
+struct Prog3;
 
-using ant_nodes =
-    boost::variant<move, left, right, boost::recursive_wrapper<if_food_ahead>,
-                   boost::recursive_wrapper<prog2>,
-                   boost::recursive_wrapper<prog3>>;
+using NodesVariant =
+boost::variant<Move, Left, Right, boost::recursive_wrapper<IfFoodAhead>,
+boost::recursive_wrapper<Prog2>,
+boost::recursive_wrapper<Prog3>>;
 
-struct prog2 : public gpm::BaseNode<ant_nodes, 2, gpm::NodeToken<'p', '2'>> {
+struct Prog2 : public gpm::BaseNode<NodesVariant, 2, gpm::NodeToken<'p', '2'>> {
   using BaseNode::BaseNode;
 };
 
-struct prog3 : public gpm::BaseNode<ant_nodes, 3, gpm::NodeToken<'p', '3'>> {
+struct Prog3 : public gpm::BaseNode<NodesVariant, 3, gpm::NodeToken<'p', '3'>> {
   using BaseNode::BaseNode;
 };
 
-struct if_food_ahead
-    : public gpm::BaseNode<ant_nodes, 2, gpm::NodeToken<'i', 'f'>> {
-  using if_food_ahead::BaseNode::BaseNode;
+struct IfFoodAhead
+: public gpm::BaseNode<NodesVariant, 2, gpm::NodeToken<'i', 'f'>> {
+  using IfFoodAhead::BaseNode::BaseNode;
 
-  constexpr ant_nodes const& get(bool b) const {
+  constexpr NodesVariant const& get(bool b) const {
     return b ? children[0] : children[1];
   }
 };

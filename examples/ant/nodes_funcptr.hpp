@@ -16,6 +16,8 @@
 #include <utility>
 #include <vector>
 
+#include <boost/hana.hpp>
+
 namespace funcptr {
 
 template <typename ContexType>
@@ -32,7 +34,7 @@ struct Node {
 };
 
 template <typename ContexType>
-auto getAntNodes() -> decltype(auto) {
+constexpr auto getAntNodes() -> decltype(auto) {
   using NodeT = Node<ContexType>;
   auto childCount = [](int childCount) {
     return std::vector<NodeT>(childCount, NodeT{});
@@ -66,7 +68,7 @@ auto getAntNodes() -> decltype(auto) {
 namespace detail {
 
 template <typename ContexType, typename CursorType>
-struct FactoryHelper {
+struct FactoryBuilder {
   using FactoryFunc = std::function<Node<ContexType>(CursorType &)>;
   using FactoryMap = frozen::unordered_map<frozen::string, FactoryFunc, 6>;
 
@@ -98,13 +100,13 @@ struct FactoryHelper {
 
   static FactoryMap makeFactoryMap() {
     auto antNodes = getAntNodes<ContexType>();
-    return FactoryHelper<ContexType, CursorType>::makeFactoryMap2(
+    return FactoryBuilder<ContexType, CursorType>::makeFactoryMap2(
         antNodes,
         std::make_index_sequence<std::tuple_size_v<decltype(antNodes)>>());
   }
   // std::make_index_sequence<std::tuple_size_v<TupleT0>>()
   static inline FactoryMap factoryMap =
-      FactoryHelper<ContexType, CursorType>::makeFactoryMap();
+    FactoryBuilder<ContexType, CursorType>::makeFactoryMap();
 
   static Node<ContexType> factory(CursorType &tokenCursor) {
     auto token = tokenCursor.token();
@@ -116,7 +118,95 @@ struct FactoryHelper {
 
 template <typename ContexType, typename CursorTypeType>
 Node<ContexType> factory(CursorTypeType tokenCursorType) {
-  return detail::FactoryHelper<ContexType, CursorTypeType>::factory(
+  return detail::FactoryBuilder<ContexType, CursorTypeType>::factory(
       tokenCursorType);
 }
+
+namespace experimental {
+
+template<uint8_t kMaxHash, typename BeginIterType, typename EndIterType>
+constexpr uint8_t simpleHash(BeginIterType begin, EndIterType end) {
+  uint8_t r = 0;
+  for (;begin != end; ++begin){
+    r = (r+7) ^ *begin;
+    
+  }
+  return r & (kMaxHash-1);
+}
+
+template<typename RangeType>
+constexpr uint8_t simpleHash(RangeType range) {
+  return simpleHash(std::begin(range), std::end(range));
+}
+
+template<uint8_t kMaxHash, typename ...T>
+constexpr int checkForColision(boost::hana::tuple<T...>)
+{
+  using hashes = boost::mp11::mp_list<std::integral_constant<uint8_t,
+  simpleHash<kMaxHash>(std::begin(T::name), std::end(T::name)-1)>...>;
+  
+  using unique_hashes = boost::mp11::mp_unique<hashes>;
+  
+  using size_hashes = boost::mp11::mp_size<hashes>;
+  using size_unique_hashes = boost::mp11::mp_size<unique_hashes>;
+  
+  static_assert(std::is_same_v<size_hashes, size_unique_hashes>,
+                "colision detected in hash function, please change hash function");
+  return 0;
+}
+
+namespace detail{
+template <typename T, size_t N, size_t ...Idx>
+decltype(auto) arrayToTuple(std::array<T, N> const & nodeDef, std::index_sequence<Idx...>) {
+  return boost::hana::make_tuple((std::get<Idx>(nodeDef).name) ...);
+}
+}
+
+template <typename T, size_t N>
+decltype(auto) arrayToTuple(std::array<T, N> const & nodeDef) {
+  return detail::arrayToTuple(nodeDef, std::make_index_sequence<N>{});
+}
+
+template <typename NodeType, typename CursorType, uint8_t kMaxHash>
+class FactorySimpleHash{
+  
+ // using NodeCreateFunction = std::add_pointer_t<NodeType(CursorType&)>;
+  using NodeCreateFunction = std::function<NodeType(CursorType&)>;
+  
+  template<typename NodeDefArray>
+  static std::array<NodeCreateFunction, kMaxHash> makeHashToNode(NodeDefArray nodeDefs) {
+    std::array<NodeCreateFunction, kMaxHash> creatFunctionLUT{nullptr};
+
+    for(auto aNodeDef: nodeDefs){
+      auto hash = simpleHash<kMaxHash>(std::begin(aNodeDef.name), std::end(aNodeDef.name));
+      
+      creatFunctionLUT[hash] = [aNodeDef, nodeDefs](CursorType& tokenCursor) -> NodeType {
+        auto node = aNodeDef;
+        for (auto& child : node.children) {
+          tokenCursor.next();
+          child = FactorySimpleHash<NodeType, CursorType, kMaxHash>::factory(tokenCursor, nodeDefs);
+        }
+        return node;
+      };
+    }
+    return creatFunctionLUT;
+  }
+  
+  
+  template<typename TokenType, typename NodeDefArray>
+  static NodeCreateFunction getCreateFuntion(TokenType token, NodeDefArray nodeDefs){
+    static std::array<NodeCreateFunction, kMaxHash> creatFunctionLUT = makeHashToNode(nodeDefs);
+    
+    return creatFunctionLUT[simpleHash<kMaxHash>(token.begin(), token.end())];
+  }
+ 
+public:
+  template<typename NodeDefArray>
+  static NodeType factory(CursorType tokenCursor, NodeDefArray nodeDefs) {
+    auto token = tokenCursor.token();
+    return getCreateFuntion(token, nodeDefs)(tokenCursor);
+  }
+};
+}// namespace experimental
+
 }  // namespace funcptr

@@ -21,7 +21,7 @@ class AsOOPNotation : public boost::static_visitor<std::string> {
   AsOOPNotation(std::string const& simulationName)
       : simulationName_{simulationName} {}
 
-  std::string operator()(ant::if_food_ahead const& node) const {
+  std::string operator()(ant::IfFoodAhead const& node) const {
     return fmt::format(
         R"""(
 std::make_unique<antoop::IfFoodAhead<decltype({simulationName})>>(
@@ -35,11 +35,11 @@ std::make_unique<antoop::IfFoodAhead<decltype({simulationName})>>(
   }
 
   struct AntNodeToClassName {
-    static char const* name(ant::move) { return "Move"; }
-    static char const* name(ant::left) { return "Left"; }
-    static char const* name(ant::right) { return "Right"; }
-    static char const* name(ant::prog2) { return "Prog2"; }
-    static char const* name(ant::prog3) { return "Prog3"; }
+    static char const* name(ant::Move) { return "Move"; }
+    static char const* name(ant::Left) { return "Left"; }
+    static char const* name(ant::Right) { return "Right"; }
+    static char const* name(ant::Prog2) { return "Prog2"; }
+    static char const* name(ant::Prog3) { return "Prog3"; }
   };
 
   template <typename NodeT>
@@ -67,18 +67,21 @@ struct OPPTreeCTStatic {
   std::string name() const { return "oppTreeCTStatic"; }
   std::string functionName() const { return "oppTreeCTStatic"; }
 
-  std::string body(ant::ant_nodes ant) const {
+  std::string body(ant::NodesVariant ant) const {
     return fmt::format(R"""(
 template<typename AntBoardSimT>
 int oppTreeCTStatic(AntBoardSimT antBoardSim, std::string_view const &, BenchmarkPart toMessure)
 {{                
   auto oopTree = {oopNotation};
-  if(toMessure == BenchmarkPart::Create) 
+  if(toMessure == BenchmarkPart::Create) {{
+    benchmark::DoNotOptimize(oopTree);
     return 0;
+  }}
   while(!antBoardSim.is_finish())
   {{
     (*oopTree)(antBoardSim);
   }}
+  benchmark::DoNotOptimize(antBoardSim.score());
   return antBoardSim.score(); 
 }}
 )""",

@@ -19,7 +19,7 @@ using namespace fmt::literals;
 class AsCPPFixedWithVisitorNotation
     : public boost::static_visitor<std::string> {
  public:
-  std::string operator()(ant::if_food_ahead const& node) const {
+  std::string operator()(ant::IfFoodAhead const& node) const {
     return fmt::format(
         R"""(
 if(antBoardSim.is_food_in_front()){{
@@ -49,7 +49,7 @@ if(antBoardSim.is_food_in_front()){{
 struct UnwrappedVisitorCallingCTStatic {
   std::string name() const { return "unwrappedVisitorCallingCTStatic"; }
   std::string functionName() const { return "unwrappedVisitorCallingCTStatic"; }
-  std::string body(ant::ant_nodes ant) const {
+  std::string body(ant::NodesVariant ant) const {
     return fmt::format(R"""(
 template<typename AntBoardSimT>
 int unwrappedVisitorCallingCTStatic(AntBoardSimT antBoardSim, std::string_view const &, BenchmarkPart toMessure)
@@ -61,6 +61,7 @@ int unwrappedVisitorCallingCTStatic(AntBoardSimT antBoardSim, std::string_view c
   {{
     {cppFixedWithVisitorNotation}
   }}
+  benchmark::DoNotOptimize(antBoardSim.score());
   return antBoardSim.score(); 
 }}
 )""",

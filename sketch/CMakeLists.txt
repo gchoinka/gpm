@@ -44,7 +44,7 @@ set_target_properties(mybenchmark PROPERTIES
 )
 target_compile_options(mybenchmark PRIVATE -Wall -Wextra -pedantic -Werror)
 
-target_link_libraries(mybenchmark benchmark::benchmark fmt::fmt Boost::boost Gpm)
+target_link_libraries(mybenchmark benchmark::benchmark fmt::fmt Boost::boost Gpm Frozen)
 
 add_executable(iterators_and_ranges iterators_and_ranges.cpp)
 set_target_properties(iterators_and_ranges PROPERTIES

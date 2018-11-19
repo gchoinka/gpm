@@ -13,19 +13,22 @@
 struct FuncPtrDynamic {
   std::string name() const { return "funcPtrDynamic"; }
   std::string functionName() const { return "funcPtrDynamic"; }
-  std::string body(ant::ant_nodes) const {
+  std::string body(ant::NodesVariant) const {
     return fmt::format(R"""(
 template<typename AntBoardSimT>
 static int funcPtrDynamic(AntBoardSimT antBoardSim, std::string_view const & sv, BenchmarkPart toMessure)
 {{    
   auto anAnt = funcptr::factory<AntBoardSimT>(gpm::RPNTokenCursor{{sv}});
-  if(toMessure == BenchmarkPart::Create) 
-    return anAnt.children.size();
+  if(toMessure == BenchmarkPart::Create) {{
+    benchmark::DoNotOptimize(anAnt);
+    return 0;
+  }}
 
   while(!antBoardSim.is_finish())
   {{
     anAnt(anAnt, antBoardSim);
   }}
+  benchmark::DoNotOptimize(antBoardSim.score());
   return antBoardSim.score(); 
 }}
     )""");

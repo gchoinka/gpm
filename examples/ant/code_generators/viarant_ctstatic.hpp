@@ -17,7 +17,7 @@ using namespace fmt::literals;
 
 class AsRecursiveVariantNotation : public boost::static_visitor<std::string> {
  public:
-  std::string operator()(ant::if_food_ahead const& node) const {
+  std::string operator()(ant::IfFoodAhead const& node) const {
     return fmt::format(
         R"""(
 {nodeName}{{
@@ -53,20 +53,23 @@ class AsRecursiveVariantNotation : public boost::static_visitor<std::string> {
 struct VariantCTStatic {
   std::string name() const { return "variantCTStatic"; }
   std::string functionName() const { return "variantCTStatic"; }
-  std::string body(ant::ant_nodes ant) const {
+  std::string body(ant::NodesVariant ant) const {
     return fmt::format(R"""(
 template<typename AntBoardSimT>
 static int variantCTStatic(AntBoardSimT antBoardSim, std::string_view const &, BenchmarkPart toMessure)
 {{    
-  auto optAnt = ant::ant_nodes{{{recursiveVariantNotation}}};
-  if(toMessure == BenchmarkPart::Create) 
+  auto anAnt = ant::NodesVariant{{{recursiveVariantNotation}}};
+  if(toMessure == BenchmarkPart::Create) {{
+    benchmark::DoNotOptimize(anAnt);
     return 0;
+  }}
   auto antBoardSimVisitor = ant::AntBoardSimulationVisitor{{antBoardSim}};
   
   while(!antBoardSim.is_finish())
   {{
-    boost::apply_visitor(antBoardSimVisitor, optAnt);
+    boost::apply_visitor(antBoardSimVisitor, anAnt);
   }}
+  benchmark::DoNotOptimize(antBoardSim.score());
   return antBoardSim.score(); 
 }}
 )""",

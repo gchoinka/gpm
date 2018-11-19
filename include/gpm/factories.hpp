@@ -86,10 +86,12 @@ namespace gpm::experimental {
   template<uint8_t kMaxHash, typename BeginIterType, typename EndIterType>
   constexpr uint8_t simpleHash(BeginIterType begin, EndIterType end) {
     uint8_t r = 0;
-    while (begin != end) r = r ^ *begin++;
+    for (;begin != end; ++begin){
+      r = (r+7) ^ *begin;
+      
+    }
     return r & (kMaxHash-1);
   }
-  
   
   template<typename RangeType>
   constexpr uint8_t simpleHash(RangeType range) {

@@ -56,8 +56,11 @@ set_target_properties(ant_genetic_programming PROPERTIES
             CXX_EXTENSIONS OFF
 )
 target_compile_options(ant_genetic_programming PRIVATE ${warning_flags})
-target_link_libraries(ant_genetic_programming Gpm Threads::Threads fmt::fmt Boost::boost Boost::program_options Outcome) 
+target_link_libraries(ant_genetic_programming Gpm Threads::Threads fmt::fmt Boost::boost Boost::program_options Outcome Frozen) 
 
+
+set(antrpndeffile "${CMAKE_CURRENT_SOURCE_DIR}/data/randomAnt.txt")
+#set(antrpndeffile "${CMAKE_CURRENT_SOURCE_DIR}/data/optAnt.txt")
 
 
 option(GPM_FORMAT_GENERATED_FILES "Should the files which were generated in ${GeneratedBechmarksIncludesDir} be formated?(only usefull if someone wants to read them)." OFF)
@@ -74,7 +77,7 @@ set(last_target timeing_build_tree_benchmark_all)
 foreach(bmName funcPtrDynamic variantDynamic variantDynamic2 variantCTStatic oopTreeDynamic oppTreeCTStatic unwrappedDirectCTStatic unwrappedVisitorCallingCTStatic tupleCTStatic dynoTreeDynamic dynoTreeCTStatic None)
     add_custom_target(timeing_build_tree_benchmark_${bmName}
       COMMAND "${CMAKE_COMMAND}" -E remove "${GeneratedBechmarksIncludesDir}/ant_simulation_benchmark_generated_functions.cpp"
-      COMMAND "$<TARGET_FILE:generate_tree_for_benchmark>" --benchmark ${bmName} --antrpndef "${CMAKE_CURRENT_SOURCE_DIR}/data/randomAnt.txt" --outfile "${GeneratedBechmarksIncludesDir}/ant_simulation_benchmark_generated_functions.cpp"
+      COMMAND "$<TARGET_FILE:generate_tree_for_benchmark>" --benchmark ${bmName} --antrpndef "${antrpndeffile}" --outfile "${GeneratedBechmarksIncludesDir}/ant_simulation_benchmark_generated_functions.cpp"
       COMMAND ${FORMAT_STEP}
       COMMAND "${CMAKE_COMMAND}" -E touch_nocreate "${CMAKE_CURRENT_SOURCE_DIR}/tree_benchmark_main.cpp"
       COMMAND /usr/bin/time -v -o "${CMAKE_CURRENT_BINARY_DIR}/buildtime_${bmName}.txt" "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --target tree_benchmark
@@ -89,7 +92,7 @@ endforeach()
 
 add_custom_target(make_tree_benchmark 
     COMMAND "${CMAKE_COMMAND}" -E remove "${GeneratedBechmarksIncludesDir}/ant_simulation_benchmark_generated_functions.cpp"
-    COMMAND "$<TARGET_FILE:generate_tree_for_benchmark>" --benchmark all --antrpndef "${CMAKE_CURRENT_SOURCE_DIR}/data/optAnt.txt" --outfile "${GeneratedBechmarksIncludesDir}/ant_simulation_benchmark_generated_functions.cpp"
+    COMMAND "$<TARGET_FILE:generate_tree_for_benchmark>" --benchmark all --antrpndef "${antrpndeffile}" --outfile "${GeneratedBechmarksIncludesDir}/ant_simulation_benchmark_generated_functions.cpp"
     COMMAND ${FORMAT_STEP}
     COMMAND "${CMAKE_COMMAND}" -E touch_nocreate "${CMAKE_CURRENT_SOURCE_DIR}/tree_benchmark_main.cpp"
     COMMAND /usr/bin/time -v -o "${CMAKE_CURRENT_BINARY_DIR}/buildtime.txt" "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --target tree_benchmark

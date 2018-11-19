@@ -25,9 +25,9 @@ class AsCPPFixedNotation : public boost::static_visitor<std::string> {
       : simulationName_{simulationName} {}
 
   struct AntNodeToSimulationMethodName {
-    static char const* name(ant::move) { return "move"; }
-    static char const* name(ant::left) { return "left"; }
-    static char const* name(ant::right) { return "right"; }
+    static char const* name(ant::Move) { return "move"; }
+    static char const* name(ant::Left) { return "left"; }
+    static char const* name(ant::Right) { return "right"; }
     template <typename NodeT>
     static char const* name(NodeT) {
       return "";
@@ -37,7 +37,7 @@ class AsCPPFixedNotation : public boost::static_visitor<std::string> {
   template <typename NodeT>
   std::string operator()(NodeT node) const {
     std::string res;
-    if constexpr (std::is_same_v<ant::if_food_ahead, NodeT>) {
+    if constexpr (std::is_same_v<ant::IfFoodAhead, NodeT>) {
       return fmt::format(
           R"""(
 if({simulationName}.is_food_in_front()){{
@@ -64,7 +64,7 @@ if({simulationName}.is_food_in_front()){{
 struct UnwrappedDirectCTStatic {
   std::string name() const { return "unwrappedDirectCTStatic"; }
   std::string functionName() const { return "unwrappedDirectCTStatic"; }
-  std::string body(ant::ant_nodes ant) const {
+  std::string body(ant::NodesVariant ant) const {
     return fmt::format(R"""(
 template<typename AntBoardSimT>
 int unwrappedDirectCTStatic(AntBoardSimT antBoardSim, std::string_view const &, BenchmarkPart toMessure)
@@ -74,6 +74,7 @@ int unwrappedDirectCTStatic(AntBoardSimT antBoardSim, std::string_view const &, 
   while(!antBoardSim.is_finish()){{
     {cppFixedNotation}
   }}
+  benchmark::DoNotOptimize(antBoardSim.score());
   return antBoardSim.score();
 }}
 )""",

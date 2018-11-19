@@ -14,18 +14,22 @@ struct DynoTreeDynamic {
   std::string name() const { return "dynoTreeDynamic"; }
   std::string functionName() const { return "dynoTreeDynamic"; }
 
-  std::string body(ant::ant_nodes) const {
+  std::string body(ant::NodesVariant) const {
     return fmt::format(R"""(
 template<typename AntBoardSimT>
 static int dynoTreeDynamic(AntBoardSimT antBoardSim, std::string_view const & sv, BenchmarkPart toMessure)
 {{                
   auto dynoTree = antdyno::factory<AntBoardSimT>(gpm::RPNTokenCursor{{sv}});
-  if(toMessure == BenchmarkPart::Create) 
+
+  if(toMessure == BenchmarkPart::Create) {{
+    benchmark::DoNotOptimize(dynoTree);
     return 0;
+  }}
   while(!antBoardSim.is_finish())
   {{
     dynoTree.eval(antBoardSim);
   }}
+  benchmark::DoNotOptimize(antBoardSim.score());
   return antBoardSim.score(); 
 }}
 )""");

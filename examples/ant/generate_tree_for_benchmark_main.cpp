@@ -54,20 +54,20 @@ namespace {
 //   int maxHeight = 17;
 //   // std::random_device rd;
 //
-//   return gpm::BasicGenerator<ant::ant_nodes>{minHeight, maxHeight}();
+//   return gpm::BasicGenerator<ant::NodesVariant>{minHeight, maxHeight}();
 // }
 //
 // decltype(auto) getOptAnt() {
 //   char const* optimalAntRPNdef = "m r m if l l p3 r m if if p2 r p2 m if";
 //   return
-//   gpm::factory<ant::ant_nodes>(gpm::RPNTokenCursor{optimalAntRPNdef});
+//   gpm::factory<ant::NodesVariant>(gpm::RPNTokenCursor{optimalAntRPNdef});
 // }
 
 decltype(auto) getAntFromFile(char const* filename) {
   std::ifstream f(filename);
   std::string str;
   std::getline(f, str);
-  return gpm::factory<ant::ant_nodes>(gpm::RPNTokenCursor{str});
+  return gpm::factory<ant::NodesVariant>(gpm::RPNTokenCursor{str});
 }
 
 struct CLIArgs {

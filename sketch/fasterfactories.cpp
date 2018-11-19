@@ -18,7 +18,9 @@
 template<uint8_t kMaxHash, typename BeginIterType, typename EndIterType>
 constexpr uint8_t simpleHash(BeginIterType begin, EndIterType end) {
   uint8_t r = 0;
-  while (begin != end) r = r ^ *begin++;
+  for (;begin != end; ++begin){
+    r = (r+7) ^ *begin;
+  }
   return r & (kMaxHash-1);
 }
 
@@ -27,8 +29,6 @@ template<typename RangeType>
 constexpr uint8_t simpleHash(RangeType range) {
   return simpleHash(std::begin(range), std::end(range));
 }
-
-
 
 
 template<uint8_t kMaxHash, typename ...T>
@@ -123,7 +123,7 @@ namespace {
   namespace detail {
 
 
-    //constexpr auto checkForColisionV =  checkForColision(ant::ant_nodes);
+    //constexpr auto checkForColisionV =  checkForColision(ant::NodesVariant);
 
   }
 }
@@ -143,8 +143,8 @@ int main() {
   //     std::cout << n.name << "\n";
   //     return 0;
   //   }, hashToObject[cthash(Base<'p', '3'>{})]);
-  // //   ant::prog3 p3{};
-  // //   auto at = asTuple(ant::ant_nodes{});
+  // //   ant::Prog3 p3{};
+  // //   auto at = asTuple(ant::NodesVariant{});
   // //   boost::hana::for_each(at, [](auto & n){
   // //     std::cout << n.name << " " << std::hex << (int)cthash(n.name,
   // std::end(n.name)-1) << "\n";
@@ -154,13 +154,13 @@ int main() {
 
   gpm::RPNTokenCursor optAntIter{"m l m if l l p3 m if l p3 m if"};
   //   std::string_view token{"if"};
-  //   VariantTypeCreateFunction<ant::ant_nodes, gpm::RPNTokenCursor> f =
-  //   [](gpm::RPNTokenCursor&) -> ant::ant_nodes {return ant::prog3{};};
+  //   VariantTypeCreateFunction<ant::NodesVariant, gpm::RPNTokenCursor> f =
+  //   [](gpm::RPNTokenCursor&) -> ant::NodesVariant {return ant::Prog3{};};
   //   auto tmp = f(ttokenCursor);
 
-  constexpr auto maxHash = ctpow(2,5);
+  constexpr auto maxHash = ctpow(2,4);
   auto optAnt =
-  FactoryV2<ant::ant_nodes, gpm::RPNTokenCursor, maxHash>::factory(optAntIter);
+  FactoryV2<ant::NodesVariant, gpm::RPNTokenCursor, maxHash>::factory(optAntIter);
   std::cout << boost::apply_visitor(gpm::RPNPrinter<std::string>{}, optAnt);
   //   boost::apply_visitor([](auto const & obj){
   //     std::cout << boost::typeindex::type_id<decltype(obj)>().pretty_name()
@@ -170,46 +170,3 @@ int main() {
   //   );
   //
 }
-
-#if 0
-#include <array>
-#include <experimental/array>
-#include <string_view>
-#include <utility>
-#include <tuple>
-
-namespace std{ using namespace std::experimental; }
-
-constexpr auto kNodeNames = std::make_array<std::string_view>("if", "m", "r", "l", "p2", "p3", "p4", "p5");
-
-
-constexpr uint8_t cthash(std::string_view s) {
-  uint8_t r = 0;
-  for (auto begin = std::begin(s), end = std::end(s); begin != end; ++begin) {
-    r = (r ^ (*begin));
-  }
-  return r & 0b0001'1111;
-}
-
-template<typename T, auto ...Idx>
-constexpr bool checkForDupHashes(T nodeNames, std::index_sequence<Idx...>)
-{
-    std::array<uint8_t, std::tuple_size_v<T>> hashList{cthash(std::get<Idx>(nodeNames))...};
-
-    for(std::size_t i = 0; i  <hashList.size(); ++i){
-        auto searchValue = hashList[i];
-        for(std::size_t h = i+1; h < hashList.size(); ++h){
-            if(searchValue == hashList[h])
-                return true;
-        }
-    }
-    return false;
-}
-
-template <auto N> constexpr auto force_compute_at_compile_time() -> decltype(auto) { return N; };
-
-int main()
-{
-    return checkForDupHashes(kNodeNames, std::make_index_sequence<std::tuple_size_v<decltype(kNodeNames)>>{});
-}
-#endif

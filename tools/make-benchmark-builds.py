@@ -17,6 +17,9 @@ compiler=[
     {"compiler":"clang++-7", "dir":"clang++-7", "cmake_args":["-DCMAKE_BUILD_TYPE=Release"]}, 
     {"compiler":"clang++-7", "dir":"clang++-7-ASAN", "cmake_args":["-DCMAKE_BUILD_TYPE=Debug", "-DCMAKE_CXX_FLAGS=-fsanitize=address -fno-omit-frame-pointer",  "-DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address"]}, 
     {"compiler":"clang++-7", "dir":"clang++-7-USAN", "cmake_args":["-DCMAKE_BUILD_TYPE=Debug", "-DCMAKE_CXX_FLAGS=-fsanitize=undefined -fno-omit-frame-pointer",  "-DCMAKE_EXE_LINKER_FLAGS=-fsanitize=undefined"]}, 
+    {"compiler":"g++-8.2", "dir":"g++-8.2-minsize", "cmake_args":["-DCMAKE_BUILD_TYPE=MinSizeRel"]}, 
+    {"compiler":"clang++-7", "dir":"clang++-7-minsize", "cmake_args":["-DCMAKE_BUILD_TYPE=MinSizeRel"]}, 
+    
 ]
 
 

@@ -6,7 +6,7 @@ template <typename AntBoardSimT>
 static int variantDynamic(AntBoardSimT antBoardSim, std::string_view const &sv,
                           BenchmarkPart toMessure) {
   auto optAnt = gpm::experimental::FactoryV2<
-      ant::ant_nodes, gpm::RPNTokenCursor>::factory(gpm::RPNTokenCursor{sv});
+      ant::NodesVariant, gpm::RPNTokenCursor>::factory(gpm::RPNTokenCursor{sv});
   if (toMessure == BenchmarkPart::Create) return 0;
   auto antBoardSimVisitor = ant::AntBoardSimulationVisitor{antBoardSim};
 
@@ -19,26 +19,26 @@ static int variantDynamic(AntBoardSimT antBoardSim, std::string_view const &sv,
 template <typename AntBoardSimT>
 static int variantCTStatic(AntBoardSimT antBoardSim, std::string_view const &,
                            BenchmarkPart toMessure) {
-  auto optAnt = ant::ant_nodes{ant::if_food_ahead{
-      ant::move{}
+  auto optAnt = ant::NodesVariant{ant::IfFoodAhead{
+      ant::Move{}
 
       ,
-      ant::prog3{ant::left{},
-                 ant::if_food_ahead{ant::move{}
+      ant::Prog3{ant::Left{},
+                 ant::IfFoodAhead{ant::Move{}
 
                                     ,
-                                    ant::prog3{ant::left{}, ant::left{},
-                                               ant::if_food_ahead{ant::move{}
+                                    ant::Prog3{ant::Left{}, ant::Left{},
+                                               ant::IfFoodAhead{ant::Move{}
 
                                                                   ,
-                                                                  ant::left{}
+                                                                  ant::Left{}
 
                                                }
 
                                     }
 
                  },
-                 ant::move{}
+                 ant::Move{}
 
       }
 
@@ -141,26 +141,26 @@ int unwrappedVisitorCallingCTStatic(AntBoardSimT antBoardSim,
   auto antBoardSimVisitor = ant::AntBoardSimulationVisitor{antBoardSim};
   while (!antBoardSim.is_finish()) {
     if (antBoardSim.is_food_in_front()) {
-      antBoardSimVisitor(ant::move{});
+      antBoardSimVisitor(ant::Move{});
 
     } else {
-      antBoardSimVisitor(ant::left{});
+      antBoardSimVisitor(ant::Left{});
 
       if (antBoardSim.is_food_in_front()) {
-        antBoardSimVisitor(ant::move{});
+        antBoardSimVisitor(ant::Move{});
 
       } else {
-        antBoardSimVisitor(ant::left{});
-        antBoardSimVisitor(ant::left{});
+        antBoardSimVisitor(ant::Left{});
+        antBoardSimVisitor(ant::Left{});
 
         if (antBoardSim.is_food_in_front()) {
-          antBoardSimVisitor(ant::move{});
+          antBoardSimVisitor(ant::Move{});
 
         } else {
-          antBoardSimVisitor(ant::left{});
+          antBoardSimVisitor(ant::Left{});
         }
       }
-      antBoardSimVisitor(ant::move{});
+      antBoardSimVisitor(ant::Move{});
     }
   }
   return antBoardSim.score();

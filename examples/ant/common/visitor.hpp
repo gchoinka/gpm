@@ -17,13 +17,13 @@ class AntBoardSimulationVisitor : public boost::static_visitor<void> {
  public:
   AntBoardSimulationVisitor(AntBoardSimType& sim) : sim_{sim} {}
 
-  void operator()(move) const { sim_.move(); }
+  void operator()(Move) const { sim_.move(); }
 
-  void operator()(left) const { sim_.left(); }
+  void operator()(Left) const { sim_.left(); }
 
-  void operator()(right) const { sim_.right(); }
+  void operator()(Right) const { sim_.right(); }
 
-  void operator()(if_food_ahead const& c) const {
+  void operator()(IfFoodAhead const& c) const {
     boost::apply_visitor(*this, c.get(sim_.is_food_in_front()));
   }
 

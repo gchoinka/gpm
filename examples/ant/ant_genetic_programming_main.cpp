@@ -25,6 +25,8 @@
 #include "common/santa_fe_board.hpp"
 #include "common/visitor.hpp"
 
+#include "nodes_funcptr.hpp"
+
 #include <vector>
 
 class CountNodes : public boost::static_visitor<int> {
@@ -42,16 +44,16 @@ class CountNodes : public boost::static_visitor<int> {
 };
 
 // class FlattenTree : public
-// boost::static_visitor<std::vector<std::reference_wrapper<ant::ant_nodes>>>
+// boost::static_visitor<std::vector<std::reference_wrapper<ant::NodesVariant>>>
 // {
 // public:
-//   mutable ant::ant_nodes * rootNode_ = nullptr;
-//   FlattenTree(ant::ant_nodes & rootNode):rootNode_{&rootNode}{}
+//   mutable ant::NodesVariant * rootNode_ = nullptr;
+//   FlattenTree(ant::NodesVariant & rootNode):rootNode_{&rootNode}{}
 //
 //   template <typename T>
-//   std::vector<std::reference_wrapper<ant::ant_nodes>> operator()(T & node)
+//   std::vector<std::reference_wrapper<ant::NodesVariant>> operator()(T & node)
 //   const {
-//     std::vector<std::reference_wrapper<ant::ant_nodes>> toReturn_;
+//     std::vector<std::reference_wrapper<ant::NodesVariant>> toReturn_;
 //     if(rootNode_ != nullptr)
 //     {
 //       toReturn_.push_back(*rootNode_);
@@ -114,16 +116,20 @@ int main() {
   console->info("Welcome to spdlog version {}.{}.{} !", SPDLOG_VER_MAJOR,
                 SPDLOG_VER_MINOR, SPDLOG_VER_PATCH);
 
-  //   char const* optimalAntRPNdef = "m r m if l l p3 r m if if p2 r p2 m if";
-  //   auto optAnt =
-  //   gpm::factory<ant::ant_nodes>(gpm::RPNTokenCursor{optimalAntRPNdef});
+    char const* optimalAntRPNdef = "m r m if l l p3 r m if if p2 r p2 m if";
+    
+    constexpr auto maxHash = 16;
+    auto mySim = getAntSataFeStaticBoardSim();
+
+    auto optAnt = funcptr::experimental::FactorySimpleHash<funcptr::Node<decltype(mySim)>,gpm::RPNTokenCursor, maxHash>::factory(gpm::RPNTokenCursor{optimalAntRPNdef}, funcptr::getAntNodes<decltype(mySim)>());
+  //   gpm::factory<ant::NodesVariant>(gpm::RPNTokenCursor{optimalAntRPNdef});
   //   fmt::print("{}\n", boost::apply_visitor(CountNodes{}, optAnt));
   //
   //
   //
-  //   std::vector<std::reference_wrapper<ant::ant_nodes>> nodesRef{optAnt};
+  //   std::vector<std::reference_wrapper<ant::NodesVariant>> nodesRef{optAnt};
   //   FlattenTree
-  //   f{boost::make_function_output_iterator([&nodesRef](ant::ant_nodes & n){
+  //   f{boost::make_function_output_iterator([&nodesRef](ant::NodesVariant & n){
   //   nodesRef.push_back(n); })}; boost::apply_visitor(f, optAnt);
   //
   //
@@ -159,25 +165,25 @@ int main() {
     return sim.score();
   };
 
-  using FittnessReturnType = decltype(fittnessFun(ant::ant_nodes{}));
+  using FittnessReturnType = decltype(fittnessFun(ant::NodesVariant{}));
   struct ScoreIdxPair {
     FittnessReturnType score;
     std::size_t index;
   };
 
-  auto population = std::vector<ant::ant_nodes>{};
+  auto population = std::vector<ant::NodesVariant>{};
   population.reserve(populationSize);
   auto fitness = std::vector<ScoreIdxPair>{};
   fitness.reserve(populationSize);
 
-  auto nextPopulation = std::vector<ant::ant_nodes>{};
+  auto nextPopulation = std::vector<ant::NodesVariant>{};
   nextPopulation.reserve(population.size());
   auto nextFitness = std::vector<ScoreIdxPair>{};
   nextFitness.reserve(population.size());
 
   std::random_device rd;
   auto rndNodeGen =
-      gpm::BasicGenerator<ant::ant_nodes>{minHeight, maxHeight, rd()};
+      gpm::BasicGenerator<ant::NodesVariant>{minHeight, maxHeight, rd()};
 
   for (auto i = population.size(); i < populationSize; ++i)
     population.emplace_back(rndNodeGen());
