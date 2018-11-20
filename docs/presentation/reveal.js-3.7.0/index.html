@@ -1,0 +1,109 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>reveal.js</title>
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/black.css">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+<section>
+                                <h1>X ways trees in C++</h1><p>
+                                gerard.choinka@gmail.com<p>
+                                https://github.com/gchoinka/gpm
+                                </section>
+
+<section data-markdown>
+<script type="text/template">
+### Index
+ - Motivation
+ - Genetic Programming
+ - GPM lib
+ - Tree Structures
+   - OOP based
+   - recursive variant
+   - ...
+ - Benchmarks
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+### Motivation
+ - Having something to talk about in interviews <!-- .element: class="fragment" -->
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+### Genetic Programming
+ - optimizing strategy based on evolutiuon <!-- .element: class="fragment" -->
+ - Gens <-> set of instructions <!-- .element: class="fragment" -->
+   - Trees <!-- .element: class="fragment" -->
+ - fitness function <!-- .element: class="fragment" -->
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+### Why Genetic Programming
+ - can produce human understandable results <!-- .element: class="fragment" -->
+
+### Why Not Genetic Programming <!-- .element: class="fragment" -->
+ - Gens and fitness function need a lot of domain knowlage <!-- .element: class="fragment" -->
+</script>
+</section>
+
+<section data-markdown>
+```c++
+auto population = { /* create random individuals */ };
+while(!solutionIsGoodEnough && !otherLimitReached)
+{
+        auto fitness = evalFitness(population);
+        // choose the fittest individuals
+        // let them create a new population
+        // swaping gens
+        // mutating etc.
+        population = nextGenerationPopulation;
+}
+```
+</section>
+
+			</div>
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+			// More info about config & dependencies:
+			// - https://github.com/hakimel/reveal.js#configuration
+			// - https://github.com/hakimel/reveal.js#dependencies
+			Reveal.initialize({
+				dependencies: [
+					{ src: 'plugin/markdown/marked.js' },
+					{ src: 'plugin/markdown/markdown.js' },
+					{ src: 'plugin/notes/notes.js', async: true },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+				]
+			});
+		</script>
+	</body>
+</html>
