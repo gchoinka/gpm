@@ -38,8 +38,10 @@ set_target_properties(tree_benchmark PROPERTIES
            CXX_EXTENSIONS OFF
 )
 target_compile_options(tree_benchmark PRIVATE ${warning_flags})
-target_link_libraries(tree_benchmark Gpm GeneratedBechmarks fmt::fmt benchmark::benchmark Boost::boost Boost::program_options Outcome Dyno Frozen)
-
+target_link_libraries(tree_benchmark Gpm GeneratedBechmarks fmt::fmt benchmark::benchmark Boost::boost Boost::program_options Outcome Frozen)
+if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+  target_link_libraries(tree_benchmark Dyno)
+endif()
 
 add_executable(ant_board_visualization ant_board_visualization.cpp) 
 set_target_properties(ant_board_visualization PROPERTIES
@@ -74,7 +76,14 @@ endif()
 add_custom_target(timeing_build_tree_benchmark_all)
 
 set(last_target timeing_build_tree_benchmark_all)
-foreach(bmName funcPtrDynamic variantDynamic variantDynamic2 variantCTStatic oopTreeDynamic oppTreeCTStatic unwrappedDirectCTStatic unwrappedVisitorCallingCTStatic tupleCTStatic dynoTreeDynamic dynoTreeCTStatic None)
+
+set(bmNameList funcPtrDynamic variantDynamic variantDynamic2 variantCTStatic oopTreeDynamic oppTreeCTStatic unwrappedDirectCTStatic unwrappedVisitorCallingCTStatic tupleCTStatic None)
+
+if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+  set(bmNameList ${bmNameList} dynoTreeDynamic dynoTreeCTStatic)
+endif()
+
+foreach(bmName ${bmNameList})
     add_custom_target(timeing_build_tree_benchmark_${bmName}
       COMMAND "${CMAKE_COMMAND}" -E remove "${GeneratedBechmarksIncludesDir}/ant_simulation_benchmark_generated_functions.cpp"
       COMMAND "$<TARGET_FILE:generate_tree_for_benchmark>" --benchmark ${bmName} --antrpndef "${antrpndeffile}" --outfile "${GeneratedBechmarksIncludesDir}/ant_simulation_benchmark_generated_functions.cpp"

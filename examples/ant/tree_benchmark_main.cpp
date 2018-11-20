@@ -30,8 +30,9 @@ namespace outcome = OUTCOME_V2_NAMESPACE;
 #include "common/nodes.hpp"
 #include "common/santa_fe_board.hpp"
 #include "common/visitor.hpp"
-
-#include "nodes_dyno.hpp"
+#ifndef _MSC_VER
+  #include "nodes_dyno.hpp"
+#endif
 #include "nodes_funcptr.hpp"
 #include "nodes_hana_tuple.hpp"
 #include "nodes_opp.hpp"

@@ -56,11 +56,14 @@ find_package(Threads)
 add_library(Outcome INTERFACE)
 target_include_directories(Outcome SYSTEM INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/ned14_outcome/include)
 
-add_library(Dyno INTERFACE)
-target_include_directories(Dyno SYSTEM INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/ldionne_dyno/include)
+if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+  add_library(Dyno INTERFACE)
+  target_include_directories(Dyno SYSTEM INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/ldionne_dyno/include)
+endif()
 
 add_library(Gpm INTERFACE)
 target_include_directories(Gpm INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_link_libraries(Gpm INTERFACE Boost::boost)
 
 add_library(Frozen INTERFACE)
 target_include_directories(Frozen INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/frozen/include)
