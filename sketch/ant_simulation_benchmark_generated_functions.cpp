@@ -26,16 +26,16 @@ static int variantCTStatic(AntBoardSimT antBoardSim, std::string_view const &,
       ant::Prog3{ant::Left{},
                  ant::IfFoodAhead{ant::Move{}
 
-                                    ,
-                                    ant::Prog3{ant::Left{}, ant::Left{},
-                                               ant::IfFoodAhead{ant::Move{}
+                                  ,
+                                  ant::Prog3{ant::Left{}, ant::Left{},
+                                             ant::IfFoodAhead{ant::Move{}
 
-                                                                  ,
-                                                                  ant::Left{}
+                                                              ,
+                                                              ant::Left{}
 
-                                               }
+                                             }
 
-                                    }
+                                  }
 
                  },
                  ant::Move{}

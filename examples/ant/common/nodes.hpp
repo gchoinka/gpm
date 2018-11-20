@@ -26,9 +26,9 @@ struct Prog2;
 struct Prog3;
 
 using NodesVariant =
-boost::variant<Move, Left, Right, boost::recursive_wrapper<IfFoodAhead>,
-boost::recursive_wrapper<Prog2>,
-boost::recursive_wrapper<Prog3>>;
+    boost::variant<Move, Left, Right, boost::recursive_wrapper<IfFoodAhead>,
+                   boost::recursive_wrapper<Prog2>,
+                   boost::recursive_wrapper<Prog3>>;
 
 struct Prog2 : public gpm::BaseNode<NodesVariant, 2, gpm::NodeToken<'p', '2'>> {
   using BaseNode::BaseNode;
@@ -39,7 +39,7 @@ struct Prog3 : public gpm::BaseNode<NodesVariant, 3, gpm::NodeToken<'p', '3'>> {
 };
 
 struct IfFoodAhead
-: public gpm::BaseNode<NodesVariant, 2, gpm::NodeToken<'i', 'f'>> {
+    : public gpm::BaseNode<NodesVariant, 2, gpm::NodeToken<'i', 'f'>> {
   using IfFoodAhead::BaseNode::BaseNode;
 
   constexpr NodesVariant const& get(bool b) const {

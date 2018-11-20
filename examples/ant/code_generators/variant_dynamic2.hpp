@@ -39,4 +39,3 @@ static int variantDynamic2(AntBoardSimT antBoardSim, std::string_view const & sv
     )""");
   }
 };
-

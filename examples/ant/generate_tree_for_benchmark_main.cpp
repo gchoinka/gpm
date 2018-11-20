@@ -127,9 +127,10 @@ int main(int argc, char** argv) {
   auto cliArgs = cliArgsOutcome.value();
 
   auto bm = hana::make_tuple(
-      VariantDynamic{}, VariantDynamic2{}, VariantCTStatic{}, OOPTreeDynamic{}, OPPTreeCTStatic{},
-      UnwrappedDirectCTStatic{}, UnwrappedVisitorCallingCTStatic{},
-      TupleCTStatic{}, DynoTreeDynamic{}, DynoTreeCTStatic{}, FuncPtrDynamic{});
+      VariantDynamic{}, VariantDynamic2{}, VariantCTStatic{}, OOPTreeDynamic{},
+      OPPTreeCTStatic{}, UnwrappedDirectCTStatic{},
+      UnwrappedVisitorCallingCTStatic{}, TupleCTStatic{}, DynoTreeDynamic{},
+      DynoTreeCTStatic{}, FuncPtrDynamic{});
 
   if (cliArgs.listBenchmarks) {
     std::cout << "\n";

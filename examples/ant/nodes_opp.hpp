@@ -131,11 +131,11 @@ template <typename ContexType, typename CursorType>
 std::unique_ptr<BaseNode<ContexType>> factory_imp(CursorType &tokenCursor) {
   static auto nodeCreateFunMap = makeFactoryMap<ContexType, CursorType>();
   auto token = tokenCursor.token();
-//   if (!nodeCreateFunMap.count(token)) {
-//     throw std::runtime_error{
-//         std::string{"cant find factory function for token >>"} +
-//         std::string{token} + "<<"};
-//   }
+  //   if (!nodeCreateFunMap.count(token)) {
+  //     throw std::runtime_error{
+  //         std::string{"cant find factory function for token >>"} +
+  //         std::string{token} + "<<"};
+  //   }
 
   return nodeCreateFunMap[token](tokenCursor);
 }
