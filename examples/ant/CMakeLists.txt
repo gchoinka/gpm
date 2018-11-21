@@ -9,11 +9,16 @@
 #move this to somewhere else
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   set(warning_flags "")
+  set(default_compiler_flags "")
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   set(warning_flags -Wall -Wextra -pedantic -Werror)
+  set(default_compiler_flags -march=native)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(warning_flags -Wall -Wextra -pedantic -Werror -Wno-gnu-string-literal-operator-template)
+  set(default_compiler_flags -march=native)
 endif()
+
+message(STATUS "${CMAKE_CXX_COMPILER_ID}")
 
 set(GeneratedBechmarksIncludesDir "${CMAKE_CURRENT_BINARY_DIR}/generated_includes")
 file(MAKE_DIRECTORY "${GeneratedBechmarksIncludesDir}")
@@ -29,6 +34,7 @@ set_target_properties(generate_tree_for_benchmark PROPERTIES
             CXX_EXTENSIONS OFF
 )
 target_compile_options(generate_tree_for_benchmark PRIVATE ${warning_flags})
+target_compile_options(generate_tree_for_benchmark PRIVATE ${default_compiler_flags})
 target_link_libraries(generate_tree_for_benchmark Gpm fmt::fmt Boost::boost Boost::program_options Outcome Frozen)
 
 
@@ -38,6 +44,7 @@ set_target_properties(tree_benchmark PROPERTIES
            CXX_EXTENSIONS OFF
 )
 target_compile_options(tree_benchmark PRIVATE ${warning_flags})
+target_compile_options(tree_benchmark PRIVATE ${default_compiler_flags})
 target_link_libraries(tree_benchmark Gpm GeneratedBechmarks fmt::fmt benchmark::benchmark Boost::boost Boost::program_options Outcome Frozen)
 if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   target_link_libraries(tree_benchmark Dyno)
@@ -49,6 +56,7 @@ set_target_properties(ant_board_visualization PROPERTIES
             CXX_EXTENSIONS OFF
 )
 target_compile_options(ant_board_visualization PRIVATE ${warning_flags})
+target_compile_options(ant_board_visualization PRIVATE ${default_compiler_flags})
 target_link_libraries(ant_board_visualization Gpm fmt::fmt Boost::boost Boost::program_options Outcome Frozen) 
 
 
@@ -58,6 +66,7 @@ set_target_properties(ant_genetic_programming PROPERTIES
             CXX_EXTENSIONS OFF
 )
 target_compile_options(ant_genetic_programming PRIVATE ${warning_flags})
+target_compile_options(ant_genetic_programming PRIVATE ${default_compiler_flags})
 target_link_libraries(ant_genetic_programming Gpm Threads::Threads fmt::fmt Boost::boost Boost::program_options Outcome Frozen) 
 
 
