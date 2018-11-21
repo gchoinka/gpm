@@ -35,6 +35,8 @@ matrix:
       addons: *default_addons
     - env: CMAKE_BUILD_TYPE=Release CXXCOMPILER=clang++-7 CCOMPILER=clang-7 CLANG_VERS="7"
       addons: *default_addons
+    - env: CMAKE_BUILD_TYPE=Release CXXCOMPILER=clang++-7 CCOMPILER=clang-7 CLANG_VERS="7" CMAKE_CXX_FLAGS="-stdlib=libc++" CMAKE_EXE_LINKER_FLAGS="-lc++ -lc++abi"
+      addons: *default_addons
 
 
 script:
