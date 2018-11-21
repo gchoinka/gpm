@@ -20,16 +20,11 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
+#include <gpm/tree_utils.hpp>
 #include "common/ant_board_simulation.hpp"
 #include "common/nodes.hpp"
 #include "common/santa_fe_board.hpp"
 #include "common/visitor.hpp"
-
-#include "nodes_funcptr.hpp"
-
-#include <vector>
-
-
 
 // class FlattenTree : public
 // boost::static_visitor<std::vector<std::reference_wrapper<ant::NodesVariant>>>
@@ -64,7 +59,6 @@ template <typename OutputIterT>
 class FlattenTree : public boost::static_visitor<OutputIterT> {
  public:
   OutputIterT sink_;
-  bool firstNode_ = true;
   FlattenTree(OutputIterT sink) : sink_{sink} {}
 
   template <typename T>
@@ -133,7 +127,7 @@ int main() {
 
   constexpr auto populationSize = 5000;
   constexpr auto minHeight = 2;
-  constexpr auto maxHeight = 11;
+  constexpr auto maxHeight = 5;
 
   constexpr auto generationMax = 5000;
   constexpr auto numberOfElite = std::min(4, populationSize);
@@ -147,7 +141,7 @@ int main() {
   size_t const tournamentSize = 4;
 
   auto fittnessFun = [](auto const& anAnt) {
-    //auto sim = getAntRandomBoardSim(1024, 1024, 42);
+    // auto sim = getAntRandomBoardSim(1024, 1024, 42);
     auto sim = getAntSataFeStaticBoardSim();
     auto antBoardSimVisitor = ant::AntBoardSimulationVisitor{sim};
 
@@ -197,28 +191,68 @@ int main() {
     }
   };
 
-  auto crossover = [](ant::NodesVariant idv1, ant::NodesVariant idv2,
+  auto crossover = [](ant::NodesVariant& idv1, ant::NodesVariant& idv2,
                       auto randomGen) {
-    std::array<std::reference_wrapper<ant::NodesVariant>, 2> args = {
+    std::array<std::reference_wrapper<ant::NodesVariant>, 2> indis = {
         std::ref(idv1), std::ref(idv2)};
-    std::array<ant::NodesVariant*, 2> crossoverPoints;
 
-    for (int i = 0; i < 2; ++i) {
-      std::vector<ant::NodesVariant*> flatenTree;
-      FlattenTree ft{[&flatenTree](ant::NodesVariant* n) mutable {
-        flatenTree.push_back(n);
-      }};
-      boost::apply_visitor(ft, args[i].get());
-      crossoverPoints[i] =
-          flatenTree[std::uniform_int_distribution<std::size_t>{
-              0, flatenTree.size() - 1}(randomGen)];
+    std::array<std::size_t, 2> crossoverPointsIndex;
+    for (std::size_t i = 0; i < 2; ++i) {
+      auto treeSize = boost::apply_visitor(gpm::CountNodes{}, indis[i].get());
+      crossoverPointsIndex[i] = std::uniform_int_distribution<std::size_t>{
+          1, treeSize - 1}(randomGen);
     }
 
-    ant::NodesVariant old = *crossoverPoints[0];
-    *crossoverPoints[0] = *crossoverPoints[1];
-    *crossoverPoints[1] = old;
+    ant::NodesVariant old;
+    {
+      int i = 0;
+      std::size_t idx = 1;
+      std::size_t const toFind = crossoverPointsIndex[i];
+      boost::apply_visitor(
+          gpm::CallSinkOnNodes{
+              [&idx, toFind, &old](ant::NodesVariant& n) -> bool {
+                if (idx++ == toFind) {
+                  old = n;
+                  return false;
+                }
+                return true;
+              }},
+          indis[i].get());
+    }
 
-    return std::make_tuple(idv1, idv2);
+    ant::NodesVariant old2;
+    {
+      int i = 1;
+      std::size_t idx = 1;
+      std::size_t const toFind = crossoverPointsIndex[i];
+      boost::apply_visitor(
+          gpm::CallSinkOnNodes{
+              [&idx, toFind, &old, &old2](ant::NodesVariant& n) -> bool {
+                if (idx++ == toFind) {
+                  old2 = n;
+                  n = old;
+                  return false;
+                }
+                return true;
+              }},
+          indis[i].get());
+    }
+
+    {
+      int i = 0;
+      std::size_t idx = 1;
+      std::size_t const toFind = crossoverPointsIndex[i];
+      boost::apply_visitor(
+          gpm::CallSinkOnNodes{
+              [&idx, toFind, &old2](ant::NodesVariant& n) -> bool {
+                if (idx++ == toFind) {
+                  n = old2;
+                  return false;
+                }
+                return true;
+              }},
+          indis[i].get());
+    }
   };
 
   for ([[gnu::unused]] auto generation : boost::irange(generationMax)) {
@@ -252,19 +286,20 @@ int main() {
 
     auto tournamentSelector =
         std::uniform_int_distribution<std::size_t>{0, population.size() - 1};
-    auto indvIndex = std::array<std::size_t, 2>{tournamentSelector(pRndGen),
-                                                tournamentSelector(pRndGen)};
-    for (size_t i = 0; i < tournamentSize; ++i) {
-      indvIndex[0] = std::min(indvIndex[0], tournamentSelector(pRndGen));
-      indvIndex[1] = std::min(indvIndex[1], tournamentSelector(pRndGen));
+    while (nextPopulation.size() < 2 * population.size() / 3) {
+      auto indvIndex = std::array<std::size_t, 2>{tournamentSelector(pRndGen),
+                                                  tournamentSelector(pRndGen)};
+      for (size_t i = 0; i < tournamentSize; ++i) {
+        indvIndex[0] = std::min(indvIndex[0], tournamentSelector(pRndGen));
+        indvIndex[1] = std::min(indvIndex[1], tournamentSelector(pRndGen));
+      }
+
+      nextPopulation.emplace_back(population[fitness[indvIndex[0]].index]);
+      nextPopulation.emplace_back(population[fitness[indvIndex[1]].index]);
+
+      crossover(nextPopulation[nextPopulation.size() - 1],
+                nextPopulation[nextPopulation.size() - 2], pRndGen);
     }
-
-    auto [newIdv1, newIdv2] =
-        crossover(population[fitness[indvIndex[0]].index],
-                  population[fitness[indvIndex[1]].index], pRndGen);
-
-    nextPopulation.emplace_back(newIdv1);
-    nextPopulation.emplace_back(newIdv2);
 
     population.swap(nextPopulation);
     fitness.swap(nextFitness);

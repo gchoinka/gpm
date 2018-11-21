@@ -36,8 +36,8 @@ namespace outcome = OUTCOME_V2_NAMESPACE;
 #include "nodes_opp.hpp"
 
 #ifndef _MSC_VER
-  #include "code_generators/dyno_tree_ctstatic.hpp"
-  #include "code_generators/dyno_tree_dynamic.hpp"
+#include "code_generators/dyno_tree_ctstatic.hpp"
+#include "code_generators/dyno_tree_dynamic.hpp"
 #endif
 #include "code_generators/funcptr_dynamic.hpp"
 #include "code_generators/oop_tree_dynamic.hpp"
@@ -128,15 +128,14 @@ int main(int argc, char** argv) {
   }
   auto cliArgs = cliArgsOutcome.value();
 
-  auto bm = hana::make_tuple(
-      VariantDynamic{}, VariantDynamic2{}, VariantCTStatic{}, OOPTreeDynamic{},
-      OPPTreeCTStatic{}, UnwrappedDirectCTStatic{},
-      UnwrappedVisitorCallingCTStatic{}, TupleCTStatic{}, 
-#ifndef _MSC_VER      
-      DynoTreeDynamic{},
-      DynoTreeCTStatic{}, 
+  auto bm = hana::make_tuple(VariantDynamic{}, VariantDynamic2{},
+                             VariantCTStatic{}, OOPTreeDynamic{},
+                             OPPTreeCTStatic{}, UnwrappedDirectCTStatic{},
+                             UnwrappedVisitorCallingCTStatic{}, TupleCTStatic{},
+#ifndef _MSC_VER
+                             DynoTreeDynamic{}, DynoTreeCTStatic{},
 #endif
-      FuncPtrDynamic{});
+                             FuncPtrDynamic{});
 
   if (cliArgs.listBenchmarks) {
     std::cout << "\n";

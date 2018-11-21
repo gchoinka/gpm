@@ -1,13 +1,13 @@
 #pragma once
 
-#include <tuple>
 #include <boost/variant.hpp>
+#include <cstddef>
+#include <tuple>
 
-
-namespace gpm{
+namespace gpm {
 
 class CountNodes : public boost::static_visitor<std::size_t> {
-public:
+ public:
   template <typename T>
   std::size_t operator()(T const& node) const {
     std::size_t count = 0;
@@ -19,6 +19,23 @@ public:
     return 1 + count;
   }
 };
-  
 
-}// namespace gpm
+template <typename SinkType>
+class CallSinkOnNodes : public boost::static_visitor<void> {
+ public:
+  SinkType const& sink_;
+
+  CallSinkOnNodes(SinkType const& sink) : sink_{sink} {}
+
+  template <typename T>
+  void operator()(T& node) const {
+    if constexpr (std::tuple_size<decltype(node.children)>::value != 0) {
+      for (auto& n : node.children) {
+        if (!sink_(n)) return;
+        boost::apply_visitor(*this, n);
+      }
+    }
+  }
+};
+
+}  // namespace gpm

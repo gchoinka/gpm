@@ -17,14 +17,7 @@ target_compile_options(hanatupletree PRIVATE -Wall -Wextra -pedantic -Werror)
 
 target_link_libraries(hanatupletree fmt::fmt Boost::boost)
 
-add_executable(dynoexample dynoexample.cpp)
-set_target_properties(dynoexample PROPERTIES
-            CXX_STANDARD 17
-            CXX_EXTENSIONS OFF
-)
-target_compile_options(dynoexample PRIVATE -Wall -Wextra -pedantic -Werror)
 
-target_link_libraries(dynoexample fmt::fmt Boost::boost Dyno)
 
 
 add_executable(fasterfactories fasterfactories.cpp)
