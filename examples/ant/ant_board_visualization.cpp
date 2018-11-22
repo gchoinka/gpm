@@ -212,6 +212,14 @@ class GetNodeByIndex : public boost::static_visitor<VariantType&> {
   }
 };
 
+template <typename RangeType>
+struct Foo{
+  static constexpr uint8_t simpleHash(RangeType range) {
+    constexpr uint8_t kMaxHash = 16;
+    return impl_tree::simpleHash<kMaxHash>(std::begin(range), std::end(range));
+  }
+};
+
 int main(int argc, char* argv[]) {
   auto cliArgsOutcome = handleCLI(argc, argv);
   if (!cliArgsOutcome) {
@@ -231,6 +239,9 @@ int main(int argc, char* argv[]) {
 //   auto optAnt2 = gpm::factory<ant::NodesVariant>(gpm::RPNTokenCursor{p});
   
   auto rpnTokenCursor = gpm::RPNTokenCursor{p};
+  
+
+  impl_tree::initKNodes2<Foo, decltype(antBoardSim)>();
   
 
   while (!antBoardSim.is_finish()) {

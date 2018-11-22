@@ -45,7 +45,6 @@ std::array<NodeDef<ContexType>, 16> kNodes{};
  
 template<uint8_t kMaxHash, typename ContexType> 
 auto ifBehavior(gpm::RPNTokenCursor & tokenCursor, ContexType & c, EvalMode em)-> gpm::RPNTokenCursor &{
-  
   if(em == EvalMode::TraverseOnly) {
     for(int i = 0; i < 2; ++i) {
       tokenCursor.next();
@@ -117,7 +116,7 @@ auto p3Behavior(gpm::RPNTokenCursor & tokenCursor, ContexType & c, EvalMode em)-
 }
 
 template<uint8_t kMaxHash, typename ContexType>
-bool intKNodes()
+bool initKNodes()
 {
   using NodeT = NodeDef<ContexType>;
   using namespace std::literals;
@@ -148,10 +147,44 @@ bool intKNodes()
   return true;
 }
 
+template<template <typename>typename HashFunction, typename ContexType>
+bool initKNodes2()
+{
+  constexpr uint8_t kMaxHash = 16;
+  using NodeT = NodeDef<ContexType>;
+  using namespace std::literals;
+  {
+    auto name = "if"sv;
+    kNodes<ContexType>[HashFunction<std::string_view>::simpleHash(name)] = NodeT{2, name, &ifBehavior<kMaxHash, ContexType>};
+  }
+  {
+    auto name = "m"sv;
+    kNodes<ContexType>[HashFunction<std::string_view>::simpleHash(name)] = NodeT{0, name, &moveBehavior<kMaxHash, ContexType>};
+  }
+  {
+    auto name = "r"sv;
+    kNodes<ContexType>[HashFunction<std::string_view>::simpleHash(name)] = NodeT{0, name, &rightBehavior<kMaxHash, ContexType>};
+  }
+  {
+    auto name = "l"sv;
+    kNodes<ContexType>[HashFunction<std::string_view>::simpleHash(name)] = NodeT{0, name, &leftBehavior<kMaxHash, ContexType>};
+  }
+  {
+    auto name = "p2"sv;
+    kNodes<ContexType>[HashFunction<std::string_view>::simpleHash(name)] = NodeT{2, name, &p2Behavior<kMaxHash, ContexType>};
+  }
+  {
+    auto name = "p3"sv;
+    kNodes<ContexType>[HashFunction<std::string_view>::simpleHash(name)] = NodeT{3, name, &p3Behavior<kMaxHash, ContexType>};
+  }
+  return true;
+}
+
+
 template<typename ContexType>
 void eval(gpm::RPNTokenCursor tokenCursor, ContexType & c){
   constexpr uint8_t kMaxHash = 16;
-  [[gnu::unused]]static bool b = intKNodes<kMaxHash, ContexType>();
+  [[gnu::unused]]static bool b = initKNodes<kMaxHash, ContexType>();
   
   auto token = tokenCursor.token();
   auto behaviorFun = kNodes<ContexType>[simpleHash<kMaxHash>(token)].behavior;
