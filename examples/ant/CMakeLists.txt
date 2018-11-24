@@ -20,59 +20,45 @@ endif()
 
 message(STATUS "${CMAKE_CXX_COMPILER_ID}")
 
+function(setStandard target CXX_STANDARD)
+    set_target_properties(${target} PROPERTIES
+            CXX_STANDARD ${CXX_STANDARD}
+            CXX_EXTENSIONS OFF)
+endfunction()
+
 set(GeneratedBechmarksIncludesDir "${CMAKE_CURRENT_BINARY_DIR}/generated_includes")
 file(MAKE_DIRECTORY "${GeneratedBechmarksIncludesDir}")
 
 add_library(GeneratedBechmarks INTERFACE)
 target_include_directories(GeneratedBechmarks INTERFACE ${GeneratedBechmarksIncludesDir})
 
-
+add_library(GpmExamples INTERFACE)
+target_compile_options(GpmExamples INTERFACE ${warning_flags} ${default_compiler_flags})
+target_link_libraries(GpmExamples INTERFACE Gpm fmt::fmt Boost::boost Outcome)
 
 add_executable(generate_tree_for_benchmark generate_tree_for_benchmark_main.cpp) 
-set_target_properties(generate_tree_for_benchmark PROPERTIES
-            CXX_STANDARD 17
-            CXX_EXTENSIONS OFF
-)
-target_compile_options(generate_tree_for_benchmark PRIVATE ${warning_flags})
-target_compile_options(generate_tree_for_benchmark PRIVATE ${default_compiler_flags})
-target_link_libraries(generate_tree_for_benchmark Gpm fmt::fmt Boost::boost Boost::program_options Outcome Frozen)
-
+setStandard(generate_tree_for_benchmark 17)
+target_link_libraries(generate_tree_for_benchmark GpmExamples Boost::program_options Frozen)
 
 add_executable(tree_benchmark tree_benchmark_main.cpp) 
-set_target_properties(tree_benchmark PROPERTIES
-           CXX_STANDARD 17
-           CXX_EXTENSIONS OFF
-)
-target_compile_options(tree_benchmark PRIVATE ${warning_flags})
-target_compile_options(tree_benchmark PRIVATE ${default_compiler_flags})
-target_link_libraries(tree_benchmark Gpm GeneratedBechmarks fmt::fmt benchmark::benchmark Boost::boost Boost::program_options Outcome Frozen)
+setStandard(tree_benchmark 17)
+target_link_libraries(tree_benchmark GpmExamples GeneratedBechmarks benchmark::benchmark Boost::program_options Frozen)
 if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   target_link_libraries(tree_benchmark Dyno)
 endif()
 
 add_executable(ant_board_visualization ant_board_visualization.cpp) 
-set_target_properties(ant_board_visualization PROPERTIES
-            CXX_STANDARD 17
-            CXX_EXTENSIONS OFF
-)
-target_compile_options(ant_board_visualization PRIVATE ${warning_flags})
-target_compile_options(ant_board_visualization PRIVATE ${default_compiler_flags})
-target_link_libraries(ant_board_visualization Gpm fmt::fmt Boost::boost Boost::program_options Outcome Frozen) 
-
+setStandard(ant_board_visualization 17)
+target_link_libraries(ant_board_visualization GpmExamples Boost::program_options Frozen)
 
 add_executable(ant_genetic_programming ant_genetic_programming_main.cpp) 
-set_target_properties(ant_genetic_programming PROPERTIES
-            CXX_STANDARD 20
-            CXX_EXTENSIONS OFF
-)
-target_compile_options(ant_genetic_programming PRIVATE ${warning_flags})
-target_compile_options(ant_genetic_programming PRIVATE ${default_compiler_flags})
-target_link_libraries(ant_genetic_programming Gpm Threads::Threads fmt::fmt Boost::boost Boost::program_options Outcome Frozen) 
+setStandard(ant_genetic_programming 20)
+target_link_libraries(ant_genetic_programming GpmExamples Threads::Threads Boost::program_options Frozen)
 
 
-set(antrpndeffile "${CMAKE_CURRENT_SOURCE_DIR}/data/randomAnt.txt")
-#set(antrpndeffile "${CMAKE_CURRENT_SOURCE_DIR}/data/optAnt.txt")
 
+#set(antrpndeffile "${CMAKE_CURRENT_SOURCE_DIR}/data/randomAnt.txt")
+set(antrpndeffile "${CMAKE_CURRENT_SOURCE_DIR}/data/optAnt.txt")
 
 option(GPM_FORMAT_GENERATED_FILES "Should the files which were generated in ${GeneratedBechmarksIncludesDir} be formated?(only usefull if someone wants to read them)." OFF)
 
@@ -82,9 +68,9 @@ else()
     set(FORMAT_STEP "${CMAKE_COMMAND}" -E echo "skiped formating step")
 endif()
 
-add_custom_target(timeing_build_tree_benchmark_all)
+add_custom_target(time_build_tree_benchmark_all)
 
-set(last_target timeing_build_tree_benchmark_all)
+set(last_target time_build_tree_benchmark_all)
 
 set(bmNameList funcPtrDynamic variantDynamic variantDynamic2 variantCTStatic oopTreeDynamic oppTreeCTStatic unwrappedDirectCTStatic unwrappedVisitorCallingCTStatic tupleCTStatic None)
 
@@ -93,7 +79,7 @@ if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 endif()
 
 foreach(bmName ${bmNameList})
-    add_custom_target(timeing_build_tree_benchmark_${bmName}
+    add_custom_target(time_build_tree_benchmark_${bmName}
       COMMAND "${CMAKE_COMMAND}" -E remove "${GeneratedBechmarksIncludesDir}/ant_simulation_benchmark_generated_functions.cpp"
       COMMAND "$<TARGET_FILE:generate_tree_for_benchmark>" --benchmark ${bmName} --antrpndef "${antrpndeffile}" --outfile "${GeneratedBechmarksIncludesDir}/ant_simulation_benchmark_generated_functions.cpp"
       COMMAND ${FORMAT_STEP}
@@ -102,10 +88,9 @@ foreach(bmName ${bmNameList})
       COMMAND stat --printf="%s" "$<TARGET_FILE:tree_benchmark>" > "${CMAKE_CURRENT_BINARY_DIR}/bin_size_${bmName}.txt"
       DEPENDS generate_tree_for_benchmark
     )
-    add_dependencies(${last_target} timeing_build_tree_benchmark_${bmName})
-    set(last_target timeing_build_tree_benchmark_${bmName})
+    add_dependencies(${last_target} time_build_tree_benchmark_${bmName})
+    set(last_target time_build_tree_benchmark_${bmName})
 endforeach()
-    
 
 
 add_custom_target(make_tree_benchmark 
@@ -124,14 +109,10 @@ add_custom_target(make_tree_benchmark
 
 
 add_custom_target(run_tree_benchmark 
-    COMMAND "$<TARGET_FILE:tree_benchmark>" --benchmark_report_aggregates_only=true --benchmark_repetitions=10 --benchmark_out_format=json --benchmark_out="${CMAKE_CURRENT_BINARY_DIR}/tree_benchmark.json" -b "${CMAKE_CURRENT_SOURCE_DIR}/data/santa_fe_board.txt"
+    COMMAND "$<TARGET_FILE:tree_benchmark>" --benchmark_report_aggregates_only=true --benchmark_out_format=json --benchmark_repetitions=10 --benchmark_out="${CMAKE_CURRENT_BINARY_DIR}/tree_benchmark.json" -b "${CMAKE_CURRENT_SOURCE_DIR}/data/santa_fe_board.txt"
     DEPENDS make_tree_benchmark
 )
-
-
 
 if(${GPM_BUILD_TESTS})
     add_subdirectory(tests)
 endif()
-
-

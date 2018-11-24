@@ -47,7 +47,7 @@ for c in compiler:
         check_call(["ctest", "--output-on-failure",  "-VV"])
         
     if not fastRun:
-        check_call(["cmake", "--build", compilerDir, "--target", "timeing_build_tree_benchmark_all"])
+        check_call(["cmake", "--build", compilerDir, "--target", "time_build_tree_benchmark_all"])
     treeBenchmark = json.load(open(os.path.join(compilerDir, "examples/ant/tree_benchmark.json"), "r"))
     treeBenchmark["BuildTimes"] = {}
     for filename in glob.iglob(os.path.join(compilerDir, "examples/ant/buildtime_*.txt")):
