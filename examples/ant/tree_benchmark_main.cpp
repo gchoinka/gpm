@@ -35,8 +35,8 @@ namespace outcome = OUTCOME_V2_NAMESPACE;
 #endif
 #include "nodes_funcptr.hpp"
 #include "nodes_hana_tuple.hpp"
-#include "nodes_opp.hpp"
 #include "nodes_implicit_tree.hpp"
+#include "nodes_opp.hpp"
 
 template <typename AntBoardSimT>
 class AntBoardSimDecorator {

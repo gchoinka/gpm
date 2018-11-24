@@ -23,9 +23,8 @@ namespace outcome = OUTCOME_V2_NAMESPACE;
 #include "common/santa_fe_board.hpp"
 #include "common/visitor.hpp"
 
-
-#include "nodes_implicit_tree.hpp"
 #include <gpm/tree_utils.hpp>
+#include "nodes_implicit_tree.hpp"
 
 template <typename AntBoardSimT>
 class AntBoardSimDecorator {
@@ -108,21 +107,23 @@ decltype(auto) getAntBoardSim(char const* filename) {
 //                     auto randomGen) {
 //   std::array<std::reference_wrapper<ant::NodesVariant>, 2> indis = {
 //       std::ref(idv1), std::ref(idv2)};
-// 
+//
 //   std::array<std::size_t, 2> crossoverPointsIndex;
 //   for (std::size_t i = 0; i < 2; ++i) {
 //     auto treeSize = boost::apply_visitor(gpm::CountNodes{}, indis[i].get());
 //     crossoverPointsIndex[i] =
-//         std::uniform_int_distribution<std::size_t>{1, treeSize - 1}(randomGen);
+//         std::uniform_int_distribution<std::size_t>{1, treeSize -
+//         1}(randomGen);
 //   }
-// 
+//
 //   std::array<ant::NodesVariant, 2> crossoverPoints{};
 //   for (std::size_t i = 0; i < 2; ++i) {
 //     std::size_t idx = 1;
 //     std::size_t const toFind = crossoverPointsIndex[i];
 //     boost::apply_visitor(
 //         gpm::CallSinkOnNodes{
-//             [&idx, toFind, &crossoverPoints, i](ant::NodesVariant& n) -> bool {
+//             [&idx, toFind, &crossoverPoints, i](ant::NodesVariant& n) -> bool
+//             {
 //               if (idx++ == toFind) {
 //                 crossoverPoints[i] = n;
 //                 return false;
@@ -131,13 +132,14 @@ decltype(auto) getAntBoardSim(char const* filename) {
 //             }},
 //         indis[i].get());
 //   }
-// 
+//
 //   for (std::size_t i = 0; i < 2; ++i) {
 //     std::size_t idx = 1;
 //     std::size_t const toFind = crossoverPointsIndex[i];
 //     boost::apply_visitor(
 //         gpm::CallSinkOnNodes{
-//             [&idx, toFind, &crossoverPoints, i](ant::NodesVariant& n) -> bool {
+//             [&idx, toFind, &crossoverPoints, i](ant::NodesVariant& n) -> bool
+//             {
 //               if (idx++ == toFind) {
 //                 n = crossoverPoints[1 - i];
 //                 return false;
@@ -212,11 +214,22 @@ class GetNodeByIndex : public boost::static_visitor<VariantType&> {
   }
 };
 
-template <typename RangeType>
-struct Foo{
-  static constexpr uint8_t simpleHash(RangeType range) {
-    constexpr uint8_t kMaxHash = 16;
-    return impl_tree::simpleHash<kMaxHash>(std::begin(range), std::end(range));
+template <typename HashType, HashType kMaxHashValue_>
+struct NodeNameHash {
+  static constexpr HashType kMaxHashValue = kMaxHashValue_;
+
+  template <typename BeginIterType, typename EndIterType>
+  static constexpr HashType get(BeginIterType begin, EndIterType end) {
+    HashType r = 0;
+    for (; begin != end; ++begin) {
+      r = (r + 7) ^ *begin;
+    }
+    return r & (kMaxHashValue - 1);
+  }
+
+  template <typename RangeType>
+  static constexpr HashType get(RangeType range) {
+    return get(std::begin(range), std::end(range));
   }
 };
 
@@ -228,57 +241,68 @@ int main(int argc, char* argv[]) {
   }
   auto cliArgs = cliArgsOutcome.value();
 
-//   char const* optimalAntRPNdef = "m r m if l l p3 r m if if p2 r p2 m if";
-//   auto optAnt =
-//       gpm::factory<ant::NodesVariant>(gpm::RPNTokenCursor{optimalAntRPNdef});
-  auto antBoardSim = makeAntBoardSimDecorator(getAntBoardSim(cliArgs.boarddef.c_str()));
-//       
-//   
-// 
+  //   char const* optimalAntRPNdef = "m r m if l l p3 r m if if p2 r p2 m if";
+  //   auto optAnt =
+  //       gpm::factory<ant::NodesVariant>(gpm::RPNTokenCursor{optimalAntRPNdef});
+  auto antBoardSim =
+      makeAntBoardSimDecorator(getAntBoardSim(cliArgs.boarddef.c_str()));
+  //
+  //
+  //
   char const* p = "m l m if l l p3 m if l p3 m if";
-//   auto optAnt2 = gpm::factory<ant::NodesVariant>(gpm::RPNTokenCursor{p});
-  
-  auto rpnTokenCursor = gpm::RPNTokenCursor{p};
-  
+  //   auto optAnt2 = gpm::factory<ant::NodesVariant>(gpm::RPNTokenCursor{p});
 
-  impl_tree::initKNodes2<Foo, decltype(antBoardSim)>();
-  
+  auto rpnTokenCursor = gpm::RPNTokenCursor{p};
+
+  using HashFunction = NodeNameHash<uint8_t, 16>;
+
+  implizit::initNodesBehavior<HashFunction, decltype(rpnTokenCursor),
+                              decltype(antBoardSim)>();
 
   while (!antBoardSim.is_finish()) {
-    impl_tree::eval(rpnTokenCursor, antBoardSim);
+    implizit::eval<HashFunction>(rpnTokenCursor, antBoardSim);
   }
-// 
-//   fmt::print("{}\n",
-//              boost::apply_visitor(gpm::RPNPrinter<std::string>{}, optAnt));
-//   fmt::print("{}\n",
-//              boost::apply_visitor(gpm::RPNPrinter<std::string>{}, optAnt2));
-// 
-//   std::size_t s = boost::apply_visitor(gpm::CountNodes{}, optAnt2);
-//   auto sel = std::uniform_int_distribution<std::size_t>{1, s - 1};
-//   std::size_t rndSeed = std::random_device{}();
-//   auto pRnd = std::mt19937{rndSeed};
-//   auto defaultNode = ant::NodesVariant{};
 
-//   crossover(optAnt, optAnt2, pRnd);
-// 
-//   fmt::print("{}\n",
-//              boost::apply_visitor(gpm::RPNPrinter<std::string>{}, optAnt));
-//   fmt::print("{}\n",
-//              boost::apply_visitor(gpm::RPNPrinter<std::string>{}, optAnt2));
+  //   implizit::FooBar<gpm::RPNTokenCursor, decltype(antBoardSim),
+  //                    implizit::HashHelper<uint8_t, 16>>
+  //       f;
+  //       f.fillNodesLUT();;
 
-//   std::size_t idx = 1;
-//   boost::apply_visitor(
-//       gpm::CallSinkOnNodes{[&idx](ant::NodesVariant& n) {
-//         fmt::print("{} {}\n", idx++,
-//                    boost::apply_visitor(gpm::RPNPrinter<std::string>{}, n));
-//         return true;
-//       }},
-//       optAnt2);
-//   while (true) {
-// //     [[gnu::unused]] auto toSelect = sel(pRnd);
-//     //     auto s = GetNodeByIndex{defaultNode, toSelect};
-//     //     auto & node = boost::apply_visitor(s, optAnt2);
-//     //     fmt::print("{} {}\n", toSelect,
-//     //     boost::apply_visitor(gpm::RPNPrinter<std::string>{}, node ));
-//   }
+  //
+  //   fmt::print("{}\n",
+  //              boost::apply_visitor(gpm::RPNPrinter<std::string>{}, optAnt));
+  //   fmt::print("{}\n",
+  //              boost::apply_visitor(gpm::RPNPrinter<std::string>{},
+  //              optAnt2));
+  //
+  //   std::size_t s = boost::apply_visitor(gpm::CountNodes{}, optAnt2);
+  //   auto sel = std::uniform_int_distribution<std::size_t>{1, s - 1};
+  //   std::size_t rndSeed = std::random_device{}();
+  //   auto pRnd = std::mt19937{rndSeed};
+  //   auto defaultNode = ant::NodesVariant{};
+
+  //   crossover(optAnt, optAnt2, pRnd);
+  //
+  //   fmt::print("{}\n",
+  //              boost::apply_visitor(gpm::RPNPrinter<std::string>{}, optAnt));
+  //   fmt::print("{}\n",
+  //              boost::apply_visitor(gpm::RPNPrinter<std::string>{},
+  //              optAnt2));
+
+  //   std::size_t idx = 1;
+  //   boost::apply_visitor(
+  //       gpm::CallSinkOnNodes{[&idx](ant::NodesVariant& n) {
+  //         fmt::print("{} {}\n", idx++,
+  //                    boost::apply_visitor(gpm::RPNPrinter<std::string>{},
+  //                    n));
+  //         return true;
+  //       }},
+  //       optAnt2);
+  //   while (true) {
+  // //     [[gnu::unused]] auto toSelect = sel(pRnd);
+  //     //     auto s = GetNodeByIndex{defaultNode, toSelect};
+  //     //     auto & node = boost::apply_visitor(s, optAnt2);
+  //     //     fmt::print("{} {}\n", toSelect,
+  //     //     boost::apply_visitor(gpm::RPNPrinter<std::string>{}, node ));
+  //   }
 }

@@ -1,196 +1,124 @@
 #pragma once
 
+#include <array>
+#include <gpm/io.hpp>
+#include <mutex>
 #include <string>
 #include <string_view>
-#include <array>
 #include <tuple>
 #include <type_traits>
-#include <gpm/io.hpp>
 
-
-namespace impl_tree{
-using ImplTreeType = std::string;
+namespace implizit {
 
 enum class EvalMode { DoEval, TraverseOnly };
 
+template <typename CursorType, typename ContexType>
+using BehaviorFunctionType =
+    std::add_pointer_t<CursorType &(CursorType &, ContexType &, EvalMode)>;
 
-
-template <uint8_t kMaxHash, typename BeginIterType, typename EndIterType>
-constexpr uint8_t simpleHash(BeginIterType begin, EndIterType end) {
-  uint8_t r = 0;
-  for (; begin != end; ++begin) {
-    r = (r + 7) ^ *begin;
-  }
-  return r & (kMaxHash - 1);
-}
-
-template <uint8_t kMaxHash, typename RangeType>
-constexpr uint8_t simpleHash(RangeType range) {
-  return simpleHash<kMaxHash>(std::begin(range), std::end(range));
-}
-
-template<typename ContexType>
-using BehaviorFunctionType = std::add_pointer_t<gpm::RPNTokenCursor&(gpm::RPNTokenCursor &, ContexType&, EvalMode)>;
-
-template<typename ContexType>
+template <typename CursorType, typename ContexType>
 struct NodeDef {
-  std::size_t childCount;
-  std::string_view name;
-  BehaviorFunctionType<ContexType> behavior;
+  std::size_t childCount = 0;
+  std::string_view name{""};
+  BehaviorFunctionType<CursorType, ContexType> behavior{nullptr};
 };
 
-template<typename ContexType>
-std::array<NodeDef<ContexType>, 16> kNodes{};
+template <typename HashFunction, typename CursorType, typename ContexType>
+inline std::array<NodeDef<CursorType, ContexType>, HashFunction::kMaxHashValue>
+    kNodesLUT{};
 
- 
-template<uint8_t kMaxHash, typename ContexType> 
-auto ifBehavior(gpm::RPNTokenCursor & tokenCursor, ContexType & c, EvalMode em)-> gpm::RPNTokenCursor &{
-  if(em == EvalMode::TraverseOnly) {
-    for(int i = 0; i < 2; ++i) {
-      tokenCursor.next();
-      auto token = tokenCursor.token();
-      auto behaviorFun = kNodes<ContexType>[simpleHash<kMaxHash>(token)].behavior;
-      tokenCursor = (*behaviorFun)(tokenCursor, c, EvalMode::TraverseOnly);
-    }
-  }
-  else {
-    auto foodIsInFront = c.is_food_in_front();
-    for(int i = 0; i < 2; ++i) {
-      tokenCursor.next();
-      auto token = tokenCursor.token();
-      EvalMode childEMode = EvalMode::TraverseOnly;
-      if((foodIsInFront && i == 0) || (!foodIsInFront && i == 1)){
-        childEMode = EvalMode::DoEval;
-      }
-      auto behaviorFun = kNodes<ContexType>[simpleHash<kMaxHash>(token)].behavior;
-      tokenCursor = (*behaviorFun)(tokenCursor, c, childEMode);
-    }
-  }
-  return tokenCursor;
-}
-
-template<uint8_t kMaxHash, typename ContexType> 
-auto moveBehavior(gpm::RPNTokenCursor & tokenCursor, ContexType & c, EvalMode em)-> gpm::RPNTokenCursor &{
-  if(em == EvalMode::DoEval) {
-    c.move();
-  }
-  return tokenCursor;
-}
-
-template<uint8_t kMaxHash, typename ContexType> 
-auto rightBehavior(gpm::RPNTokenCursor & tokenCursor, ContexType & c, EvalMode em)-> gpm::RPNTokenCursor &{
-  if(em == EvalMode::DoEval) {
-    c.right();
-  }
-  return tokenCursor;
-}
-
-template<uint8_t kMaxHash, typename ContexType> 
-auto leftBehavior(gpm::RPNTokenCursor & tokenCursor, ContexType & c, EvalMode em)-> gpm::RPNTokenCursor &{
-  if(em == EvalMode::DoEval) {
-    c.left();
-  }
-  return tokenCursor;
-}
-
-template<uint8_t kMaxHash, typename ContexType> 
-auto p2Behavior (gpm::RPNTokenCursor & tokenCursor, ContexType & c, EvalMode em)-> gpm::RPNTokenCursor &{
-  for(int i = 0; i < 2; ++i) {
+template <typename HashFunction, typename CursorType, typename ContexType>
+auto defaultBehavior(CursorType &tokenCursor, ContexType &c, EvalMode em,
+                     std::size_t childrenNodeCount) -> CursorType & {
+  for (std::size_t i = 0; i < childrenNodeCount; ++i) {
     tokenCursor.next();
     auto token = tokenCursor.token();
-    auto behaviorFun = kNodes<ContexType>[simpleHash<kMaxHash>(token)].behavior;
+    auto behaviorFun = kNodesLUT<HashFunction, CursorType,
+                                 ContexType>[HashFunction::get(token)]
+                           .behavior;
     tokenCursor = (*behaviorFun)(tokenCursor, c, em);
   }
   return tokenCursor;
 }
 
-template<uint8_t kMaxHash, typename ContexType> 
-auto p3Behavior(gpm::RPNTokenCursor & tokenCursor, ContexType & c, EvalMode em)-> gpm::RPNTokenCursor &{
-  for(int i = 0; i < 3; ++i) {
-    tokenCursor.next();
-    auto token = tokenCursor.token();
-    auto behaviorFun = kNodes<ContexType>[simpleHash<kMaxHash>(token)].behavior;
-    tokenCursor = (*behaviorFun)(tokenCursor, c, em);
-  }
-  return tokenCursor;
-}
-
-template<uint8_t kMaxHash, typename ContexType>
-bool initKNodes()
-{
-  using NodeT = NodeDef<ContexType>;
+template <typename HashFunction, typename CursorType, typename ContexType>
+void initNodesBehavior() {
+  using NodeT = NodeDef<CursorType, ContexType>;
   using namespace std::literals;
-  {
-    auto name = "if"sv;
-    kNodes<ContexType>[simpleHash<kMaxHash>(name)] = NodeT{2, name, &ifBehavior<kMaxHash, ContexType>};
+  std::array nodeDef = {
+      NodeT{2, "if"sv,
+            [](CursorType &tokenCursor, ContexType &c,
+               EvalMode em) -> CursorType & {
+              if (em == EvalMode::TraverseOnly) {
+                tokenCursor =
+                    defaultBehavior<HashFunction>(tokenCursor, c, em, 2);
+              } else {
+                auto foodIsInFront = c.is_food_in_front();
+                for (int i = 0; i < 2; ++i) {
+                  tokenCursor.next();
+                  auto token = tokenCursor.token();
+                  EvalMode childEMode = EvalMode::TraverseOnly;
+                  if ((foodIsInFront && i == 0) || (!foodIsInFront && i == 1)) {
+                    childEMode = EvalMode::DoEval;
+                  }
+                  auto behaviorFun =
+                      kNodesLUT<HashFunction, CursorType,
+                                ContexType>[HashFunction::get(token)]
+                          .behavior;
+                  tokenCursor = (*behaviorFun)(tokenCursor, c, childEMode);
+                }
+              }
+              return tokenCursor;
+            }},
+      NodeT{0, "m"sv,
+            [](CursorType &tokenCursor, ContexType &c,
+               EvalMode em) -> CursorType & {
+              if (em == EvalMode::DoEval) {
+                c.move();
+              }
+              return tokenCursor;
+            }},
+      NodeT{0, "r"sv,
+            [](CursorType &tokenCursor, ContexType &c,
+               EvalMode em) -> CursorType & {
+              if (em == EvalMode::DoEval) {
+                c.right();
+              }
+              return tokenCursor;
+            }},
+      NodeT{0, "l"sv,
+            [](CursorType &tokenCursor, ContexType &c,
+               EvalMode em) -> CursorType & {
+              if (em == EvalMode::DoEval) {
+                c.left();
+              }
+              return tokenCursor;
+            }},
+      NodeT{2, "p2"sv,
+            [](CursorType &tokenCursor, ContexType &c,
+               EvalMode em) -> CursorType & {
+              return defaultBehavior<HashFunction>(tokenCursor, c, em, 2);
+            }},
+      NodeT{3, "p3"sv,
+            [](CursorType &tokenCursor, ContexType &c,
+               EvalMode em) -> CursorType & {
+              return defaultBehavior<HashFunction>(tokenCursor, c, em, 3);
+            }}};
+  // TODO: test for multiple inits
+  for (auto &nDef : nodeDef) {
+    auto hash = HashFunction::get(nDef.name);
+    // TODO: test for colision
+    kNodesLUT<HashFunction, CursorType, ContexType>[hash] = nDef;
   }
-  {
-    auto name = "m"sv;
-    kNodes<ContexType>[simpleHash<kMaxHash>(name)] = NodeT{0, name, &moveBehavior<kMaxHash, ContexType>};
-  }
-  {
-    auto name = "r"sv;
-    kNodes<ContexType>[simpleHash<kMaxHash>(name)] = NodeT{0, name, &rightBehavior<kMaxHash, ContexType>};
-  }
-  {
-    auto name = "l"sv;
-    kNodes<ContexType>[simpleHash<kMaxHash>(name)] = NodeT{0, name, &leftBehavior<kMaxHash, ContexType>};
-  }
-  {
-    auto name = "p2"sv;
-    kNodes<ContexType>[simpleHash<kMaxHash>(name)] = NodeT{2, name, &p2Behavior<kMaxHash, ContexType>};
-  }
-  {
-    auto name = "p3"sv;
-    kNodes<ContexType>[simpleHash<kMaxHash>(name)] = NodeT{3, name, &p3Behavior<kMaxHash, ContexType>};
-  }
-  return true;
 }
 
-template<template <typename>typename HashFunction, typename ContexType>
-bool initKNodes2()
-{
-  constexpr uint8_t kMaxHash = 16;
-  using NodeT = NodeDef<ContexType>;
-  using namespace std::literals;
-  {
-    auto name = "if"sv;
-    kNodes<ContexType>[HashFunction<std::string_view>::simpleHash(name)] = NodeT{2, name, &ifBehavior<kMaxHash, ContexType>};
-  }
-  {
-    auto name = "m"sv;
-    kNodes<ContexType>[HashFunction<std::string_view>::simpleHash(name)] = NodeT{0, name, &moveBehavior<kMaxHash, ContexType>};
-  }
-  {
-    auto name = "r"sv;
-    kNodes<ContexType>[HashFunction<std::string_view>::simpleHash(name)] = NodeT{0, name, &rightBehavior<kMaxHash, ContexType>};
-  }
-  {
-    auto name = "l"sv;
-    kNodes<ContexType>[HashFunction<std::string_view>::simpleHash(name)] = NodeT{0, name, &leftBehavior<kMaxHash, ContexType>};
-  }
-  {
-    auto name = "p2"sv;
-    kNodes<ContexType>[HashFunction<std::string_view>::simpleHash(name)] = NodeT{2, name, &p2Behavior<kMaxHash, ContexType>};
-  }
-  {
-    auto name = "p3"sv;
-    kNodes<ContexType>[HashFunction<std::string_view>::simpleHash(name)] = NodeT{3, name, &p3Behavior<kMaxHash, ContexType>};
-  }
-  return true;
-}
-
-
-template<typename ContexType>
-void eval(gpm::RPNTokenCursor tokenCursor, ContexType & c){
-  constexpr uint8_t kMaxHash = 16;
-  [[gnu::unused]]static bool b = initKNodes<kMaxHash, ContexType>();
-  
+template <typename HashFunction, typename CursorType, typename ContexType>
+void eval(CursorType tokenCursor, ContexType &c) {
   auto token = tokenCursor.token();
-  auto behaviorFun = kNodes<ContexType>[simpleHash<kMaxHash>(token)].behavior;
+  auto behaviorFun =
+      kNodesLUT<HashFunction, CursorType, ContexType>[HashFunction::get(token)]
+          .behavior;
   (*behaviorFun)(tokenCursor, c, EvalMode::DoEval);
-  
 }
 
-
-}
+}  // namespace implizit
