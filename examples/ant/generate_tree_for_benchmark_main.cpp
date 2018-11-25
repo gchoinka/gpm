@@ -48,6 +48,7 @@ namespace outcome = OUTCOME_V2_NAMESPACE;
 #include "code_generators/variant_dynamic.hpp"
 #include "code_generators/variant_dynamic2.hpp"
 #include "code_generators/viarant_ctstatic.hpp"
+#include "code_generators/implizit_tree_dynamic.hpp"
 
 namespace {
 
@@ -132,10 +133,11 @@ int main(int argc, char** argv) {
                              VariantCTStatic{}, OOPTreeDynamic{},
                              OPPTreeCTStatic{}, UnwrappedDirectCTStatic{},
                              UnwrappedVisitorCallingCTStatic{}, TupleCTStatic{},
+                             ImplizitTreeDynamic{}, FuncPtrDynamic{}
 #ifndef _MSC_VER
-                             DynoTreeDynamic{}, DynoTreeCTStatic{},
+                             , DynoTreeDynamic{}, DynoTreeCTStatic{}
 #endif
-                             FuncPtrDynamic{});
+                             );
 
   if (cliArgs.listBenchmarks) {
     std::cout << "\n";

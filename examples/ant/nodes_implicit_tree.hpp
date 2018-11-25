@@ -14,7 +14,7 @@ enum class EvalMode { DoEval, TraverseOnly };
 
 template <typename CursorType, typename ContexType>
 using BehaviorFunctionType =
-    std::add_pointer_t<CursorType &(CursorType &, ContexType &, EvalMode)>;
+    std::add_pointer_t<void(CursorType &, ContexType &, EvalMode)>;
 
 template <typename CursorType, typename ContexType>
 struct NodeDef {
@@ -26,19 +26,20 @@ struct NodeDef {
 template <typename HashFunction, typename CursorType, typename ContexType>
 inline std::array<NodeDef<CursorType, ContexType>, HashFunction::kMaxHashValue>
     kNodesLUT{};
+    
+
 
 template <typename HashFunction, typename CursorType, typename ContexType>
-auto defaultBehavior(CursorType &tokenCursor, ContexType &c, EvalMode em,
-                     std::size_t childrenNodeCount) -> CursorType & {
+void defaultBehavior(CursorType &tokenCursor, ContexType &c, EvalMode em,
+                     std::size_t childrenNodeCount) {
   for (std::size_t i = 0; i < childrenNodeCount; ++i) {
     tokenCursor.next();
     auto token = tokenCursor.token();
     auto behaviorFun = kNodesLUT<HashFunction, CursorType,
                                  ContexType>[HashFunction::get(token)]
                            .behavior;
-    tokenCursor = (*behaviorFun)(tokenCursor, c, em);
+    (*behaviorFun)(tokenCursor, c, em);
   }
-  return tokenCursor;
 }
 
 template <typename HashFunction, typename CursorType, typename ContexType>
@@ -48,10 +49,9 @@ void initNodesBehavior() {
   std::array nodeDef = {
       NodeT{2, "if"sv,
             [](CursorType &tokenCursor, ContexType &c,
-               EvalMode em) -> CursorType & {
+               EvalMode em) {
               if (em == EvalMode::TraverseOnly) {
-                tokenCursor =
-                    defaultBehavior<HashFunction>(tokenCursor, c, em, 2);
+                defaultBehavior<HashFunction>(tokenCursor, c, em, 2);
               } else {
                 auto foodIsInFront = c.is_food_in_front();
                 for (int i = 0; i < 2; ++i) {
@@ -65,44 +65,40 @@ void initNodesBehavior() {
                       kNodesLUT<HashFunction, CursorType,
                                 ContexType>[HashFunction::get(token)]
                           .behavior;
-                  tokenCursor = (*behaviorFun)(tokenCursor, c, childEMode);
+                  (*behaviorFun)(tokenCursor, c, childEMode);
                 }
               }
-              return tokenCursor;
             }},
       NodeT{0, "m"sv,
-            [](CursorType &tokenCursor, ContexType &c,
-               EvalMode em) -> CursorType & {
+            [](CursorType &, ContexType &c,
+               EvalMode em) {
               if (em == EvalMode::DoEval) {
                 c.move();
               }
-              return tokenCursor;
             }},
       NodeT{0, "r"sv,
-            [](CursorType &tokenCursor, ContexType &c,
-               EvalMode em) -> CursorType & {
+            [](CursorType &, ContexType &c,
+               EvalMode em) {
               if (em == EvalMode::DoEval) {
                 c.right();
               }
-              return tokenCursor;
             }},
       NodeT{0, "l"sv,
-            [](CursorType &tokenCursor, ContexType &c,
-               EvalMode em) -> CursorType & {
+            [](CursorType &, ContexType &c,
+               EvalMode em) {
               if (em == EvalMode::DoEval) {
                 c.left();
               }
-              return tokenCursor;
             }},
       NodeT{2, "p2"sv,
             [](CursorType &tokenCursor, ContexType &c,
-               EvalMode em) -> CursorType & {
-              return defaultBehavior<HashFunction>(tokenCursor, c, em, 2);
+               EvalMode em) {
+              defaultBehavior<HashFunction>(tokenCursor, c, em, 2);
             }},
       NodeT{3, "p3"sv,
             [](CursorType &tokenCursor, ContexType &c,
-               EvalMode em) -> CursorType & {
-              return defaultBehavior<HashFunction>(tokenCursor, c, em, 3);
+               EvalMode em) {
+              defaultBehavior<HashFunction>(tokenCursor, c, em, 3);
             }}};
   // TODO: test for multiple inits
   for (auto &nDef : nodeDef) {

@@ -72,7 +72,7 @@ add_custom_target(time_build_tree_benchmark_all)
 
 set(last_target time_build_tree_benchmark_all)
 
-set(bmNameList funcPtrDynamic variantDynamic variantDynamic2 variantCTStatic oopTreeDynamic oppTreeCTStatic unwrappedDirectCTStatic unwrappedVisitorCallingCTStatic tupleCTStatic None)
+set(bmNameList implizitTreeDynamic funcPtrDynamic variantDynamic variantDynamic2 variantCTStatic oopTreeDynamic oppTreeCTStatic unwrappedDirectCTStatic unwrappedVisitorCallingCTStatic tupleCTStatic None)
 
 if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   set(bmNameList ${bmNameList} dynoTreeDynamic dynoTreeCTStatic)
@@ -90,6 +90,19 @@ foreach(bmName ${bmNameList})
     )
     add_dependencies(${last_target} time_build_tree_benchmark_${bmName})
     set(last_target time_build_tree_benchmark_${bmName})
+    
+    add_custom_target(make_tree_benchmark_${bmName}
+      COMMAND "${CMAKE_COMMAND}" -E remove "${GeneratedBechmarksIncludesDir}/ant_simulation_benchmark_generated_functions.cpp"
+      COMMAND "$<TARGET_FILE:generate_tree_for_benchmark>" --benchmark ${bmName} --antrpndef "${antrpndeffile}" --outfile "${GeneratedBechmarksIncludesDir}/ant_simulation_benchmark_generated_functions.cpp"
+      COMMAND ${FORMAT_STEP}
+      COMMAND "${CMAKE_COMMAND}" -E touch_nocreate "${CMAKE_CURRENT_SOURCE_DIR}/tree_benchmark_main.cpp"
+      COMMAND /usr/bin/time -v -o "${CMAKE_CURRENT_BINARY_DIR}/buildtime.txt" "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --target tree_benchmark
+      DEPENDS generate_tree_for_benchmark
+    )
+    add_custom_target(run_tree_benchmark_${bmName}
+      COMMAND "$<TARGET_FILE:tree_benchmark>" --benchmark_report_aggregates_only=true --benchmark_out_format=json --benchmark_repetitions=10 --benchmark_out="${CMAKE_CURRENT_BINARY_DIR}/tree_benchmark.json" -b "${CMAKE_CURRENT_SOURCE_DIR}/data/santa_fe_board.txt"
+      DEPENDS make_tree_benchmark_${bmName}
+    )
 endforeach()
 
 
