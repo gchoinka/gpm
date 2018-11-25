@@ -72,7 +72,7 @@ add_custom_target(time_build_tree_benchmark_all)
 
 set(last_target time_build_tree_benchmark_all)
 
-set(bmNameList implizitTreeDynamic funcPtrDynamic variantDynamic variantDynamic2 variantCTStatic oopTreeDynamic oppTreeCTStatic unwrappedDirectCTStatic unwrappedVisitorCallingCTStatic tupleCTStatic None)
+set(bmNameList implicitTreeDynamic funcPtrDynamic variantDynamic variantDynamic2 variantCTStatic oopTreeDynamic oppTreeCTStatic unwrappedDirectCTStatic unwrappedVisitorCallingCTStatic tupleCTStatic None)
 
 if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   set(bmNameList ${bmNameList} dynoTreeDynamic dynoTreeCTStatic)

@@ -40,6 +40,7 @@ namespace outcome = OUTCOME_V2_NAMESPACE;
 #include "code_generators/dyno_tree_dynamic.hpp"
 #endif
 #include "code_generators/funcptr_dynamic.hpp"
+#include "code_generators/implicit_tree_dynamic.hpp"
 #include "code_generators/oop_tree_dynamic.hpp"
 #include "code_generators/opp_tree_ctstatic.hpp"
 #include "code_generators/tuple_ctstatic.hpp"
@@ -48,7 +49,6 @@ namespace outcome = OUTCOME_V2_NAMESPACE;
 #include "code_generators/variant_dynamic.hpp"
 #include "code_generators/variant_dynamic2.hpp"
 #include "code_generators/viarant_ctstatic.hpp"
-#include "code_generators/implizit_tree_dynamic.hpp"
 
 namespace {
 
@@ -133,11 +133,12 @@ int main(int argc, char** argv) {
                              VariantCTStatic{}, OOPTreeDynamic{},
                              OPPTreeCTStatic{}, UnwrappedDirectCTStatic{},
                              UnwrappedVisitorCallingCTStatic{}, TupleCTStatic{},
-                             ImplizitTreeDynamic{}, FuncPtrDynamic{}
+                             ImplicitTreeDynamic{}, FuncPtrDynamic {}
 #ifndef _MSC_VER
-                             , DynoTreeDynamic{}, DynoTreeCTStatic{}
+                             ,
+                             DynoTreeDynamic{}, DynoTreeCTStatic {}
 #endif
-                             );
+  );
 
   if (cliArgs.listBenchmarks) {
     std::cout << "\n";

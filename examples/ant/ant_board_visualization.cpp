@@ -256,11 +256,11 @@ int main(int argc, char* argv[]) {
 
   using HashFunction = NodeNameHash<uint8_t, 16>;
 
-  implizit::initNodesBehavior<HashFunction, decltype(rpnTokenCursor),
-                              decltype(antBoardSim)>();
+  implicit_tree::initNodesBehavior<HashFunction, decltype(rpnTokenCursor),
+                                   decltype(antBoardSim)>();
 
   while (!antBoardSim.is_finish()) {
-    implizit::eval<HashFunction>(rpnTokenCursor, antBoardSim);
+    implicit_tree::eval<HashFunction>(rpnTokenCursor, antBoardSim);
   }
 
   //   implizit::FooBar<gpm::RPNTokenCursor, decltype(antBoardSim),

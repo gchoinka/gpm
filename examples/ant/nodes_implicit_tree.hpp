@@ -8,7 +8,7 @@
 #include <tuple>
 #include <type_traits>
 
-namespace implizit {
+namespace implicit_tree {
 
 enum class EvalMode { DoEval, TraverseOnly };
 
@@ -26,8 +26,6 @@ struct NodeDef {
 template <typename HashFunction, typename CursorType, typename ContexType>
 inline std::array<NodeDef<CursorType, ContexType>, HashFunction::kMaxHashValue>
     kNodesLUT{};
-    
-
 
 template <typename HashFunction, typename CursorType, typename ContexType>
 void defaultBehavior(CursorType &tokenCursor, ContexType &c, EvalMode em,
@@ -48,8 +46,7 @@ void initNodesBehavior() {
   using namespace std::literals;
   std::array nodeDef = {
       NodeT{2, "if"sv,
-            [](CursorType &tokenCursor, ContexType &c,
-               EvalMode em) {
+            [](CursorType &tokenCursor, ContexType &c, EvalMode em) {
               if (em == EvalMode::TraverseOnly) {
                 defaultBehavior<HashFunction>(tokenCursor, c, em, 2);
               } else {
@@ -70,34 +67,28 @@ void initNodesBehavior() {
               }
             }},
       NodeT{0, "m"sv,
-            [](CursorType &, ContexType &c,
-               EvalMode em) {
+            [](CursorType &, ContexType &c, EvalMode em) {
               if (em == EvalMode::DoEval) {
                 c.move();
               }
             }},
       NodeT{0, "r"sv,
-            [](CursorType &, ContexType &c,
-               EvalMode em) {
+            [](CursorType &, ContexType &c, EvalMode em) {
               if (em == EvalMode::DoEval) {
                 c.right();
               }
             }},
       NodeT{0, "l"sv,
-            [](CursorType &, ContexType &c,
-               EvalMode em) {
+            [](CursorType &, ContexType &c, EvalMode em) {
               if (em == EvalMode::DoEval) {
                 c.left();
               }
             }},
       NodeT{2, "p2"sv,
-            [](CursorType &tokenCursor, ContexType &c,
-               EvalMode em) {
+            [](CursorType &tokenCursor, ContexType &c, EvalMode em) {
               defaultBehavior<HashFunction>(tokenCursor, c, em, 2);
             }},
-      NodeT{3, "p3"sv,
-            [](CursorType &tokenCursor, ContexType &c,
-               EvalMode em) {
+      NodeT{3, "p3"sv, [](CursorType &tokenCursor, ContexType &c, EvalMode em) {
               defaultBehavior<HashFunction>(tokenCursor, c, em, 3);
             }}};
   // TODO: test for multiple inits
@@ -117,4 +108,4 @@ void eval(CursorType tokenCursor, ContexType &c) {
   (*behaviorFun)(tokenCursor, c, EvalMode::DoEval);
 }
 
-}  // namespace implizit
+}  // namespace implicit_tree
