@@ -15,10 +15,10 @@ struct VariantDynamic {
   std::string functionName() const { return "variantDynamic"; }
   std::string body(ant::NodesVariant) const {
     return fmt::format(R"""(
-template<typename AntBoardSimT>
-static int variantDynamic(AntBoardSimT antBoardSim, std::string_view const & sv, BenchmarkPart toMessure)
+template<typename AntBoardSimT, typename CursorType>
+      static int variantDynamic(AntBoardSimT antBoardSim, CursorType cursor, BenchmarkPart toMessure)
 {{    
-  auto anAnt = gpm::factory<ant::NodesVariant>(gpm::RPNTokenCursor{{sv}});
+  auto anAnt = gpm::factory<ant::NodesVariant>(cursor);
   if(toMessure == BenchmarkPart::Create) {{
     benchmark::DoNotOptimize(anAnt);
     return 0;

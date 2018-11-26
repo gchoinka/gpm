@@ -66,8 +66,8 @@ struct UnwrappedDirectCTStatic {
   std::string functionName() const { return "unwrappedDirectCTStatic"; }
   std::string body(ant::NodesVariant ant) const {
     return fmt::format(R"""(
-template<typename AntBoardSimT>
-int unwrappedDirectCTStatic(AntBoardSimT antBoardSim, std::string_view const &, BenchmarkPart toMessure)
+template<typename AntBoardSimT, typename CursorType>
+int unwrappedDirectCTStatic(AntBoardSimT antBoardSim, CursorType, BenchmarkPart toMessure)
 {{
   if(toMessure == BenchmarkPart::Create) 
     return 0;

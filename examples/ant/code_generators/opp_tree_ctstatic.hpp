@@ -69,8 +69,8 @@ struct OPPTreeCTStatic {
 
   std::string body(ant::NodesVariant ant) const {
     return fmt::format(R"""(
-template<typename AntBoardSimT>
-int oppTreeCTStatic(AntBoardSimT antBoardSim, std::string_view const &, BenchmarkPart toMessure)
+template<typename AntBoardSimT, typename CursorType>
+int oppTreeCTStatic(AntBoardSimT antBoardSim, CursorType, BenchmarkPart toMessure)
 {{                
   auto oopTree = {oopNotation};
   if(toMessure == BenchmarkPart::Create) {{

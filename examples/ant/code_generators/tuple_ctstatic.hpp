@@ -64,8 +64,8 @@ struct TupleCTStatic {
   std::string body(ant::NodesVariant ant) const {
     return fmt::format(
         R"""(
-template<typename AntBoardSimT>
-static int tupleCTStatic(AntBoardSimT antBoardSim, std::string_view const &, BenchmarkPart toMessure)
+template<typename AntBoardSimT, typename CursorType>
+static int tupleCTStatic(AntBoardSimT antBoardSim, CursorType, BenchmarkPart toMessure)
 {{ 
   using namespace tup;
   constexpr auto anAnt = {tupleNotation}{{}};

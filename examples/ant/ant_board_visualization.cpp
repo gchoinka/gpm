@@ -103,53 +103,6 @@ decltype(auto) getAntBoardSim(char const* filename) {
   return antSim;
 }
 
-// auto crossover = [](ant::NodesVariant& idv1, ant::NodesVariant& idv2,
-//                     auto randomGen) {
-//   std::array<std::reference_wrapper<ant::NodesVariant>, 2> indis = {
-//       std::ref(idv1), std::ref(idv2)};
-//
-//   std::array<std::size_t, 2> crossoverPointsIndex;
-//   for (std::size_t i = 0; i < 2; ++i) {
-//     auto treeSize = boost::apply_visitor(gpm::CountNodes{}, indis[i].get());
-//     crossoverPointsIndex[i] =
-//         std::uniform_int_distribution<std::size_t>{1, treeSize -
-//         1}(randomGen);
-//   }
-//
-//   std::array<ant::NodesVariant, 2> crossoverPoints{};
-//   for (std::size_t i = 0; i < 2; ++i) {
-//     std::size_t idx = 1;
-//     std::size_t const toFind = crossoverPointsIndex[i];
-//     boost::apply_visitor(
-//         gpm::CallSinkOnNodes{
-//             [&idx, toFind, &crossoverPoints, i](ant::NodesVariant& n) -> bool
-//             {
-//               if (idx++ == toFind) {
-//                 crossoverPoints[i] = n;
-//                 return false;
-//               }
-//               return true;
-//             }},
-//         indis[i].get());
-//   }
-//
-//   for (std::size_t i = 0; i < 2; ++i) {
-//     std::size_t idx = 1;
-//     std::size_t const toFind = crossoverPointsIndex[i];
-//     boost::apply_visitor(
-//         gpm::CallSinkOnNodes{
-//             [&idx, toFind, &crossoverPoints, i](ant::NodesVariant& n) -> bool
-//             {
-//               if (idx++ == toFind) {
-//                 n = crossoverPoints[1 - i];
-//                 return false;
-//               }
-//               return true;
-//             }},
-//         indis[i].get());
-//   }
-// };
-
 namespace {
 
 struct CLIArgs {
@@ -255,9 +208,6 @@ int main(int argc, char* argv[]) {
   auto rpnTokenCursor = gpm::RPNTokenCursor{p};
 
   using HashFunction = NodeNameHash<uint8_t, 16>;
-
-  implicit_tree::initNodesBehavior<HashFunction, decltype(rpnTokenCursor),
-                                   decltype(antBoardSim)>();
 
   while (!antBoardSim.is_finish()) {
     implicit_tree::eval<HashFunction>(rpnTokenCursor, antBoardSim);

@@ -16,10 +16,10 @@ struct DynoTreeDynamic {
 
   std::string body(ant::NodesVariant) const {
     return fmt::format(R"""(
-template<typename AntBoardSimT>
-static int dynoTreeDynamic(AntBoardSimT antBoardSim, std::string_view const & sv, BenchmarkPart toMessure)
+template<typename AntBoardSimT, typename CursorType>
+static int dynoTreeDynamic(AntBoardSimT antBoardSim, CursorType cursor, BenchmarkPart toMessure)
 {{                
-  auto dynoTree = antdyno::factory<AntBoardSimT>(gpm::RPNTokenCursor{{sv}});
+  auto dynoTree = antdyno::factory<AntBoardSimT>(cursor);
 
   if(toMessure == BenchmarkPart::Create) {{
     benchmark::DoNotOptimize(dynoTree);

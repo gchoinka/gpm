@@ -34,14 +34,11 @@ struct NodeNameHash {{
   }}
 }};  
 
-template<typename AntBoardSimT>
-static int implicitTreeDynamic(AntBoardSimT antBoardSim, std::string_view const & sv, BenchmarkPart toMessure)
+template<typename AntBoardSimT, typename CursorType>
+static int implicitTreeDynamic(AntBoardSimT antBoardSim, CursorType cursor, BenchmarkPart toMessure)
 {{  
 
   using HashFunction = NodeNameHash<uint8_t, 16>;
-  auto cursor = gpm::RPNTokenCursor{{sv}};
-  implicit_tree::initNodesBehavior<HashFunction, decltype(cursor),
-                   decltype(antBoardSim)>();
 
   if(toMessure == BenchmarkPart::Create) {{
     benchmark::DoNotOptimize(cursor);

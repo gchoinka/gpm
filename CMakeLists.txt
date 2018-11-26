@@ -24,6 +24,8 @@ option(GPM_BUILD_EXAMPLES "Enable to build the tests" ON) # TODO split EXAMPLES 
 option(GPM_BUILD_BENCHMARK "Enable to build benchmarks" ON)
 option(GPM_BUILD_SKETCH "Enable to build sketch" OFF)
 option(GPM_CXX_COLORED_OUTPUT "Always produce ANSI-colored output (GNU/Clang only)." OFF)
+option(GPM_BUILD_WPROFILER "Enable to build with profiler (search for depandencies in system libgoogle-perftools-dev)" OFF)
+
 
 
 
@@ -47,6 +49,10 @@ endif()
 if(${GPM_BUILD_BENCHMARK})
     hunter_add_package(benchmark)
     find_package(benchmark CONFIG REQUIRED)
+endif()
+
+if(${GPM_BUILD_WPROFILER})
+  find_package(Gperftools REQUIRED)
 endif()
 
 find_package(ClangFormat)

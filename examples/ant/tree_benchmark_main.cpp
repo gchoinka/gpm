@@ -190,12 +190,12 @@ enum class BenchmarkPart { Full, Create };
 #pragma message \
     "run artificial_ant_generate and copy ant_simulation_benchmark_generated_functions.cpp to the same folder, touch this file and then rerun this target"
 
-template <typename AntBoardSimT>
+template <typename AntBoardSimT, typename CursorType>
 decltype(auto) getAllTreeBenchmarks() {
   return std::make_tuple();
 }
 
-[[gnu::unused]] static char const* getAntRPN() { return ""; }
+[[gnu::unused]] static char const* getAntPN() { return ""; }
 #endif
 
 namespace {
@@ -256,7 +256,8 @@ int main(int argc, char** argv) {
   }
   auto theAntBoardSim = resultAntBoardSimOutcome.value();
 
-  auto allTreeBechmarks = getAllTreeBenchmarks<decltype(theAntBoardSim)>();
+  auto allTreeBechmarks =
+      getAllTreeBenchmarks<decltype(theAntBoardSim), gpm::PNTokenCursor>();
 
   boost::hana::for_each(allTreeBechmarks, [theAntBoardSim,
                                            cliArgs](auto& treeBenchmarkTuple) {
@@ -266,7 +267,8 @@ int main(int argc, char** argv) {
       auto theAntBoardSimCopy = theAntBoardSim;
       for (auto _ : state)
         state.counters["score"] =
-            toCall(theAntBoardSimCopy, getAntRPN(), BenchmarkPart::Full);
+            toCall(theAntBoardSimCopy, gpm::PNTokenCursor{getAntPN()},
+                   BenchmarkPart::Full);
     };
     benchmark::RegisterBenchmark(nameFull.c_str(), BM_lambdaFull);
 
@@ -277,7 +279,8 @@ int main(int argc, char** argv) {
       auto theAntBoardSimCopy = theAntBoardSim;
       for (auto _ : state)
         state.counters["score"] =
-            toCall(theAntBoardSimCopy, getAntRPN(), BenchmarkPart::Create);
+            toCall(theAntBoardSimCopy, gpm::PNTokenCursor{getAntPN()},
+                   BenchmarkPart::Create);
     };
     benchmark::RegisterBenchmark(nameCreateOnly.c_str(), BM_lambdaCreateOnly);
   });

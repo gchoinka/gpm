@@ -17,10 +17,10 @@ struct OOPTreeDynamic {
 
   std::string body(ant::NodesVariant) const {
     return fmt::format(R"""(
-template<typename AntBoardSimT>
-static int oopTreeDynamic(AntBoardSimT antBoardSim, std::string_view const & sv, BenchmarkPart toMessure)
+template<typename AntBoardSimT, typename CursorType>
+static int oopTreeDynamic(AntBoardSimT antBoardSim, CursorType cursor, BenchmarkPart toMessure)
 {{                
-  auto oopTree = antoop::factory<AntBoardSimT>(gpm::RPNTokenCursor{{sv}});
+  auto oopTree = antoop::factory<AntBoardSimT>(cursor);
   if(toMessure == BenchmarkPart::Create) {{
     benchmark::DoNotOptimize(oopTree);
     return 0;

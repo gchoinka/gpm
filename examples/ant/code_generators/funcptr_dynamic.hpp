@@ -15,10 +15,10 @@ struct FuncPtrDynamic {
   std::string functionName() const { return "funcPtrDynamic"; }
   std::string body(ant::NodesVariant) const {
     return fmt::format(R"""(
-template<typename AntBoardSimT>
-static int funcPtrDynamic(AntBoardSimT antBoardSim, std::string_view const & sv, BenchmarkPart toMessure)
+template<typename AntBoardSimT, typename CursorType>
+static int funcPtrDynamic(AntBoardSimT antBoardSim, CursorType cursor, BenchmarkPart toMessure)
 {{    
-  auto anAnt = funcptr::factory<AntBoardSimT>(gpm::RPNTokenCursor{{sv}});
+  auto anAnt = funcptr::factory<AntBoardSimT>(cursor);
   if(toMessure == BenchmarkPart::Create) {{
     benchmark::DoNotOptimize(anAnt);
     return 0;

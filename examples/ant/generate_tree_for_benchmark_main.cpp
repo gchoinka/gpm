@@ -153,8 +153,8 @@ int main(int argc, char** argv) {
   std::ofstream outf(cliArgs.outfile.c_str());
 
   outf << fmt::format(
-      "static inline char const * getAntRPN() {{ return \"{antRPN}\"; }}\n",
-      "antRPN"_a = boost::apply_visitor(gpm::RPNPrinter<std::string>{}, ant));
+      "static inline char const * getAntPN() {{ return \"{antPN}\"; }}\n",
+      "antPN"_a = boost::apply_visitor(gpm::PNPrinter<std::string>{}, ant));
   hana::for_each(bm, [&](auto const& codeGenerator) {
     auto found = std::any_of(cliArgs.benchmark.begin(), cliArgs.benchmark.end(),
                              [&](auto const& bm) {
@@ -174,7 +174,7 @@ int main(int argc, char** argv) {
                              });
     if (!found) return;
     tupleElements += fmt::format(
-        R"""({Delimiter} std::make_tuple(&{FunctionPointer}<AntBoardSimT>, "{BenchmareName}"))""",
+        R"""({Delimiter} std::make_tuple(&{FunctionPointer}<AntBoardSimT, CursorType>, "{BenchmareName}"))""",
         "Delimiter"_a = delimiter,
         "FunctionPointer"_a = codeGenerator.functionName(),
         "BenchmareName"_a = codeGenerator.name());
@@ -183,7 +183,7 @@ int main(int argc, char** argv) {
 
   fmt::print(outf,
              R"""(
-template<typename AntBoardSimT>
+template<typename AntBoardSimT, typename CursorType>
 decltype(auto) getAllTreeBenchmarks()
 {{
   return std::make_tuple({tupleElements});

@@ -24,8 +24,12 @@ struct NodeDef {
 };
 
 template <typename HashFunction, typename CursorType, typename ContexType>
+std::array<NodeDef<CursorType, ContexType>, HashFunction::kMaxHashValue>
+initNodesBehavior();
+
+template <typename HashFunction, typename CursorType, typename ContexType>
 inline std::array<NodeDef<CursorType, ContexType>, HashFunction::kMaxHashValue>
-    kNodesLUT{};
+    kNodesLUT = initNodesBehavior<HashFunction, CursorType, ContexType>();
 
 template <typename HashFunction, typename CursorType, typename ContexType>
 void defaultBehavior(CursorType &tokenCursor, ContexType &c, EvalMode em,
@@ -41,7 +45,8 @@ void defaultBehavior(CursorType &tokenCursor, ContexType &c, EvalMode em,
 }
 
 template <typename HashFunction, typename CursorType, typename ContexType>
-void initNodesBehavior() {
+std::array<NodeDef<CursorType, ContexType>, HashFunction::kMaxHashValue>
+initNodesBehavior() {
   using NodeT = NodeDef<CursorType, ContexType>;
   using namespace std::literals;
   std::array nodeDef = {
@@ -91,12 +96,15 @@ void initNodesBehavior() {
       NodeT{3, "p3"sv, [](CursorType &tokenCursor, ContexType &c, EvalMode em) {
               defaultBehavior<HashFunction>(tokenCursor, c, em, 3);
             }}};
-  // TODO: test for multiple inits
+
+  std::array<NodeDef<CursorType, ContexType>, HashFunction::kMaxHashValue>
+      toRet{};
   for (auto &nDef : nodeDef) {
     auto hash = HashFunction::get(nDef.name);
     // TODO: test for colision
-    kNodesLUT<HashFunction, CursorType, ContexType>[hash] = nDef;
+    toRet[hash] = nDef;
   }
+  return toRet;
 }
 
 template <typename HashFunction, typename CursorType, typename ContexType>

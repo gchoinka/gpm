@@ -15,13 +15,13 @@ struct VariantDynamic2 {
   std::string functionName() const { return "variantDynamic2"; }
   std::string body(ant::NodesVariant) const {
     return fmt::format(R"""(
-template<typename AntBoardSimT>
-static int variantDynamic2(AntBoardSimT antBoardSim, std::string_view const & sv, BenchmarkPart toMessure)
+template<typename AntBoardSimT, typename CursorType>
+static int variantDynamic2(AntBoardSimT antBoardSim, CursorType cursor, BenchmarkPart toMessure)
 {{   
   constexpr auto maxHash = 16;
     
   auto anAnt =
-    gpm::experimental::FactoryV2<ant::NodesVariant, gpm::RPNTokenCursor, maxHash>::factory(gpm::RPNTokenCursor{{sv}});
+    gpm::experimental::FactoryV2<ant::NodesVariant, CursorType, maxHash>::factory(cursor);
 
   if(toMessure == BenchmarkPart::Create) {{
     benchmark::DoNotOptimize(anAnt);

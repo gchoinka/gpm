@@ -35,6 +35,9 @@ target_include_directories(GeneratedBechmarks INTERFACE ${GeneratedBechmarksIncl
 add_library(GpmExamples INTERFACE)
 target_compile_options(GpmExamples INTERFACE ${warning_flags} ${default_compiler_flags})
 target_link_libraries(GpmExamples INTERFACE Gpm fmt::fmt Boost::boost Outcome)
+if(${GPM_BUILD_WPROFILER})
+  target_link_libraries(GpmExamples INTERFACE ${GPERFTOOLS_PROFILER})
+endif()
 
 add_executable(generate_tree_for_benchmark generate_tree_for_benchmark_main.cpp) 
 setStandard(generate_tree_for_benchmark 17)
@@ -58,7 +61,8 @@ target_link_libraries(ant_genetic_programming GpmExamples Threads::Threads Boost
 
 
 #set(antrpndeffile "${CMAKE_CURRENT_SOURCE_DIR}/data/randomAnt.txt")
-set(antrpndeffile "${CMAKE_CURRENT_SOURCE_DIR}/data/optAnt.txt")
+#set(antrpndeffile "${CMAKE_CURRENT_SOURCE_DIR}/data/optAnt.txt")
+set(antrpndeffile "${CMAKE_CURRENT_SOURCE_DIR}/data/optAntPN.txt")
 
 option(GPM_FORMAT_GENERATED_FILES "Should the files which were generated in ${GeneratedBechmarksIncludesDir} be formated?(only usefull if someone wants to read them)." OFF)
 
