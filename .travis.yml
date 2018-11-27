@@ -35,6 +35,7 @@ matrix:
       addons: *default_addons
     - env: CMAKE_BUILD_TYPE=Release CXXCOMPILER=clang++-7 CCOMPILER=clang-7 CLANG_VERS="7"
       addons: *default_addons
+    # clang with libc++ 
     - env: CMAKE_BUILD_TYPE=Release CXXCOMPILER=clang++-7 CCOMPILER=clang-7 CLANG_VERS="7" CMAKE_CXX_FLAGS="-stdlib=libc++" CMAKE_EXE_LINKER_FLAGS="-nodefaultlibs -L/usr/lib/llvm-7/lib -lc++ -lc++abi" CMAKE_SHARED_LINKER_FLAGS=""
       addons: *default_addons
 
@@ -54,6 +55,10 @@ script:
   - |
     mkdir build
     cd build
+    export CC=${CCCOMPILER}
+    export CXX=${CXXCOMPILER}
+    export CXX_FLAGS=${CMAKE_CXX_FLAGS}
+    export LD_FLAGS=${CMAKE_EXE_LINKER_FLAGS}
     ${CMAKE_BIN} .. -GNinja \
       -DCMAKE_CXX_COMPILER="${CXXCOMPILER}" \
       -DCMAKE_C_COMPILER="${CCCOMPILER}" \
