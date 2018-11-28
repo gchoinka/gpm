@@ -29,15 +29,15 @@ matrix:
           packages: [ "clang-7", "llvm-7-dev", "libc++-7-dev", "libc++abi-7-dev", "g++-7", "g++-8", "ninja-build", "xz-utils", "gdb"]
     - env: CMAKE_BUILD_TYPE=Debug CXXCOMPILER=g++-7 CCOMPILER=gcc-7
       addons: *default_addons
-    #- env: CMAKE_BUILD_TYPE=Release CXXCOMPILER=g++-8 CCOMPILER=gcc-8
-    #  addons: *default_addons
+    - env: CMAKE_BUILD_TYPE=Release CXXCOMPILER=g++-8 CCOMPILER=gcc-8
+      addons: *default_addons
     - env: CMAKE_BUILD_TYPE=Debug CXXCOMPILER=clang++-7 CMAKE_CXX_FLAGS="-fsanitize=undefined -fno-omit-frame-pointer" CMAKE_EXE_LINKER_FLAGS="-fsanitize=undefined" CLANG_VERS="7" CCOMPILER=clang-7 
       addons: *default_addons
     - env: CMAKE_BUILD_TYPE=Release CXXCOMPILER=clang++-7 CCOMPILER=clang-7 CLANG_VERS="7"
       addons: *default_addons
-    # clang with libc++ 
-    - env: CMAKE_BUILD_TYPE=Release CXXCOMPILER=clang++-7 CCOMPILER=clang-7 CLANG_VERS="7" CMAKE_CXX_FLAGS="-stdlib=libc++" CMAKE_EXE_LINKER_FLAGS="-stdlib=libc++ -L/usr/lib/llvm-7/lib -lc++ -lc++abi" CMAKE_SHARED_LINKER_FLAGS=""
-      addons: *default_addons
+    # clang with libc++, disabled until i find a way to tell hunter to build boost with libc++, maybe we need a build without hunter
+    #- env: CMAKE_BUILD_TYPE=Release CXXCOMPILER=clang++-7 CCOMPILER=clang-7 CLANG_VERS="7" CMAKE_CXX_FLAGS="-stdlib=libc++" CMAKE_EXE_LINKER_FLAGS="-stdlib=libc++ -L/usr/lib/llvm-7/lib -lc++ -lc++abi" CMAKE_SHARED_LINKER_FLAGS=""
+    # addons: *default_addons
 
 
 script:
