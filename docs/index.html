@@ -427,6 +427,49 @@ constexpr auto optAnt = tuple&lt;
 </section>
 
 </section>
+				
+<section>
+<section data-markdown>
+# function pointer 
+</section>
+<section data-markdown>
+```c++
+struct Node {
+  using BehaviorPtr = void (*)(Node const &, AntBoardSim &);
+
+  void operator()(Node const &n, AntBoardSim &c) const {
+    behavior(n, c);
+  }
+  BehaviorPtr behavior = nullptr;
+  std::vector<Node> children;
+};
+```
+</section>
+
+<section data-markdown>
+```c++ 
+auto childCount = [](int childCount) {
+  return std::vector<NodeT>(childCount, NodeT{});
+};
+constexpr auto getAntNodes() -> decltype(auto) {
+  return std::array{
+    Node{[](Node const &self, AntBoardSim &c) {
+      if (c.is_food_in_front())
+        self.children[0](self.children[0], c);
+      else
+        self.children[1](self.children[1], c);
+      },
+      childCount(2)},
+    Node{[](Node const &, AntBoardSim &c) {
+        c.move(); 
+      }, 
+      childCount(0)},
+  };
+}
+```
+</section>
+</section>				
+				
 
 
 			</div>
