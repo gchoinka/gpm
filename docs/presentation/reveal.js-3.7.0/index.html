@@ -114,11 +114,47 @@ class AntBoardSim {
 </section>
 <section data-markdown>
 ```c++
-class BaseNode{
-  virtual void operator()(AntBoardSim &contex) const = 0;
-  virtual ~BaseNode() = 0;
-  std::vector&lt;std::unique_ptr&lt;BaseNode&gt;&gt; children_;
+class IBaseNode {
+  virtual void eval(AntBoardSim &contex) const = 0;
+  virtual ~IBaseNode() = 0;
 };  
+template<std::size_t ChildrenCount>
+class ABaseNode : public IBaseNode {
+  std::array&lt;std::unique_ptr&lt;IBaseNode&gt;,ChildrenCount&gt; children_;
+};  
+
+```
+```c++
+class Move : public ABaseNode&lt;0&gt; {
+  virtual void eval(AntBoardSim &contex) const override {
+    contex.move(); 
+  }
+};
+
+```
+</section>
+<section data-markdown>
+```c++
+class IfFoodAhead : public ABaseNode&lt;2&gt; {
+ public:
+  virtual void eval(AntBoardSim &contex) const override {
+    if (contex.is_food_in_front())
+      children_[0]->eval(contex);
+    else
+      children_[1]->eval(contex);
+  }
+};
+
+```
+</section>
+
+<section>
+<section data-markdown>
+# variant
+</section>
+<section data-markdown>
+```c++
+
 
 ```
 ```c++
