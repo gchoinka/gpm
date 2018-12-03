@@ -78,16 +78,6 @@
 </section>
 
 <section data-markdown>
-<script type="text/template">
-### Why Genetic Programming
- - can produce human understandable results <!-- .element: class="fragment" -->
-
-### Why Not Genetic Programming <!-- .element: class="fragment" -->
- - Gens and fitness function need a lot of domain knowlage <!-- .element: class="fragment" -->
-</script>
-</section>
-
-<section data-markdown>
 ```c++
 auto population = { /* create random individuals */ };
 while(!solutionIsGoodEnough && !otherLimitReached)
@@ -100,6 +90,64 @@ while(!solutionIsGoodEnough && !otherLimitReached)
         population = nextGenerationPopulation;
 }
 ```
+</section>
+
+
+
+
+<section data-markdown>
+```c++
+class AntBoardSim {
+  void move();
+  void left();
+  void right();
+  bool is_food_in_front() const;
+  bool is_finish() const;
+  int score() const;
+};  
+```
+</section>
+
+<section>
+<section data-markdown>
+# OOP
+</section>
+<section data-markdown>
+```c++
+class BaseNode{
+  virtual void operator()(AntBoardSim &contex) const = 0;
+  virtual ~BaseNode() = 0;
+  std::vector&lt;std::unique_ptr&lt;BaseNode&gt;&gt; children_;
+};  
+
+```
+```c++
+class Move : public BaseNode {
+ public:
+  virtual void operator()(AntBoardSim &contex) const override {
+    contex.move(); 
+  }
+};
+
+```
+</section>
+<section data-markdown>
+```c++
+class IfFoodAhead : public BaseNode {
+ public:
+  virtual void operator()(AntBoardSim &contex) const override {
+    if (contex.is_food_in_front())
+      (*children_[0])(contex);
+    else
+      (*children_[1])(contex);
+  }
+};
+
+```
+</section>
+
+
+
 </section>
 
 			</div>
