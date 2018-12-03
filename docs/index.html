@@ -278,6 +278,7 @@ class EvalVisitor: boost::static_vistor&lt;void&gt; {
 ### Pros &amp; Cons
  - traversing the tree is a pain
  - vistor pattern much more modular
+ - heap objects are more hiden, value semantic 
  - error messages are full of boost preprocessor lint
 </script>
 </section>
@@ -421,7 +422,7 @@ constexpr auto optAnt = tuple&lt;
 <script type="text/template">
 ### Pros &amp; Cons
  - same runtime as static code gen <!-- .element: class="fragment" -->
- - can be iterate over <!-- .element: class="fragment" -->
+ - can be traversed <!-- .element: class="fragment" -->
 </script>
 </section>
 
