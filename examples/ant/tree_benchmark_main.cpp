@@ -201,10 +201,10 @@ int main(int argc, char** argv) {
   }
   auto theAntBoardSim = resultAntBoardSimOutcome.value();
 
-  //   using CursorType = gpm::PNTokenCursor;
-  //   auto getAntString = getAntPN;
-  using CursorType = gpm::RPNTokenCursor;
-  auto getAntString = getAntRPN;
+    using CursorType = gpm::PNTokenCursor;
+    auto getAntString = getAntPN;
+//   using CursorType = gpm::RPNTokenCursor;
+//   auto getAntString = getAntRPN;
 
   auto allTreeBechmarks =
       getAllTreeBenchmarks<decltype(theAntBoardSim), CursorType>();
