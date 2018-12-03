@@ -26,35 +26,6 @@
 #include "common/santa_fe_board.hpp"
 #include "common/visitor.hpp"
 
-// class FlattenTree : public
-// boost::static_visitor<std::vector<std::reference_wrapper<ant::NodesVariant>>>
-// {
-// public:
-//   mutable ant::NodesVariant * rootNode_ = nullptr;
-//   FlattenTree(ant::NodesVariant & rootNode):rootNode_{&rootNode}{}
-//
-//   template <typename T>
-//   std::vector<std::reference_wrapper<ant::NodesVariant>> operator()(T & node)
-//   const {
-//     std::vector<std::reference_wrapper<ant::NodesVariant>> toReturn_;
-//     if(rootNode_ != nullptr)
-//     {
-//       toReturn_.push_back(*rootNode_);
-//       rootNode_ = nullptr;
-//     }
-//     if constexpr (std::tuple_size<decltype(node.children)>::value != 0)
-//     {
-//       for (auto & n : node.children) {
-//         toReturn_.push_back(n);
-//         auto toAppend = boost::apply_visitor(*this, n);
-//         toReturn_.insert(std::end(toReturn_), std::begin(toAppend),
-//         std::end(toAppend));
-//       }
-//     }
-//     return toReturn_;
-//   }
-// };
-
 template <typename OutputIterT>
 class FlattenTree : public boost::static_visitor<OutputIterT> {
  public:

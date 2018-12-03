@@ -75,7 +75,7 @@ static int tupleCTStatic(AntBoardSimT antBoardSim, CursorType, BenchmarkPart toM
   }}
   while(!antBoardSim.is_finish())
   {{
-    tup::eval(antBoardSim, anAnt);
+    tup::eval(anAnt, antBoardSim);
   }}
   benchmark::DoNotOptimize(antBoardSim.score());
   return antBoardSim.score(); 

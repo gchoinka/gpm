@@ -27,6 +27,61 @@ namespace outcome = OUTCOME_V2_NAMESPACE;
 #include "nodes_implicit_tree.hpp"
 
 template <typename AntBoardSimT>
+class AntBoardSimDecorator2 {
+  AntBoardSimT orgAntBoardSim_;
+
+ public:
+  AntBoardSimDecorator2(AntBoardSimT& other) : orgAntBoardSim_{other} {}
+
+  template <typename F>
+  struct BefreAndAfterTask {
+    F f_;
+    BefreAndAfterTask(F f) : f_{f} { f_(); }
+    ~BefreAndAfterTask() { f_(); }
+  };
+
+  void move() {
+    BefreAndAfterTask b{[this]() {
+      orgAntBoardSim_.get_board_as_str([](auto s) { std::cout << s << "\n"; });
+    }};
+    orgAntBoardSim_.move();
+  }
+
+  void left() {
+    BefreAndAfterTask b{[this]() {
+      orgAntBoardSim_.get_board_as_str([](auto s) { std::cout << s << "\n"; });
+    }};
+    orgAntBoardSim_.left();
+  }
+
+  void right() {
+    BefreAndAfterTask b{[this]() {
+      orgAntBoardSim_.get_board_as_str([](auto s) { std::cout << s << "\n"; });
+    }};
+    orgAntBoardSim_.right();
+  }
+
+  bool is_food_in_front() const { return orgAntBoardSim_.is_food_in_front(); }
+
+  bool is_finish() const { return orgAntBoardSim_.is_finish(); }
+
+  int score() const { return orgAntBoardSim_.score(); }
+
+  std::string get_status_line() const {
+    return orgAntBoardSim_.get_status_line();
+  }
+
+  template <typename LineSinkF>
+  void get_board_as_str(LineSinkF lineSink) const {
+    orgAntBoardSim_.get_board_as_str(lineSink);
+  }
+
+  auto xSize() const { return orgAntBoardSim_.xSize(); }
+
+  auto ySize() const { return orgAntBoardSim_.ySize(); }
+};
+
+template <typename AntBoardSimT>
 class AntBoardSimDecorator {
   AntBoardSimT orgAntBoardSim_;
 

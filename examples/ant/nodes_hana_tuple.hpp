@@ -23,55 +23,55 @@ struct Prog2 {};
 struct Prog3 {};
 }  // namespace tag
 
-template <typename ContextT, typename Child0T, typename Child1T,
+template <typename ContextType, typename Child0T, typename Child1T,
           typename Child2T>
-void eval(ContextT& contex,
-          hana::tuple<tag::Prog3, Child0T, Child1T, Child2T> node);
+void eval(hana::tuple<tag::Prog3, Child0T, Child1T, Child2T> node,
+          ContextType& c);
 
-template <typename ContextT, typename Child0T, typename Child1T>
-void eval(ContextT& contex, hana::tuple<tag::Prog2, Child0T, Child1T> node);
+template <typename ContextType, typename Child0T, typename Child1T>
+void eval(hana::tuple<tag::Prog2, Child0T, Child1T> node, ContextType& c);
 
-template <typename ContextT, typename TrueTreeT, typename FalseTreeT>
-void eval(ContextT& contex,
-          hana::tuple<tag::IfFood, TrueTreeT, FalseTreeT> node);
+template <typename ContextType, typename TrueBranchT, typename FalseBranchT>
+void eval(hana::tuple<tag::IfFood, TrueBranchT, FalseBranchT> node,
+          ContextType& c);
 
-template <typename ContextT>
-void eval(ContextT& contex, hana::tuple<tag::Move>) {
-  contex.move();
+template <typename ContextType>
+void eval(hana::tuple<tag::Move>, ContextType& c) {
+  c.move();
 }
 
-template <typename ContextT>
-void eval(ContextT& contex, hana::tuple<tag::Left>) {
-  contex.left();
+template <typename ContextType>
+void eval(hana::tuple<tag::Left>, ContextType& c) {
+  c.left();
 }
 
-template <typename ContextT>
-void eval(ContextT& contex, hana::tuple<tag::Right>) {
-  contex.right();
+template <typename ContextType>
+void eval(hana::tuple<tag::Right>, ContextType& c) {
+  c.right();
 }
 
-template <typename ContextT, typename TrueTreeT, typename FalseTreeT>
-void eval(ContextT& contex,
-          hana::tuple<tag::IfFood, TrueTreeT, FalseTreeT> node) {
-  if (contex.is_food_in_front())
-    eval(contex, node[1_c]);
+template <typename ContextType, typename TrueBranchT, typename FalseBranchT>
+void eval(hana::tuple<tag::IfFood, TrueBranchT, FalseBranchT> node,
+          ContextType& c) {
+  if (c.is_food_in_front())
+    eval(node[1_c], c);
   else
-    eval(contex, node[2_c]);
+    eval(node[2_c], c);
 }
 
-template <typename ContextT, typename Child0T, typename Child1T>
-void eval(ContextT& contex, hana::tuple<tag::Prog2, Child0T, Child1T> node) {
-  eval(contex, node[1_c]);
-  eval(contex, node[2_c]);
+template <typename ContextType, typename Child0T, typename Child1T>
+void eval(hana::tuple<tag::Prog2, Child0T, Child1T> node, ContextType& c) {
+  eval(node[1_c], c);
+  eval(node[2_c], c);
 }
 
-template <typename ContextT, typename Child0T, typename Child1T,
+template <typename ContextType, typename Child0T, typename Child1T,
           typename Child2T>
-void eval(ContextT& contex,
-          hana::tuple<tag::Prog3, Child0T, Child1T, Child2T> node) {
-  eval(contex, node[1_c]);
-  eval(contex, node[2_c]);
-  eval(contex, node[3_c]);
+void eval(hana::tuple<tag::Prog3, Child0T, Child1T, Child2T> node,
+          ContextType& c) {
+  eval(node[1_c], c);
+  eval(node[2_c], c);
+  eval(node[3_c], c);
 }
 
 }  // namespace tup

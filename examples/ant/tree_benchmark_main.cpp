@@ -38,61 +38,6 @@ namespace outcome = OUTCOME_V2_NAMESPACE;
 #include "nodes_implicit_tree.hpp"
 #include "nodes_opp.hpp"
 
-template <typename AntBoardSimT>
-class AntBoardSimDecorator {
-  AntBoardSimT orgAntBoardSim_;
-
- public:
-  AntBoardSimDecorator(AntBoardSimT& other) : orgAntBoardSim_{other} {}
-
-  template <typename F>
-  struct BefreAndAfterTask {
-    F f_;
-    BefreAndAfterTask(F f) : f_{f} { f_(); }
-    ~BefreAndAfterTask() { f_(); }
-  };
-
-  void move() {
-    BefreAndAfterTask b{[this]() {
-      orgAntBoardSim_.get_board_as_str([](auto s) { std::cout << s << "\n"; });
-    }};
-    orgAntBoardSim_.move();
-  }
-
-  void left() {
-    BefreAndAfterTask b{[this]() {
-      orgAntBoardSim_.get_board_as_str([](auto s) { std::cout << s << "\n"; });
-    }};
-    orgAntBoardSim_.left();
-  }
-
-  void right() {
-    BefreAndAfterTask b{[this]() {
-      orgAntBoardSim_.get_board_as_str([](auto s) { std::cout << s << "\n"; });
-    }};
-    orgAntBoardSim_.right();
-  }
-
-  bool is_food_in_front() const { return orgAntBoardSim_.is_food_in_front(); }
-
-  bool is_finish() const { return orgAntBoardSim_.is_finish(); }
-
-  int score() const { return orgAntBoardSim_.score(); }
-
-  std::string get_status_line() const {
-    return orgAntBoardSim_.get_status_line();
-  }
-
-  template <typename LineSinkF>
-  void get_board_as_str(LineSinkF lineSink) const {
-    orgAntBoardSim_.get_board_as_str(lineSink);
-  }
-
-  auto xSize() const { return orgAntBoardSim_.xSize(); }
-
-  auto ySize() const { return orgAntBoardSim_.ySize(); }
-};
-
 decltype(auto) getAntSataFeStaticBoardSim() {
   using namespace ant;
   auto max_steps = 400;
@@ -256,34 +201,42 @@ int main(int argc, char** argv) {
   }
   auto theAntBoardSim = resultAntBoardSimOutcome.value();
 
+  //   using CursorType = gpm::PNTokenCursor;
+  //   auto getAntString = getAntPN;
+  using CursorType = gpm::RPNTokenCursor;
+  auto getAntString = getAntRPN;
+
   auto allTreeBechmarks =
-      getAllTreeBenchmarks<decltype(theAntBoardSim), gpm::PNTokenCursor>();
+      getAllTreeBenchmarks<decltype(theAntBoardSim), CursorType>();
 
-  boost::hana::for_each(allTreeBechmarks, [theAntBoardSim,
-                                           cliArgs](auto& treeBenchmarkTuple) {
-    auto nameFull = std::string{std::get<1>(treeBenchmarkTuple)} + "Full";
-    auto toCall = std::get<0>(treeBenchmarkTuple);
-    auto BM_lambdaFull = [toCall, theAntBoardSim](benchmark::State& state) {
-      auto theAntBoardSimCopy = theAntBoardSim;
-      for (auto _ : state)
-        state.counters["score"] =
-            toCall(theAntBoardSimCopy, gpm::PNTokenCursor{getAntPN()},
-                   BenchmarkPart::Full);
-    };
-    benchmark::RegisterBenchmark(nameFull.c_str(), BM_lambdaFull);
+  boost::hana::for_each(
+      allTreeBechmarks,
+      [theAntBoardSim, cliArgs, getAntString](auto& treeBenchmarkTuple) {
+        auto nameFull = std::string{std::get<1>(treeBenchmarkTuple)} + "Full";
+        auto toCall = std::get<0>(treeBenchmarkTuple);
+        auto BM_lambdaFull = [toCall, theAntBoardSim,
+                              getAntString](benchmark::State& state) {
+          auto theAntBoardSimCopy = theAntBoardSim;
+          for (auto _ : state)
+            state.counters["score"] =
+                toCall(theAntBoardSimCopy, CursorType{getAntString()},
+                       BenchmarkPart::Full);
+        };
+        benchmark::RegisterBenchmark(nameFull.c_str(), BM_lambdaFull);
 
-    auto nameCreateOnly =
-        std::string{std::get<1>(treeBenchmarkTuple)} + "CreateOnly";
-    auto BM_lambdaCreateOnly = [toCall,
-                                theAntBoardSim](benchmark::State& state) {
-      auto theAntBoardSimCopy = theAntBoardSim;
-      for (auto _ : state)
-        state.counters["score"] =
-            toCall(theAntBoardSimCopy, gpm::PNTokenCursor{getAntPN()},
-                   BenchmarkPart::Create);
-    };
-    benchmark::RegisterBenchmark(nameCreateOnly.c_str(), BM_lambdaCreateOnly);
-  });
+        auto nameCreateOnly =
+            std::string{std::get<1>(treeBenchmarkTuple)} + "CreateOnly";
+        auto BM_lambdaCreateOnly = [toCall, theAntBoardSim,
+                                    getAntString](benchmark::State& state) {
+          auto theAntBoardSimCopy = theAntBoardSim;
+          for (auto _ : state)
+            state.counters["score"] =
+                toCall(theAntBoardSimCopy, CursorType{getAntString()},
+                       BenchmarkPart::Create);
+        };
+        benchmark::RegisterBenchmark(nameCreateOnly.c_str(),
+                                     BM_lambdaCreateOnly);
+      });
 
   benchmark::Initialize(&argc, argv);
   benchmark::RunSpecifiedBenchmarks();
