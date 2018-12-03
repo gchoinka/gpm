@@ -118,9 +118,10 @@ class IBaseNode {
   virtual void eval(AntBoardSim &contex) const = 0;
   virtual ~IBaseNode() = 0;
 };  
-template<std::size_t ChildrenCount>
+template&lt;std::size_t ChildrenCount&gt;
 class ABaseNode : public IBaseNode {
-  std::array&lt;std::unique_ptr&lt;IBaseNode&gt;,ChildrenCount&gt; children_;
+  std::array&lt;
+    std::unique_ptr&lt;IBaseNode&gt;, ChildrenCount&gt; children_;
 };  
 
 ```
@@ -147,6 +148,15 @@ class IfFoodAhead : public ABaseNode&lt;2&gt; {
 
 ```
 </section>
+<section data-markdown>
+<script type="text/template">
+### Pros &amp; Cons
+ - object are on the heap 
+ - well understand
+ - pointer semantic 
+</script>
+</section>
+</section>
 
 <section>
 <section data-markdown>
@@ -154,37 +164,243 @@ class IfFoodAhead : public ABaseNode&lt;2&gt; {
 </section>
 <section data-markdown>
 ```c++
-
+struct MoveTag {};
+struct RightTag {};
+using AntNode = boost::variant&lt;MoveTag, RightTag&gt;;
 
 ```
+</section>
+<section data-markdown>
 ```c++
-class Move : public BaseNode {
- public:
-  virtual void operator()(AntBoardSim &contex) const override {
-    contex.move(); 
+class EvalVisitor: boost::static_vistor&lt;void&gt; {
+  AntBoardSim & contex;
+  
+  void operator()(MoveTag){
+    contex.move();
   }
+  
+  void operator()(RightTag){
+    contex.right();
+  }
+};
+
+```
+</section>
+
+<section data-markdown>
+```c++
+struct MoveTag {};
+struct RightTag {};
+struct IfFoodAheadTag {
+  std::array&lt;AntNode, 2&gt; children_;
+};
+using AntNode = boost::variant&lt;
+  MoveTag, RightTag, IfFoodAheadTag&gt;;
+
+```
+</section>
+
+<section data-markdown>
+```c++
+struct MoveTag {};
+struct RightTag {};
+struct IfFoodAheadTag;
+using AntNode = boost::variant&lt;
+  MoveTag, RightTag, IfFoodAheadTag&gt;;
+struct IfFoodAheadTag {
+  std::array&lt;AntNode, 2&gt; children_;
 };
 
 ```
 </section>
 <section data-markdown>
 ```c++
-class IfFoodAhead : public BaseNode {
- public:
-  virtual void operator()(AntBoardSim &contex) const override {
-    if (contex.is_food_in_front())
-      (*children_[0])(contex);
-    else
-      (*children_[1])(contex);
-  }
+struct MoveTag {};
+struct RightTag {};
+struct IfFoodAheadTag;
+using AntNode = boost::variant&lt;
+  MoveTag, 
+  RightTag, 
+  boost::recursive_wrapper&lt;IfFoodAheadTag&gt;&gt;;
+struct IfFoodAheadTag {
+  std::array&lt;AntNode, 2&gt; children_;
 };
 
 ```
 </section>
 
+<section data-markdown>
+```c++
+class EvalVisitor: boost::static_vistor&lt;void&gt; {
+  AntBoardSim & contex;
+  
+  void operator()(MoveTag){ contex.move(); }
+  void operator()(RightTag){ contex.right(); }
+  
+  void operator()(IfFoodAheadTag){
+    if (contex.is_food_in_front())
+      boost::apply_vistor(*this, children_[0]);
+    else
+      boost::apply_vistor(*this, children_[1]);
+  }
+};
 
+```
+</section>
+<section data-markdown>
+<script type="text/template">
+### Pros &amp; Cons
+ - traversing the tree is a pain
+ - vistor pattern much more modular
+ - error messages are full of boost preprocessor lint
+</script>
+</section>
+</section>
+
+
+<section>
+<section data-markdown>
+# C++ Code generator
+</section>
+<section data-markdown>
+```c++
+if (antBoardSim.is_food_in_front()) {
+  antBoardSim.move();
+} 
+else {
+  { //p2
+    { //p2
+      antBoardSim.right();
+      antBoardSim.right();
+    }
+    antBoardSim.move();
+  }
+}
+```
+</section>
+
+<section data-markdown>
+```c++
+#if __has_include("generated_code.cpp")
+  #include "generated_code.cpp"
+#else
+  #pragma message "generated_code.cpp is missing!" 
+
+  template&lt;typename ContextType&gt;
+  static void evalAntBoard(ContextType & antBoardSim) {
+  }
+#endif
+```
+</section>
+<section data-markdown>
+<script type="text/template">
+### Pros &amp; Cons
+ - compile time <!-- .element: class="fragment" -->
+ - build system dependency  <!-- .element: class="fragment" -->
+</script>
+</section>
 
 </section>
+
+
+
+<section>
+<section data-markdown>
+# code gen. to tuples
+</section>
+<section data-markdown>
+```c++
+namespace tag {
+struct Move {};
+struct Right {};
+struct IfFood {};
+struct Prog2 {};
+}  // namespace tag
+```
+</section>
+
+<section data-markdown>
+```c++
+template &lt;typename ContextType, 
+  typename Child0T, 
+  typename Child1T&gt;
+void eval(
+  tuple&lt;tag::Prog2, Child0T, Child1T&gt; node, 
+  ContextType& c);
+
+template &lt;typename ContextType, 
+  typename TrueBranchT, 
+  typename FalseBranchT&gt;
+void eval(
+  tuple&lt;tag::IfFood, TrueBranchT, FalseBranchT&gt; node,
+  ContextType& c);
+```
+</section>
+
+<section data-markdown>
+```c++
+template &lt;typename ContextType&gt;
+void eval(tuple&lt;tag::Move&gt;, ContextType& c) {
+  c.move();
+}
+```
+</section>
+
+<section data-markdown>
+```c++
+template &lt;typename ContextType, 
+  typename TrueBranchT, 
+  typename FalseBranchT&gt;
+void eval(
+  tuple&lt;tag::IfFood, TrueBranchT, FalseBranchT&gt; node,
+  ContextType& c) {
+  if (c.is_food_in_front())
+    eval(node[1_c], c);
+  else
+    eval(node[2_c], c);
+}
+```
+</section>
+
+<section data-markdown>
+```c++
+template &lt;typename ContextType, 
+  typename Child0T, 
+  typename Child1T&gt;
+void eval(
+  tuple&lt;tag::Prog2, Child0T, Child1T&gt; node, 
+  ContextType& c) {
+  eval(node[1_c], c);
+  eval(node[2_c], c);
+}
+```
+</section>
+
+<section data-markdown>
+```c++
+constexpr auto optAnt = tuple&lt;
+  tag::IfFood, 
+    tuple&lt;tag::Move&gt;,
+    tuple&lt;tag::Prog2, 
+      tuple&lt;tag::Prog2, 
+        tuple&lt;tag::Right&gt;, 
+        tuple&lt;tag::Right&gt;
+      &gt;,
+      tuple&lt;tag::Move&gt;
+    &gt;
+  &gt;{};
+```
+</section>
+<section data-markdown>
+<script type="text/template">
+### Pros &amp; Cons
+ - same runtime as static code gen <!-- .element: class="fragment" -->
+ - can be iterate over <!-- .element: class="fragment" -->
+</script>
+</section>
+
+</section>
+
 
 			</div>
 		</div>
