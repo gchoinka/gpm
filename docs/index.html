@@ -106,7 +106,7 @@
 <section data-markdown>
 ```c++
 auto population = { /* create random individuals */ };
-while(!solutionIsGoodEnough && !otherLimitReached)
+while(!solutionIsGoodEnough &amp;&amp; !otherLimitReached)
 {
         auto fitness = evalFitness(population);
         // choose the fittest individuals
@@ -141,7 +141,7 @@ class AntBoardSim {
 <section data-markdown>
 ```c++
 class IBaseNode {
-  virtual void eval(AntBoardSim &contex) const = 0;
+  virtual void eval(AntBoardSim &amp;contex) const = 0;
   virtual ~IBaseNode() = 0;
 };  
 template&lt;std::size_t ChildrenCount&gt;
@@ -153,7 +153,7 @@ class ABaseNode : public IBaseNode {
 ```
 ```c++
 class Move : public ABaseNode&lt;0&gt; {
-  virtual void eval(AntBoardSim &contex) const override {
+  virtual void eval(AntBoardSim &amp;contex) const override {
     contex.move(); 
   }
 };
@@ -164,7 +164,7 @@ class Move : public ABaseNode&lt;0&gt; {
 ```c++
 class IfFoodAhead : public ABaseNode&lt;2&gt; {
  public:
-  virtual void eval(AntBoardSim &contex) const override {
+  virtual void eval(AntBoardSim &amp;contex) const override {
     if (contex.is_food_in_front())
       children_[0]->eval(contex);
     else
@@ -199,7 +199,7 @@ using AntNode = boost::variant&lt;MoveTag, RightTag&gt;;
 <section data-markdown>
 ```c++
 class EvalVisitor: boost::static_vistor&lt;void&gt; {
-  AntBoardSim & contex;
+  AntBoardSim &amp; contex;
   
   void operator()(MoveTag){
     contex.move();
@@ -258,7 +258,7 @@ struct IfFoodAheadTag {
 <section data-markdown>
 ```c++
 class EvalVisitor: boost::static_vistor&lt;void&gt; {
-  AntBoardSim & contex;
+  AntBoardSim &amp; contex;
   
   void operator()(MoveTag){ contex.move(); }
   void operator()(RightTag){ contex.right(); }
@@ -314,7 +314,7 @@ else {
   #pragma message "generated_code.cpp is missing!" 
 
   template&lt;typename ContextType&gt;
-  static void evalAntBoard(ContextType & antBoardSim) {
+  static void evalAntBoard(ContextType &amp; antBoardSim) {
   }
 #endif
 ```
@@ -353,21 +353,21 @@ template &lt;typename ContextType,
   typename Child1T&gt;
 void eval(
   tuple&lt;tag::Prog2, Child0T, Child1T&gt; node, 
-  ContextType& c);
+  ContextType&amp; c);
 
 template &lt;typename ContextType, 
   typename TrueBranchT, 
   typename FalseBranchT&gt;
 void eval(
   tuple&lt;tag::IfFood, TrueBranchT, FalseBranchT&gt; node,
-  ContextType& c);
+  ContextType&amp; c);
 ```
 </section>
 
 <section data-markdown>
 ```c++
 template &lt;typename ContextType&gt;
-void eval(tuple&lt;tag::Move&gt;, ContextType& c) {
+void eval(tuple&lt;tag::Move&gt;, ContextType&amp; c) {
   c.move();
 }
 ```
@@ -435,13 +435,13 @@ constexpr auto optAnt = tuple&lt;
 <section data-markdown>
 ```c++
 struct Node {
-  using BehaviorPtr = void (*)(Node const &, AntBoardSim &);
+  using BehaviorPtr = void (*)(Node const &amp;, AntBoardSim &amp;);
 
-  void operator()(Node const &n, AntBoardSim &c) const {
+  void operator()(Node const &amp;n, AntBoardSim &amp;c) const {
     behavior(n, c);
   }
   BehaviorPtr behavior = nullptr;
-  std::vector<Node> children;
+  std::vector&lt;Node&gt; children;
 };
 ```
 </section>
@@ -449,18 +449,18 @@ struct Node {
 <section data-markdown>
 ```c++ 
 auto childCount = [](int childCount) {
-  return std::vector<NodeT>(childCount, NodeT{});
+  return std::vector&lt;NodeT&gt;(childCount, NodeT{});
 };
 constexpr auto getAntNodes() -> decltype(auto) {
   return std::array{
-    Node{[](Node const &self, AntBoardSim &c) {
+    Node{[](Node const &amp;self, AntBoardSim &amp;c) {
       if (c.is_food_in_front())
         self.children[0](self.children[0], c);
       else
         self.children[1](self.children[1], c);
       },
       childCount(2)},
-    Node{[](Node const &, AntBoardSim &c) {
+    Node{[](Node const &amp;, AntBoardSim &amp;c) {
         c.move(); 
       }, 
       childCount(0)},
@@ -486,7 +486,7 @@ constexpr auto getAntNodes() -> decltype(auto) {
 </section>
 <section data-markdown>
 ```c++
-char const * const antInPolishNotation = "if m p2 p2 r r m"
+char const * const antInPolishNotation = "if m p2 p2 r r m";
   // Tokenizer
   // Token to behavior LUT
 ```
