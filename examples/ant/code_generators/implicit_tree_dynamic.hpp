@@ -9,8 +9,12 @@
 
 #include <fmt/format.h>
 #include <string>
+#include <vector>
 
 struct ImplicitTreeDynamic {
+  std::vector<std::string> includes() const {
+    return {"nodes_implicit_tree.hpp"};
+  }
   std::string name() const { return "implicitTreeDynamic"; }
   std::string functionName() const { return "implicitTreeDynamic"; }
   std::string body(ant::NodesVariant) const {

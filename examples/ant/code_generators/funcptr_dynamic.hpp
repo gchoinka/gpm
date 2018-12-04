@@ -9,8 +9,10 @@
 
 #include <fmt/format.h>
 #include <string>
+#include <vector>
 
 struct FuncPtrDynamic {
+  std::vector<std::string> includes() const { return {"nodes_funcptr.hpp"}; }
   std::string name() const { return "funcPtrDynamic"; }
   std::string functionName() const { return "funcPtrDynamic"; }
   std::string body(ant::NodesVariant) const {

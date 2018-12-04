@@ -149,8 +149,19 @@ int main(int argc, char** argv) {
                              [&](auto const& bm) {
                                return bm == "all" || bm == codeGenerator.name();
                              });
-
-    if (found) outf << codeGenerator.body(ant);
+    if (found) {
+      for (auto inc : codeGenerator.includes())
+        outf << fmt::format("#include \"{}\"\n", inc);
+    }
+  });
+  hana::for_each(bm, [&](auto const& codeGenerator) {
+    auto found = std::any_of(cliArgs.benchmark.begin(), cliArgs.benchmark.end(),
+                             [&](auto const& bm) {
+                               return bm == "all" || bm == codeGenerator.name();
+                             });
+    if (found) {
+      outf << codeGenerator.body(ant);
+    }
   });
 
   std::string tupleElements;

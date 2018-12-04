@@ -46,6 +46,7 @@ target_link_libraries(generate_tree_for_benchmark GpmExamples Boost::program_opt
 add_executable(tree_benchmark tree_benchmark_main.cpp) 
 setStandard(tree_benchmark 17)
 target_link_libraries(tree_benchmark GpmExamples GeneratedBechmarks benchmark::benchmark Boost::program_options Frozen)
+target_include_directories(tree_benchmark PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_executable(ant_board_visualization ant_board_visualization.cpp) 
 setStandard(ant_board_visualization 17)

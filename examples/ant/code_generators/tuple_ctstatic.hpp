@@ -12,6 +12,7 @@
 #include <boost/type_index.hpp>
 #include <boost/variant.hpp>
 #include <string>
+#include <vector>
 
 #include "../common/nodes.hpp"
 
@@ -59,6 +60,7 @@ class AsTupletNotation : public boost::static_visitor<std::string> {
 };
 
 struct TupleCTStatic {
+  std::vector<std::string> includes() const { return {"nodes_hana_tuple.hpp"}; }
   std::string name() const { return "tupleCTStatic"; }
   std::string functionName() const { return "tupleCTStatic"; }
   std::string body(ant::NodesVariant ant) const {

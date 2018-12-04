@@ -9,8 +9,10 @@
 
 #include <fmt/format.h>
 #include <string>
+#include <vector>
 
 struct VariantDynamic2 {
+  std::vector<std::string> includes() const { return {"common/nodes.hpp"}; }
   std::string name() const { return "variantDynamic2"; }
   std::string functionName() const { return "variantDynamic2"; }
   std::string body(ant::NodesVariant) const {

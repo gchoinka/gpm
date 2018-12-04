@@ -31,11 +31,6 @@ namespace outcome = OUTCOME_V2_NAMESPACE;
 #include "common/santa_fe_board.hpp"
 #include "common/visitor.hpp"
 
-#include "nodes_funcptr.hpp"
-#include "nodes_hana_tuple.hpp"
-#include "nodes_implicit_tree.hpp"
-#include "nodes_opp.hpp"
-
 decltype(auto) getAntSataFeStaticBoardSim() {
   using namespace ant;
   auto max_steps = 400;
@@ -201,8 +196,6 @@ int main(int argc, char** argv) {
 
   using CursorType = gpm::PNTokenCursor;
   auto getAntString = getAntPN;
-  //   using CursorType = gpm::RPNTokenCursor;
-  //   auto getAntString = getAntRPN;
 
   auto allTreeBechmarks =
       getAllTreeBenchmarks<decltype(theAntBoardSim), CursorType>();

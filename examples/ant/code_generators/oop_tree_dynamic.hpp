@@ -7,11 +7,12 @@
  */
 #pragma once
 
-#include <string>
-
 #include <fmt/format.h>
+#include <string>
+#include <vector>
 
 struct OOPTreeDynamic {
+  std::vector<std::string> includes() const { return {"nodes_opp.hpp"}; }
   std::string name() const { return "oopTreeDynamic"; }
   std::string functionName() const { return "oopTreeDynamic"; }
 
