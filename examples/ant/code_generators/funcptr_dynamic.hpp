@@ -12,6 +12,7 @@
 #include <vector>
 
 struct FuncPtrDynamic {
+  std::string fileName() const { return __FILE__; }
   std::vector<std::string> includes() const { return {"nodes_funcptr.hpp"}; }
   std::string name() const { return "funcPtrDynamic"; }
   std::string functionName() const { return "funcPtrDynamic"; }

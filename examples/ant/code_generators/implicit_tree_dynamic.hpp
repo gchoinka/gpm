@@ -12,6 +12,7 @@
 #include <vector>
 
 struct ImplicitTreeDynamic {
+  std::string fileName() const { return __FILE__; }
   std::vector<std::string> includes() const {
     return {"nodes_implicit_tree.hpp"};
   }

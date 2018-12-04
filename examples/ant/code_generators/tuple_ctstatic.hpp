@@ -60,6 +60,7 @@ class AsTupletNotation : public boost::static_visitor<std::string> {
 };
 
 struct TupleCTStatic {
+  std::string fileName() const { return __FILE__; }
   std::vector<std::string> includes() const { return {"nodes_hana_tuple.hpp"}; }
   std::string name() const { return "tupleCTStatic"; }
   std::string functionName() const { return "tupleCTStatic"; }

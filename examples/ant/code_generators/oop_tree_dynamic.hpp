@@ -12,6 +12,7 @@
 #include <vector>
 
 struct OOPTreeDynamic {
+  std::string fileName() const { return __FILE__; }
   std::vector<std::string> includes() const { return {"nodes_opp.hpp"}; }
   std::string name() const { return "oopTreeDynamic"; }
   std::string functionName() const { return "oopTreeDynamic"; }
