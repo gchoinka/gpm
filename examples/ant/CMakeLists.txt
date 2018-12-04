@@ -46,9 +46,6 @@ target_link_libraries(generate_tree_for_benchmark GpmExamples Boost::program_opt
 add_executable(tree_benchmark tree_benchmark_main.cpp) 
 setStandard(tree_benchmark 17)
 target_link_libraries(tree_benchmark GpmExamples GeneratedBechmarks benchmark::benchmark Boost::program_options Frozen)
-if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-  target_link_libraries(tree_benchmark Dyno)
-endif()
 
 add_executable(ant_board_visualization ant_board_visualization.cpp) 
 setStandard(ant_board_visualization 17)
@@ -76,11 +73,8 @@ add_custom_target(time_build_tree_benchmark_all)
 
 set(last_target time_build_tree_benchmark_all)
 
-set(bmNameList implicitTreeDynamic funcPtrDynamic variantDynamic variantDynamic2 variantCTStatic oopTreeDynamic oppTreeCTStatic unwrappedDirectCTStatic unwrappedVisitorCallingCTStatic tupleCTStatic None)
+set(bmNameList implicitTreeDynamic funcPtrDynamic variantDynamic2 oopTreeDynamic tupleCTStatic None)
 
-if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-  set(bmNameList ${bmNameList} dynoTreeDynamic dynoTreeCTStatic)
-endif()
 
 foreach(bmName ${bmNameList})
     add_custom_target(time_build_tree_benchmark_${bmName}

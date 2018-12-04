@@ -35,20 +35,11 @@ namespace outcome = OUTCOME_V2_NAMESPACE;
 #include "nodes_hana_tuple.hpp"
 #include "nodes_opp.hpp"
 
-#ifndef _MSC_VER
-#include "code_generators/dyno_tree_ctstatic.hpp"
-#include "code_generators/dyno_tree_dynamic.hpp"
-#endif
 #include "code_generators/funcptr_dynamic.hpp"
 #include "code_generators/implicit_tree_dynamic.hpp"
 #include "code_generators/oop_tree_dynamic.hpp"
-#include "code_generators/opp_tree_ctstatic.hpp"
 #include "code_generators/tuple_ctstatic.hpp"
-#include "code_generators/unwrapped_direct_ctstatic.hpp"
-#include "code_generators/unwrapped_visitorcalling_ctstatic.hpp"
-#include "code_generators/variant_dynamic.hpp"
 #include "code_generators/variant_dynamic2.hpp"
-#include "code_generators/viarant_ctstatic.hpp"
 
 namespace {
 
@@ -129,16 +120,9 @@ int main(int argc, char** argv) {
   }
   auto cliArgs = cliArgsOutcome.value();
 
-  auto bm = hana::make_tuple(VariantDynamic{}, VariantDynamic2{},
-                             VariantCTStatic{}, OOPTreeDynamic{},
-                             OPPTreeCTStatic{}, UnwrappedDirectCTStatic{},
-                             UnwrappedVisitorCallingCTStatic{}, TupleCTStatic{},
-                             ImplicitTreeDynamic{}, FuncPtrDynamic {}
-#ifndef _MSC_VER
-                             ,
-                             DynoTreeDynamic{}, DynoTreeCTStatic {}
-#endif
-  );
+  auto bm =
+      hana::make_tuple(VariantDynamic2{}, OOPTreeDynamic{}, TupleCTStatic{},
+                       ImplicitTreeDynamic{}, FuncPtrDynamic{});
 
   if (cliArgs.listBenchmarks) {
     std::cout << "\n";

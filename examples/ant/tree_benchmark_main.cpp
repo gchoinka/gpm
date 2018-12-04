@@ -30,9 +30,7 @@ namespace outcome = OUTCOME_V2_NAMESPACE;
 #include "common/nodes.hpp"
 #include "common/santa_fe_board.hpp"
 #include "common/visitor.hpp"
-#ifndef _MSC_VER
-#include "nodes_dyno.hpp"
-#endif
+
 #include "nodes_funcptr.hpp"
 #include "nodes_hana_tuple.hpp"
 #include "nodes_implicit_tree.hpp"
@@ -201,10 +199,10 @@ int main(int argc, char** argv) {
   }
   auto theAntBoardSim = resultAntBoardSimOutcome.value();
 
-    using CursorType = gpm::PNTokenCursor;
-    auto getAntString = getAntPN;
-//   using CursorType = gpm::RPNTokenCursor;
-//   auto getAntString = getAntRPN;
+  using CursorType = gpm::PNTokenCursor;
+  auto getAntString = getAntPN;
+  //   using CursorType = gpm::RPNTokenCursor;
+  //   auto getAntString = getAntRPN;
 
   auto allTreeBechmarks =
       getAllTreeBenchmarks<decltype(theAntBoardSim), CursorType>();
