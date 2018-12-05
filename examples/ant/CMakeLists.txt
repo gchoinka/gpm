@@ -58,8 +58,8 @@ target_link_libraries(ant_genetic_programming GpmExamples Threads::Threads Boost
 
 
 
-#set(antrpndeffile "${CMAKE_CURRENT_SOURCE_DIR}/data/randomAnt.txt")
-set(antrpndeffile "${CMAKE_CURRENT_SOURCE_DIR}/data/optAnt.txt")
+set(antrpndeffile "${CMAKE_CURRENT_SOURCE_DIR}/data/randomAnt.txt")
+#set(antrpndeffile "${CMAKE_CURRENT_SOURCE_DIR}/data/optAnt.txt")
 #set(antrpndeffile "${CMAKE_CURRENT_SOURCE_DIR}/data/optAntPN.txt")
 
 option(GPM_FORMAT_GENERATED_FILES "Should the files which were generated in ${GeneratedBechmarksIncludesDir} be formated?(only usefull if someone wants to read them)." OFF)
@@ -74,7 +74,7 @@ add_custom_target(time_build_tree_benchmark_all)
 
 set(last_target time_build_tree_benchmark_all)
 
-set(bmNameList implicitTreeDynamic funcPtrDynamic variantDynamic2 oopTreeDynamic tupleCTStatic None)
+set(bmNameList implicitTreeDynamic funcPtrDynamic funcPtr2Dynamic variantDynamic oopTreeDynamic tupleCTStatic None)
 
 
 foreach(bmName ${bmNameList})

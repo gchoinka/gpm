@@ -35,11 +35,12 @@ namespace outcome = OUTCOME_V2_NAMESPACE;
 #include "nodes_hana_tuple.hpp"
 #include "nodes_opp.hpp"
 
+#include "code_generators/funcptr2_dynamic.hpp"
 #include "code_generators/funcptr_dynamic.hpp"
 #include "code_generators/implicit_tree_dynamic.hpp"
 #include "code_generators/oop_tree_dynamic.hpp"
 #include "code_generators/tuple_ctstatic.hpp"
-#include "code_generators/variant_dynamic2.hpp"
+#include "code_generators/variant_dynamic.hpp"
 
 namespace {
 
@@ -120,9 +121,9 @@ int main(int argc, char** argv) {
   }
   auto cliArgs = cliArgsOutcome.value();
 
-  auto bm =
-      hana::make_tuple(VariantDynamic2{}, OOPTreeDynamic{}, TupleCTStatic{},
-                       ImplicitTreeDynamic{}, FuncPtrDynamic{});
+  auto bm = hana::make_tuple(VariantDynamic{}, OOPTreeDynamic{},
+                             TupleCTStatic{}, ImplicitTreeDynamic{},
+                             FuncPtrDynamic{}, FuncPtr2Dynamic{});
 
   if (cliArgs.listBenchmarks) {
     std::cout << "\n";
