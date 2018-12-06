@@ -27,6 +27,8 @@ struct BaseNode : public CTString {
 };
 
 struct AnyTypeNullSink {
+  AnyTypeNullSink() {}
+  
   template <typename T>
   AnyTypeNullSink(T const &&) {}
   template <typename T>
