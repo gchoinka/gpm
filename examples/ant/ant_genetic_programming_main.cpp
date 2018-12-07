@@ -278,7 +278,7 @@ int main() {
     console->info("refill");
     population.resize(populationSize);
 
-    [&population, &rndNodeGen]() {
+    [&population, &rndNodeGen, populationSize]() {
       auto asyncWorkersCount =
           std::min(std::size_t(std::thread::hardware_concurrency()),
                    std::size_t(populationSize) - population.size());
