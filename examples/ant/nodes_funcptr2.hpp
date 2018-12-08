@@ -41,37 +41,39 @@ struct NodeDescription {
 };
 
 template <typename ContexType>
-constexpr auto getAntNodes() -> decltype(auto) {
-  using NodeT = Node<ContexType>;
-  using NodeDesT = NodeDescription<ContexType>;
-  using namespace std::literals;
-  return std::array{
-      NodeDesT{"if"sv,
-               [](NodeT const &self, ContexType &c) {
-                 if (c.is_food_in_front())
-                   self.children[0](self.children[0], c);
-                 else
-                   self.children[1](self.children[1], c);
-               },
-               2},
-      NodeDesT{"m"sv, [](NodeT const &, ContexType &c) { c.move(); }, 0},
-      NodeDesT{"l"sv, [](NodeT const &, ContexType &c) { c.left(); }, 0},
-      NodeDesT{"r"sv, [](NodeT const &, ContexType &c) { c.right(); }, 0},
-      NodeDesT{"p2"sv,
-               [](NodeT const &self, ContexType &c) {
-                 for (auto &child : self.children) child(child, c);
-               },
-               2},
-      NodeDesT{"p3"sv,
-               [](NodeT const &self, ContexType &c) {
-                 for (auto &child : self.children) child(child, c);
-               },
-               3}};
-}
+struct GetAntNodes {
+  static constexpr auto get() -> decltype(auto) {
+    using NodeT = Node<ContexType>;
+    using NodeDesT = NodeDescription<ContexType>;
+    using namespace std::literals;
+    return std::array{
+        NodeDesT{"if"sv,
+                 [](NodeT const &self, ContexType &c) {
+                   if (c.is_food_in_front())
+                     self.children[0](self.children[0], c);
+                   else
+                     self.children[1](self.children[1], c);
+                 },
+                 2},
+        NodeDesT{"m"sv, [](NodeT const &, ContexType &c) { c.move(); }, 0},
+        NodeDesT{"l"sv, [](NodeT const &, ContexType &c) { c.left(); }, 0},
+        NodeDesT{"r"sv, [](NodeT const &, ContexType &c) { c.right(); }, 0},
+        NodeDesT{"p2"sv,
+                 [](NodeT const &self, ContexType &c) {
+                   for (auto &child : self.children) child(child, c);
+                 },
+                 2},
+        NodeDesT{"p3"sv,
+                 [](NodeT const &self, ContexType &c) {
+                   for (auto &child : self.children) child(child, c);
+                 },
+                 3}};
+  }
+};
 
 namespace detail {
 
-template <typename ContexType, typename CursorType>
+template <typename ContexType, typename GetNodesDefType, typename CursorType>
 struct FactoryBuilder {
   using FactoryFunc = std::function<Node<ContexType>(CursorType &)>;
   using FactoryMap = frozen::unordered_map<frozen::string, FactoryFunc, 6>;
@@ -111,24 +113,25 @@ struct FactoryBuilder {
   }
 
   static FactoryMap makeFactoryMap() {
-    auto antNodes = getAntNodes<ContexType>();
-    return FactoryBuilder<ContexType, CursorType>::makeFactoryMapImpl(
-        antNodes,
-        std::make_index_sequence<std::tuple_size_v<decltype(antNodes)>>());
+    auto antNodes = GetNodesDefType::get();
+    return FactoryBuilder<ContexType, GetNodesDefType, CursorType>::
+        makeFactoryMapImpl(
+            antNodes,
+            std::make_index_sequence<std::tuple_size_v<decltype(antNodes)>>());
   }
 
   static NameMap makeNameMap() {
-    auto antNodes = getAntNodes<ContexType>();
+    auto antNodes = GetNodesDefType::get();
     NameMap nm;
     for (auto &ndef : antNodes) nm[ndef.behavior] = ndef.name;
     return nm;
   }
 
   static inline FactoryMap factoryMap =
-      FactoryBuilder<ContexType, CursorType>::makeFactoryMap();
+      FactoryBuilder<ContexType, GetNodesDefType, CursorType>::makeFactoryMap();
 
   static inline NameMap nameMap =
-      FactoryBuilder<ContexType, CursorType>::makeNameMap();
+      FactoryBuilder<ContexType, GetNodesDefType, CursorType>::makeNameMap();
 
   static Node<ContexType> factory(CursorType &tokenCursor) {
     auto token = tokenCursor.token();
@@ -138,15 +141,17 @@ struct FactoryBuilder {
 };
 }  // namespace detail
 
-template <typename ContexType, typename CursorTypeType>
+template <typename ContexType, typename GetNodesDefType,
+          typename CursorTypeType>
 Node<ContexType> factory(CursorTypeType tokenCursorType) {
-  return detail::FactoryBuilder<ContexType, CursorTypeType>::factory(
-      tokenCursorType);
+  return detail::FactoryBuilder<ContexType, GetNodesDefType,
+                                CursorTypeType>::factory(tokenCursorType);
 }
 
-template <typename ContexType, typename CursorTypeType>
+template <typename ContexType, typename GetNodesDefType,
+          typename CursorTypeType>
 std::string_view getNodeName(Node<ContexType> const &nc) {
-  return detail::FactoryBuilder<ContexType,
+  return detail::FactoryBuilder<ContexType, GetNodesDefType,
                                 CursorTypeType>::nameMap[nc.behavior];
 }
 

@@ -21,7 +21,7 @@ struct FuncPtr2Dynamic {
 template<typename AntBoardSimT, typename CursorType>
 static int funcPtr2Dynamic(AntBoardSimT antBoardSim, CursorType cursor, BenchmarkPart toMessure)
 {{    
-  auto anAnt = funcptr2::factory<AntBoardSimT>(cursor);
+auto anAnt = funcptr2::factory<AntBoardSimT, funcptr2::GetAntNodes<AntBoardSimT>>(cursor);
   if(toMessure == BenchmarkPart::Create) {{
     benchmark::DoNotOptimize(anAnt);
     return 0;
