@@ -3,47 +3,46 @@
 #include <boost/type_index.hpp>
 #include <boost/variant.hpp>
 #include <boost/variant/recursive_wrapper.hpp>
+#include <cassert>
 #include <iostream>
 #include <iterator>
 #include <string_view>
 #include <type_traits>
-#include <cassert>
 
 #include <gpm/io.hpp>
 #include "../examples/ant/common/nodes.hpp"
 
-//namespace hana = boost::hana;
-//using namespace hana::literals;  // contains the _c suffix
+// namespace hana = boost::hana;
+// using namespace hana::literals;  // contains the _c suffix
 
-template<uint8_t kMaxHash, typename BeginIterType, typename EndIterType>
+template <uint8_t kMaxHash, typename BeginIterType, typename EndIterType>
 constexpr uint8_t simpleHash(BeginIterType begin, EndIterType end) {
   uint8_t r = 0;
-  for (;begin != end; ++begin){
-    r = (r+7) ^ *begin;
+  for (; begin != end; ++begin) {
+    r = (r + 7) ^ *begin;
   }
-  return r & (kMaxHash-1);
+  return r & (kMaxHash - 1);
 }
 
-
-template<typename RangeType>
+template <typename RangeType>
 constexpr uint8_t simpleHash(RangeType range) {
   return simpleHash(std::begin(range), std::end(range));
 }
 
+template <uint8_t kMaxHash, typename... T>
+constexpr int checkForColision(boost::hana::tuple<T...>) {
+  using hashes = boost::mp11::mp_list<std::integral_constant<
+      uint8_t,
+      simpleHash<kMaxHash>(std::begin(T::name), std::end(T::name) - 1)>...>;
 
-template<uint8_t kMaxHash, typename ...T>
-constexpr int checkForColision(boost::hana::tuple<T...>)
-{
-  using hashes = boost::mp11::mp_list<std::integral_constant<uint8_t,
-  simpleHash<kMaxHash>(std::begin(T::name), std::end(T::name)-1)>...>;
-  
   using unique_hashes = boost::mp11::mp_unique<hashes>;
-  
+
   using size_hashes = boost::mp11::mp_size<hashes>;
   using size_unique_hashes = boost::mp11::mp_size<unique_hashes>;
-  
-  static_assert(std::is_same_v<size_hashes, size_unique_hashes>,
-                "colision detected in hash function, please change hash function");
+
+  static_assert(
+      std::is_same_v<size_hashes, size_unique_hashes>,
+      "colision detected in hash function, please change hash function");
   return 0;
 }
 
@@ -54,8 +53,8 @@ decltype(auto) variantToTuple(boost::variant<T...>) {
 
 template <typename VariantType, typename CursorType, uint8_t kMaxHash>
 class FactoryV2 {
-  
-  using VariantTypeCreateFunction = std::add_pointer_t<VariantType(CursorType&)>;
+  using VariantTypeCreateFunction =
+      std::add_pointer_t<VariantType(CursorType&)>;
 
   static std::array<VariantTypeCreateFunction, kMaxHash> makeHashToNode() {
     std::array<VariantTypeCreateFunction, kMaxHash> creatFunctionLUT{nullptr};
@@ -63,28 +62,30 @@ class FactoryV2 {
     checkForColision<kMaxHash>(nodesAsTuple);
     boost::hana::for_each(nodesAsTuple, [&creatFunctionLUT](auto n) {
       using NodeType = decltype(n);
-      auto hash = simpleHash<kMaxHash>(std::begin(n.name), std::end(n.name) - 1);
+      auto hash =
+          simpleHash<kMaxHash>(std::begin(n.name), std::end(n.name) - 1);
 
       creatFunctionLUT[hash] = [](CursorType& tokenCursor) -> VariantType {
-          auto node = NodeType{};
-          for (auto& child : node.children) {
-            tokenCursor.next();
-            child = FactoryV2<VariantType,CursorType,kMaxHash>::factory(tokenCursor);
-          }
-          return node;
-        };
+        auto node = NodeType{};
+        for (auto& child : node.children) {
+          tokenCursor.next();
+          child = FactoryV2<VariantType, CursorType, kMaxHash>::factory(
+              tokenCursor);
+        }
+        return node;
+      };
     });
     return creatFunctionLUT;
   }
 
+  template <typename TokenType>
+  static VariantTypeCreateFunction getCreateFuntion(TokenType token) {
+    static std::array<VariantTypeCreateFunction, kMaxHash> creatFunctionLUT =
+        makeHashToNode();
 
-  template<typename TokenType>
-  static VariantTypeCreateFunction getCreateFuntion(TokenType token){
-    static std::array<VariantTypeCreateFunction, kMaxHash> creatFunctionLUT = makeHashToNode();
-    
     return creatFunctionLUT[simpleHash<kMaxHash>(token.begin(), token.end())];
   }
-  
+
  public:
   static VariantType factory(CursorType& tokenCursor) {
     auto token = tokenCursor.token();
@@ -120,13 +121,12 @@ class FactoryV2 {
 // constexpr auto tup = hana::tuple<M, L, R, IF, P2, P3>{};
 
 namespace {
-  namespace detail {
+namespace detail {
 
+// constexpr auto checkForColisionV =  checkForColision(ant::NodesVariant);
 
-    //constexpr auto checkForColisionV =  checkForColision(ant::NodesVariant);
-
-  }
 }
+}  // namespace
 
 constexpr int ctpow(int base, int iexp) {
   return iexp == 0 ? 1 : base * ctpow(base, iexp - 1);
@@ -158,9 +158,10 @@ int main() {
   //   [](gpm::RPNTokenCursor&) -> ant::NodesVariant {return ant::Prog3{};};
   //   auto tmp = f(ttokenCursor);
 
-  constexpr auto maxHash = ctpow(2,4);
+  constexpr auto maxHash = ctpow(2, 4);
   auto optAnt =
-  FactoryV2<ant::NodesVariant, gpm::RPNTokenCursor, maxHash>::factory(optAntIter);
+      FactoryV2<ant::NodesVariant, gpm::RPNTokenCursor, maxHash>::factory(
+          optAntIter);
   std::cout << boost::apply_visitor(gpm::RPNPrinter<std::string>{}, optAnt);
   //   boost::apply_visitor([](auto const & obj){
   //     std::cout << boost::typeindex::type_id<decltype(obj)>().pretty_name()
