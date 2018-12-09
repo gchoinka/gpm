@@ -24,7 +24,7 @@ namespace outcome = OUTCOME_V2_NAMESPACE;
 #include "common/visitor.hpp"
 
 #include <gpm/tree_utils.hpp>
-#include "nodes_funcptr2.hpp"
+#include "nodes_funcptr.hpp"
 #include "nodes_implicit_tree.hpp"
 
 template <typename AntBoardSimT>
