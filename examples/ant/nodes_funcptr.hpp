@@ -9,7 +9,10 @@
 
 #include <frozen/string.h>
 #include <frozen/unordered_map.h>
+
 #include <array>
+#include <boost/container/flat_map.hpp>
+#include <boost/container/vector.hpp>
 #include <functional>
 #include <string_view>
 #include <unordered_map>
@@ -28,55 +31,59 @@ struct Node {
     behavior(n, c);
   }
 
-  std::string_view name = "unset";
   BehaviorPtr behavior = nullptr;
-  std::vector<Node<ContexType>> children;
+  boost::container::vector<Node<ContexType>> children;
 };
 
 template <typename ContexType>
-constexpr auto getAntNodes() -> decltype(auto) {
-  using NodeT = Node<ContexType>;
-  auto childCount = [](int childCount) {
-    return std::vector<NodeT>(childCount, NodeT{});
-  };
+struct NodeDescription {
+  std::string_view name;
+  typename Node<ContexType>::BehaviorPtr behavior;
+  std::size_t childCount;
+};
 
-  return std::array{
-      NodeT{"if",
-            [](NodeT const &self, ContexType &c) {
-              if (c.is_food_in_front())
-                self.children[0](self.children[0], c);
-              else
-                self.children[1](self.children[1], c);
-            },
-            childCount(2)},
-      NodeT{"m", [](NodeT const &, ContexType &c) { c.move(); }, childCount(0)},
-      NodeT{"l", [](NodeT const &, ContexType &c) { c.left(); }, childCount(0)},
-      NodeT{"r", [](NodeT const &, ContexType &c) { c.right(); },
-            childCount(0)},
-      NodeT{"p2",
-            [](NodeT const &self, ContexType &c) {
-              for (auto &child : self.children) child(child, c);
-            },
-            childCount(2)},
-      NodeT{"p3",
-            [](NodeT const &self, ContexType &c) {
-              for (auto &child : self.children) child(child, c);
-            },
-            childCount(3)}};
-}
+template <typename ContexType>
+struct GetAntNodes {
+  static constexpr auto get() -> decltype(auto) {
+    using NodeT = Node<ContexType>;
+    using NodeDesT = NodeDescription<ContexType>;
+    using namespace std::literals;
+    return std::array{
+        NodeDesT{"if"sv,
+                 [](NodeT const &self, ContexType &c) {
+                   if (c.is_food_in_front())
+                     self.children[0](self.children[0], c);
+                   else
+                     self.children[1](self.children[1], c);
+                 },
+                 2},
+        NodeDesT{"m"sv, [](NodeT const &, ContexType &c) { c.move(); }, 0},
+        NodeDesT{"l"sv, [](NodeT const &, ContexType &c) { c.left(); }, 0},
+        NodeDesT{"r"sv, [](NodeT const &, ContexType &c) { c.right(); }, 0},
+        NodeDesT{"p2"sv,
+                 [](NodeT const &self, ContexType &c) {
+                   for (auto &child : self.children) child(child, c);
+                 },
+                 2},
+        NodeDesT{"p3"sv,
+                 [](NodeT const &self, ContexType &c) {
+                   for (auto &child : self.children) child(child, c);
+                 },
+                 3}};
+  }
+};
 
 namespace detail {
 
-template <typename ContexType, typename CursorType>
-struct FactoryBuilder {
+template <typename ContexType, typename GetNodesDefType, typename CursorType>
+struct FactoryMapBuilder {
   using FactoryFunc = std::function<Node<ContexType>(CursorType &)>;
   using FactoryMap = frozen::unordered_map<frozen::string, FactoryFunc, 6>;
 
-  static FactoryFunc makeFactoryFunc(Node<ContexType> templateNode) {
+  static FactoryFunc makeFactoryFunc(NodeDescription<ContexType> templateNode) {
     return [templateNode](CursorType &tokenCursor) {
-      auto currentNode =
-          Node<ContexType>{templateNode.name, templateNode.behavior, {}};
-      for ([[gnu::unused]] auto const &foo : templateNode.children) {
+      auto currentNode = Node<ContexType>{templateNode.behavior, {}};
+      for (std::size_t i = 0; i < templateNode.childCount; ++i) {
         tokenCursor.next();
         auto token = tokenCursor.token();
         auto key = frozen::string{token.data(), token.size()};
@@ -86,27 +93,28 @@ struct FactoryBuilder {
     };
   }
 
-  static frozen::string makeName(Node<ContexType> templateNode) {
+  static frozen::string makeName(NodeDescription<ContexType> templateNode) {
     return frozen::string{templateNode.name.data(), templateNode.name.size()};
   }
 
   template <typename NodesT, auto... Idx>
-  static FactoryMap makeFactoryMap2(NodesT nodes, std::index_sequence<Idx...>) {
+  static FactoryMap makeFactoryMapImpl(NodesT nodes,
+                                       std::index_sequence<Idx...>) {
     return frozen::unordered_map<frozen::string, FactoryFunc,
                                  std::tuple_size_v<NodesT>>{
         {makeName(std::get<Idx>(nodes)),
          makeFactoryFunc(std::get<Idx>(nodes))}...};
   }
 
-  static FactoryMap makeFactoryMap() {
-    auto antNodes = getAntNodes<ContexType>();
-    return FactoryBuilder<ContexType, CursorType>::makeFactoryMap2(
-        antNodes,
-        std::make_index_sequence<std::tuple_size_v<decltype(antNodes)>>());
-  }
-  // std::make_index_sequence<std::tuple_size_v<TupleT0>>()
-  static inline FactoryMap factoryMap =
-      FactoryBuilder<ContexType, CursorType>::makeFactoryMap();
+  static FactoryMap makeFactoryMap() {}
+
+  static inline FactoryMap factoryMap = []() {
+    auto antNodes = GetNodesDefType::get();
+    return FactoryMapBuilder<ContexType, GetNodesDefType, CursorType>::
+        makeFactoryMapImpl(
+            antNodes,
+            std::make_index_sequence<std::tuple_size_v<decltype(antNodes)>>());
+  }();
 
   static Node<ContexType> factory(CursorType &tokenCursor) {
     auto token = tokenCursor.token();
@@ -114,11 +122,62 @@ struct FactoryBuilder {
     return factoryMap.at(key)(tokenCursor);
   }
 };
+
+template <typename ContexType, typename GetNodesDefType>
+struct NodeDescriptionMapBilder {
+  using NameToNodeDescriptionMapType =
+      boost::container::flat_map<std::string_view, NodeDescription<ContexType>>;
+  using BehaviorToNodeDescriptionMapType =
+      boost::container::flat_map<typename Node<ContexType>::BehaviorPtr,
+                                 NodeDescription<ContexType>>;
+
+  static inline NameToNodeDescriptionMapType nameToNodeDescriptionMap = []() {
+    NameToNodeDescriptionMapType m{};
+    auto antNodesDes = GetNodesDefType::get();
+    for (auto &nDes : antNodesDes) m[nDes.name] = nDes;
+    return m;
+  }();
+
+  static inline BehaviorToNodeDescriptionMapType
+      behaviorToNodeDescriptionMapType = []() {
+        BehaviorToNodeDescriptionMapType m{};
+        auto antNodesDes = GetNodesDefType::get();
+        for (auto &nDes : antNodesDes) m[nDes.behavior] = nDes;
+        return m;
+      }();
+
+  static NodeDescription<ContexType> const &getNodeDescription(
+      std::string_view name) {
+    return NodeDescriptionMapBilder<
+        ContexType, GetNodesDefType>::nameToNodeDescriptionMap[name];
+  }
+  static NodeDescription<ContexType> const &getNodeDescription(
+      typename Node<ContexType>::BehaviorPtr behavior) {
+    return NodeDescriptionMapBilder<ContexType, GetNodesDefType>::
+        behaviorToNodeDescriptionMapType[behavior];
+  }
+};
+
 }  // namespace detail
 
-template <typename ContexType, typename CursorTypeType>
+template <typename ContexType, typename GetNodesDefType,
+          typename CursorTypeType>
 Node<ContexType> factory(CursorTypeType tokenCursorType) {
-  return detail::FactoryBuilder<ContexType, CursorTypeType>::factory(
-      tokenCursorType);
+  return detail::FactoryMapBuilder<ContexType, GetNodesDefType,
+                                   CursorTypeType>::factory(tokenCursorType);
 }
+
+template <typename ContexType, typename GetNodesDefType>
+NodeDescription<ContexType> getNodeDescription(std::string_view name) {
+  return detail::NodeDescriptionMapBilder<
+      ContexType, GetNodesDefType>::getNodeDescription(name);
+}
+
+template <typename ContexType, typename GetNodesDefType>
+NodeDescription<ContexType> getNodeDescription(
+    typename Node<ContexType>::BehaviorPtr behavior) {
+  return detail::NodeDescriptionMapBilder<
+      ContexType, GetNodesDefType>::getNodeDescription(behavior);
+}
+
 }  // namespace funcptr

@@ -24,6 +24,7 @@ namespace outcome = OUTCOME_V2_NAMESPACE;
 #include "common/visitor.hpp"
 
 #include <gpm/tree_utils.hpp>
+#include "nodes_funcptr2.hpp"
 #include "nodes_implicit_tree.hpp"
 
 template <typename AntBoardSimT>
@@ -241,6 +242,12 @@ struct NodeNameHash {
   }
 };
 
+template <typename ContexType>
+struct BehaviorAndNextNodePos {
+  typename funcptr2::Node<ContexType>::BehaviorPtr behavior;
+  std::size_t nodeCount;
+};
+
 int main(int argc, char* argv[]) {
   auto cliArgsOutcome = handleCLI(argc, argv);
   if (!cliArgsOutcome) {
@@ -267,6 +274,18 @@ int main(int argc, char* argv[]) {
   while (!antBoardSim.is_finish()) {
     implicit_tree::eval<HashFunction>(rpnTokenCursor, antBoardSim);
   }
+
+  using ContexType = decltype(antBoardSim);
+  std::vector<BehaviorAndNextNodePos<ContexType>> arryTree;
+
+  auto f = funcptr2::factory<ContexType, funcptr2::GetAntNodes<ContexType>>(
+      rpnTokenCursor);
+
+  std::cout << funcptr2::getNodeDescription<ContexType,
+                                            funcptr2::GetAntNodes<ContexType>>(
+                   "if")
+                   .name
+            << "\n";
 
   //   implizit::FooBar<gpm::RPNTokenCursor, decltype(antBoardSim),
   //                    implizit::HashHelper<uint8_t, 16>>
