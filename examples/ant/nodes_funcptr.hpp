@@ -184,9 +184,25 @@ namespace funcptr::io {
 
 template <typename ContexType, typename GetNodesDefType, typename SinkT>
 void printRPN(funcptr::Node<ContexType> const &n, SinkT sink) {
-  for (auto b = n.children.rbegin(); b != n.children.rend(); ++b)
-    printRPN<ContexType, GetNodesDefType, SinkT>(*b, sink);
+  for (auto iter = n.children.rbegin(); iter != n.children.rend(); ++iter)
+    printRPN<ContexType, GetNodesDefType, SinkT>(*iter, sink);
   sink(getNodeDescription<ContexType, GetNodesDefType>(n.behavior).name);
+}
+
+template <typename ContexType, typename GetNodesDefType, typename SinkT>
+void walkReverseNodes(funcptr::Node<ContexType> const &n, SinkT &&sink) {
+  for (auto iter = n.children.rbegin(); iter != n.children.rend(); ++iter)
+    walkReverseNodes<ContexType, GetNodesDefType, SinkT>(
+        *iter, std::forward<SinkT>(sink));
+  sink(n);
+}
+
+template <typename ContexType, typename GetNodesDefType, typename SinkT>
+void walkNodes(funcptr::Node<ContexType> const &n, SinkT &&sink) {
+  sink(n);
+  for (auto iter = n.children.rbegin(); iter != n.children.rend(); ++iter)
+    walkNodes<ContexType, GetNodesDefType, SinkT>(*iter,
+                                                  std::forward<SinkT>(sink));
 }
 
 }  // namespace funcptr::io
