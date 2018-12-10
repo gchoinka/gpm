@@ -244,7 +244,7 @@ struct NodeNameHash {
 
 template <typename ContexType>
 struct BehaviorAndNextNodePos {
-  typename funcptr2::Node<ContexType>::BehaviorPtr behavior;
+  typename funcptr::Node<ContexType>::BehaviorPtr behavior;
   std::size_t nodeCount;
 };
 
@@ -263,7 +263,6 @@ int main(int argc, char* argv[]) {
       makeAntBoardSimDecorator(getAntBoardSim(cliArgs.boarddef.c_str()));
   //
   //
-  //
   char const* p = "m l m if l l p3 m if l p3 m if";
   //   auto optAnt2 = gpm::factory<ant::NodesVariant>(gpm::RPNTokenCursor{p});
 
@@ -278,15 +277,17 @@ int main(int argc, char* argv[]) {
   using ContexType = decltype(antBoardSim);
   std::vector<BehaviorAndNextNodePos<ContexType>> arryTree;
 
-  auto f = funcptr2::factory<ContexType, funcptr2::GetAntNodes<ContexType>>(
+  auto f = funcptr::factory<ContexType, funcptr::GetAntNodes<ContexType>>(
       rpnTokenCursor);
 
-  std::cout << funcptr2::getNodeDescription<ContexType,
-                                            funcptr2::GetAntNodes<ContexType>>(
+  std::cout << funcptr::getNodeDescription<ContexType,
+                                           funcptr::GetAntNodes<ContexType>>(
                    "if")
                    .name
             << "\n";
-
+  funcptr::io::printRPN<ContexType, funcptr::GetAntNodes<ContexType>>(
+      f, [](std::string_view s) { std::cout << s << " "; });
+  std::cout << "\n";
   //   implizit::FooBar<gpm::RPNTokenCursor, decltype(antBoardSim),
   //                    implizit::HashHelper<uint8_t, 16>>
   //       f;

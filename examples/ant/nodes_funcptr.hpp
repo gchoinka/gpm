@@ -25,7 +25,8 @@ namespace funcptr {
 
 template <typename ContexType>
 struct Node {
-  using BehaviorPtr = void (*)(Node<ContexType> const &, ContexType &);
+  using BehaviorPtr =
+      std::add_pointer_t<void(Node<ContexType> const &, ContexType &)>;
 
   void operator()(Node<ContexType> const &n, ContexType &c) const {
     behavior(n, c);
@@ -93,20 +94,17 @@ struct FactoryMapBuilder {
     };
   }
 
-  static frozen::string makeName(NodeDescription<ContexType> templateNode) {
-    return frozen::string{templateNode.name.data(), templateNode.name.size()};
-  }
-
   template <typename NodesT, auto... Idx>
   static FactoryMap makeFactoryMapImpl(NodesT nodes,
                                        std::index_sequence<Idx...>) {
+    auto toFrozenString = [](NodeDescription<ContexType> templateNode) {
+      return frozen::string{templateNode.name.data(), templateNode.name.size()};
+    };
     return frozen::unordered_map<frozen::string, FactoryFunc,
                                  std::tuple_size_v<NodesT>>{
-        {makeName(std::get<Idx>(nodes)),
+        {toFrozenString(std::get<Idx>(nodes)),
          makeFactoryFunc(std::get<Idx>(nodes))}...};
   }
-
-  static FactoryMap makeFactoryMap() {}
 
   static inline FactoryMap factoryMap = []() {
     auto antNodes = GetNodesDefType::get();
@@ -181,3 +179,14 @@ NodeDescription<ContexType> getNodeDescription(
 }
 
 }  // namespace funcptr
+
+namespace funcptr::io {
+
+template <typename ContexType, typename GetNodesDefType, typename SinkT>
+void printRPN(funcptr::Node<ContexType> const &n, SinkT sink) {
+  for (auto b = n.children.rbegin(); b != n.children.rend(); ++b)
+    printRPN<ContexType, GetNodesDefType, SinkT>(*b, sink);
+  sink(getNodeDescription<ContexType, GetNodesDefType>(n.behavior).name);
+}
+
+}  // namespace funcptr::io
