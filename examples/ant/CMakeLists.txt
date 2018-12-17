@@ -52,6 +52,10 @@ add_executable(ant_board_visualization ant_board_visualization.cpp)
 setStandard(ant_board_visualization 17)
 target_link_libraries(ant_board_visualization GpmExamples Boost::program_options Frozen)
 
+add_executable(ant_sandbox ant_sandbox.cpp) 
+setStandard(ant_sandbox 17)
+target_link_libraries(ant_sandbox GpmExamples Boost::program_options Frozen)
+
 add_executable(ant_genetic_programming ant_genetic_programming_main.cpp) 
 setStandard(ant_genetic_programming 20)
 target_link_libraries(ant_genetic_programming GpmExamples Threads::Threads Boost::program_options Frozen)
