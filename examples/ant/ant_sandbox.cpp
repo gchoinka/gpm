@@ -7,6 +7,8 @@
  */
 #include <fstream>
 #include <iostream>
+#include <vector>
+#include <stack>
 
 #include <boost/program_options.hpp>
 
@@ -322,5 +324,46 @@ int main(int argc, char* argv[]) {
   auto nodes = ipt::IptAntNodesDef<ContexType>::get();
   auto b =
       ipt::factory<ContexType, ipt::IptAntNodesDef<ContexType>>(rpnTokenCursor);
+      
+  std::vector<std::size_t> parents(b.size(), 0);
+  
+  std::size_t cur = 0;
+  while(b[cur].childrenCount != 0){
+    parents[cur+1] = cur;
+    cur += 1;
+  }
+//   if(b[parents[cur]].childrenCount > 1)
+/*  
+  if(b[0].childrenCount > 0){
+    parents[1] = 0;
+    if(b[1].childrenCount > 0)
+      parents[2] = 1;
+  }
+      
+  std::vector<std::size_t> sizeInfo(b.size(), 0);
+  struct Branch {
+    std::size_t pos;
+    std::size_t childNumber;
+  };
+  std::stack<Branch> branchesTodo;
+
+  
+  std::size_t cur = 0;
+  while(true){
+    if(b[cur].childrenCount == 0){
+      for(auto p: parents)
+        sizeInfo[p] += 1;
+      if(branchesTodo.size() == 0)
+        break;
+    }
+    else {
+      for(int i = 1; i < b[cur].childrenCount; ++i){
+        branchesTodo.push(Branch{cur, b[cur].childrenCount - 1 - i}); 
+      }
+      cur++;
+    }
+    
+  }*/
+  
   std::cout << b.size() << "\n";
 }
