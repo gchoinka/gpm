@@ -9,6 +9,8 @@
 #include <iostream>
 #include <vector>
 #include <stack>
+#include <string_view>
+#include <limits>
 
 #include <boost/program_options.hpp>
 
@@ -97,34 +99,35 @@ template <typename ContexType>
 struct Node;
 
 template <typename ContexType>
-using NodeVector = boost::container::vector<Node<ContexType>>;
+using NodeVectorType = boost::container::vector<Node<ContexType>>;
 
-template <typename ContexType>
-using BehaviorFunctionPtr = std::add_pointer_t<void(
-    NodeVector<ContexType> const&, typename NodeVector<ContexType>::size_type,
-    ContexType&)>;
 
 template <typename ContexType>
 struct Node {
-  BehaviorFunctionPtr<ContexType> behavior;
-  typename NodeVector<ContexType>::size_type childrenCount;
+  using SizeType = typename NodeVectorType<ContexType>::size_type;
+  using BehaviorFunctionPtrType = std::add_pointer_t<void(
+    NodeVectorType<ContexType> const&, typename NodeVectorType<ContexType>::size_type,
+    ContexType&)>;
+    
+  BehaviorFunctionPtrType behavior;
+  SizeType childrenCount;
 };
 
 template <typename ContexType>
 struct NodeDescription {
   std::string_view name;
-  BehaviorFunctionPtr<ContexType> behavior;
-  typename NodeVector<ContexType>::size_type childrenCount;
+  typename Node<ContexType>::BehaviorFunctionPtrType behavior;
+  typename Node<ContexType>::SizeType childrenCount;
 };
 
-template <typename ContexType, typename NodeVector<ContexType>::size_type N>
-std::array<typename NodeVector<ContexType>::size_type, N> getChildrenIndex(
-    NodeVector<ContexType> const& n,
-    typename NodeVector<ContexType>::size_type currentNodePos) {
-  std::array<typename NodeVector<ContexType>::size_type, N> childrenIdx;
+template <typename ContexType, typename NodeVectorType<ContexType>::size_type N>
+std::array<typename NodeVectorType<ContexType>::size_type, N> getChildrenIndex(
+    NodeVectorType<ContexType> const& n,
+    typename NodeVectorType<ContexType>::size_type currentNodePos) {
+  std::array<typename NodeVectorType<ContexType>::size_type, N> childrenIdx;
   if (N > 0) {
     childrenIdx[0] = currentNodePos + 1;
-    for (typename NodeVector<ContexType>::size_type i = 1; i < N; ++i) {
+    for (typename NodeVectorType<ContexType>::size_type i = 1; i < N; ++i) {
       auto nextNodePos = n[childrenIdx[i - 1]].childrenCount + 1;
       childrenIdx[i] = nextNodePos;
     }
@@ -139,25 +142,25 @@ struct IptAntNodesDef {
     using NodeDesT = NodeDescription<ContexType>;
     return std::array{
         NodeDesT{"m"sv,
-                 [](NodeVector<ContexType> const&,
-                    typename NodeVector<ContexType>::size_type,
+                 [](NodeVectorType<ContexType> const&,
+                    typename NodeVectorType<ContexType>::size_type,
                     ContexType& c) { c.move(); },
                  0},
         NodeDesT{"l"sv,
-                 [](NodeVector<ContexType> const&,
-                    typename NodeVector<ContexType>::size_type,
+                 [](NodeVectorType<ContexType> const&,
+                    typename NodeVectorType<ContexType>::size_type,
                     ContexType& c) { c.left(); },
                  0},
 
         NodeDesT{"r"sv,
-                 [](NodeVector<ContexType> const&,
-                    typename NodeVector<ContexType>::size_type,
+                 [](NodeVectorType<ContexType> const&,
+                    typename NodeVectorType<ContexType>::size_type,
                     ContexType& c) { c.right(); },
                  0},
 
         NodeDesT{"p2"sv,
-                 [](NodeVector<ContexType> const& n,
-                    typename NodeVector<ContexType>::size_type currentNodePos,
+                 [](NodeVectorType<ContexType> const& n,
+                    typename NodeVectorType<ContexType>::size_type currentNodePos,
                     ContexType& c) {
                    for (auto childIdx :
                         getChildrenIndex<ContexType, 2>(n, currentNodePos))
@@ -165,8 +168,8 @@ struct IptAntNodesDef {
                  },
                  2},
         NodeDesT{"p3"sv,
-                 [](NodeVector<ContexType> const& n,
-                    typename NodeVector<ContexType>::size_type currentNodePos,
+                 [](NodeVectorType<ContexType> const& n,
+                    typename NodeVectorType<ContexType>::size_type currentNodePos,
                     ContexType& c) {
                    for (auto childIdx :
                         getChildrenIndex<ContexType, 3>(n, currentNodePos))
@@ -174,8 +177,8 @@ struct IptAntNodesDef {
                  },
                  3},
         NodeDesT{"if"sv,
-                 [](NodeVector<ContexType> const& n,
-                    typename NodeVector<ContexType>::size_type currentNodePos,
+                 [](NodeVectorType<ContexType> const& n,
+                    typename NodeVectorType<ContexType>::size_type currentNodePos,
                     ContexType& c) {
                    auto childIdxArray =
                        getChildrenIndex<ContexType, 2>(n, currentNodePos);
@@ -193,12 +196,12 @@ namespace detail {
 
 template <typename ContexType, typename GetNodesDefType, typename CursorType>
 struct FactoryMapBuilder {
-  using FactoryFunc = std::function<void(CursorType&, NodeVector<ContexType>&)>;
+  using FactoryFunc = std::function<void(CursorType&, NodeVectorType<ContexType>&)>;
   using FactoryMap = frozen::unordered_map<frozen::string, FactoryFunc, 6>;
 
   static FactoryFunc makeFactoryFunc(NodeDescription<ContexType> templateNode) {
     return [templateNode](CursorType& tokenCursor,
-                          NodeVector<ContexType>& nodeVector) {
+                          NodeVectorType<ContexType>& nodeVector) {
       nodeVector.emplace_back(
           Node<ContexType>{templateNode.behavior, templateNode.childrenCount});
       for (std::size_t i = 0; i < templateNode.childrenCount; ++i) {
@@ -231,7 +234,7 @@ struct FactoryMapBuilder {
   }();
 
   static void factory(CursorType& tokenCursor,
-                      NodeVector<ContexType>& nodeVector) {
+                      NodeVectorType<ContexType>& nodeVector) {
     auto token = tokenCursor.token();
     auto key = frozen::string{token.data(), token.size()};
     factoryMap.at(key)(tokenCursor, nodeVector);
@@ -243,7 +246,7 @@ struct NodeDescriptionMapBilder {
   using NameToNodeDescriptionMapType =
       boost::container::flat_map<std::string_view, NodeDescription<ContexType>>;
   using BehaviorToNodeDescriptionMapType =
-      boost::container::flat_map<typename Node<ContexType>::BehaviorPtr,
+  boost::container::flat_map<typename Node<ContexType>::BehaviorFunctionPtrType,
                                  NodeDescription<ContexType>>;
 
   static inline NameToNodeDescriptionMapType nameToNodeDescriptionMap = []() {
@@ -267,7 +270,7 @@ struct NodeDescriptionMapBilder {
         ContexType, GetNodesDefType>::nameToNodeDescriptionMap[name];
   }
   static NodeDescription<ContexType> const& getNodeDescription(
-      typename Node<ContexType>::BehaviorPtr behavior) {
+    typename Node<ContexType>::BehaviorFunctionPtrType behavior) {
     return NodeDescriptionMapBilder<ContexType, GetNodesDefType>::
         behaviorToNodeDescriptionMapType[behavior];
   }
@@ -277,8 +280,8 @@ struct NodeDescriptionMapBilder {
 
 template <typename ContexType, typename GetNodesDefType,
           typename CursorTypeType>
-NodeVector<ContexType> factory(CursorTypeType tokenCursorType) {
-  NodeVector<ContexType> nodeVector;
+NodeVectorType<ContexType> factory(CursorTypeType tokenCursorType) {
+  NodeVectorType<ContexType> nodeVector;
   detail::FactoryMapBuilder<ContexType, GetNodesDefType,
                             CursorTypeType>::factory(tokenCursorType,
                                                      nodeVector);
@@ -293,10 +296,45 @@ NodeDescription<ContexType> getNodeDescription(std::string_view name) {
 
 template <typename ContexType, typename GetNodesDefType>
 NodeDescription<ContexType> getNodeDescription(
-    typename Node<ContexType>::BehaviorPtr behavior) {
+  typename Node<ContexType>::BehaviorFunctionPtrType behavior) {
   return detail::NodeDescriptionMapBilder<
       ContexType, GetNodesDefType>::getNodeDescription(behavior);
 }
+
+template<typename ContexType>
+std::vector<typename Node<ContexType>::SizeType> makeParentMatrix(NodeVectorType<ContexType> & tree){
+  using SizeT = typename ipt::Node<ContexType>::SizeType;
+  auto const kParentNotSet = std::numeric_limits<SizeT>::max();
+  std::vector<SizeT> parents(tree.size(), kParentNotSet);
+  
+  
+  int riStart = tree.size() - 1;
+  while(tree[0].childrenCount != 0){
+    int ri = riStart;
+    riStart = tree.size() - 1;
+    for(; ri > 1; --ri){
+      if(tree[ri].childrenCount == 0 && (tree[ri-1].childrenCount != 0 || parents[ri-1] != kParentNotSet) && parents[ri] == kParentNotSet){
+        break;
+      }
+    }
+    
+    int sri = ri - 1;
+    for(; sri >= 0; --sri){
+      if(tree[sri].childrenCount != 0){
+        tree[sri].childrenCount -= 1;
+        parents[ri] = sri;
+        if(tree[sri].childrenCount == 0)
+          riStart = sri;
+        break;
+      }
+    }
+    
+  }
+  return parents;
+  
+}
+
+
 
 }  // namespace ipt
 
@@ -314,25 +352,95 @@ int main(int argc, char* argv[]) {
   auto antBoardSim = getAntBoardSim(cliArgs.boarddef.c_str());
   //
   //
-  char const* p = "m l m if l l p3 m if l p3 m if";
+//char const* p = "m l m if l l p3 m if l p3 m if";
+  char const* p = "l l m m m p3 p3 l m p2 if";
   //   auto optAnt2 = gpm::factory<ant::NodesVariant>(gpm::RPNTokenCursor{p});
 
   auto rpnTokenCursor = gpm::RPNTokenCursor{p};
 
-  using ContexType = decltype(antBoardSim);
+  using ContexT = decltype(antBoardSim);
 
-  auto nodes = ipt::IptAntNodesDef<ContexType>::get();
-  auto b =
-      ipt::factory<ContexType, ipt::IptAntNodesDef<ContexType>>(rpnTokenCursor);
+//   auto nodes = ipt::IptAntNodesDef<ContexT>::get();
+  auto tree =
+      ipt::factory<ContexT, ipt::IptAntNodesDef<ContexT>>(rpnTokenCursor);
       
-  std::vector<std::size_t> parents(b.size(), 0);
+      auto parents =  ipt::makeParentMatrix<ContexT>(tree);
+//   using SizeT = ipt::Node<ContexT>::SizeType;
+//   auto const kParentNotSet = std::numeric_limits<SizeT>::max();
+//   std::vector<SizeT> parents(tree.size(), kParentNotSet);
+//   
+//   
+//   int riStart = tree.size() - 1;
+//   while(tree[0].childrenCount != 0){
+//     int ri = riStart;
+//     riStart = tree.size() - 1;
+//     for(; ri > 1; --ri){
+//       if(tree[ri].childrenCount == 0 && (tree[ri-1].childrenCount != 0 || parents[ri-1] != kParentNotSet) && parents[ri] == kParentNotSet){
+//         break;
+//       }
+//     }
+//     
+//     int sri = ri - 1;
+//     for(; sri >= 0; --sri){
+//       if(tree[sri].childrenCount != 0){
+//         tree[sri].childrenCount -= 1;
+//         parents[ri] = sri;
+//         if(tree[sri].childrenCount == 0)
+//           riStart = sri;
+//         break;
+//       }
+//     }
+//     
+
+    for(auto & n: tree){
+      fmt::print("{:>4}", ipt::getNodeDescription<ContexT,ipt::IptAntNodesDef<ContexT>> (n.behavior).name);
+    }
+    fmt::print("\n");
+    for(auto & n: tree){
+      fmt::print("{:>4}", n.childrenCount);
+    }
+    fmt::print("\n");
+    for(auto & n: parents){
+      if(n > parents.size())
+        fmt::print("{:>4}", -1);
+      else
+        fmt::print("{:>4}", n);
+    }
+    fmt::print("\n");
+
+// //       
+// //     }
+//   }
   
-  std::size_t cur = 0;
-  while(b[cur].childrenCount != 0){
-    parents[cur+1] = cur;
-    cur += 1;
-  }
-//   if(b[parents[cur]].childrenCount > 1)
+//   SizeT cursor = 0;
+//   while(tree[cursor].childrenCount != 0){
+//     parents[cursor+1] = cursor;
+//     childProcessed[cursor] = 1;
+//     cursor += 1;
+//   }
+//   
+// //     while(true){
+//       auto candidate = parents[cursor];
+//       
+//       if(tree[candidate].childrenCount > 1 && childProcessed[candidate] < tree[candidate].childrenCount){
+//         auto subCursor = candidate;
+// 
+//         while(parents[++subCursor] != kParentNotSet){}
+// 
+//         parents[subCursor] = candidate;
+//         childProcessed[candidate] += 1; 
+// //         while(tree[subCursor].childrenCount != 0){
+// //           parents[subCursor+1] = subCursor;
+// //           childProcessed[subCursor] = 1;
+// //           subCursor += 1;
+// //         }
+//         
+//       }
+//         
+// //     }
+  
+
+
 /*  
   if(b[0].childrenCount > 0){
     parents[1] = 0;
@@ -365,5 +473,5 @@ int main(int argc, char* argv[]) {
     
   }*/
   
-  std::cout << b.size() << "\n";
+std::cout << tree.size() << "\n";
 }
