@@ -4,14 +4,14 @@
 Genetic Programming is an optimizing strategy inspired by genetic and evolution theory. 
 
 GPM is a genetic programming library written in C++17.
-It is heavily influenced by gpcxx but it useses boost::variant and std::array for its tree and node representation.  Gpcxx, on the other hand, uses object polymorphism and custom tree containers (which is not slower, but value semantic and visitor pattern are preferable in my view).
-## Goals
-* use modern C++ futures to make GP more easily accessible on C++. 
-* allows me to keep my C++ knowledge update
+It started as a modernisation of https://github.com/Ambrosys/gpcxx , the goal was to replace object polymorphism with std::variant polymorphism.
+Aa a result of benchmarking, it became clear that std::variant did not have runtime advantages (in the tested use case). Even std::variant offers value semantic and double dispatch abilities. The decision was made against using std::variant as the base for the tree structure. 
+ * std::variant lacks some features for recursive data structures (the benchmarks used boost::variant as a workaround) https://stackoverflow.com/questions/39454347/using-stdvariant-with-recursion-without-using-boostrecursive-wrapper
+ * our variant implementation of the tree leaked implementation details to the users
+The current goal is to implement gpm with nodes in a continues chunk of memory and minimal overhead inspired the way binary heaps are implemented.
 
-## Side Goals
-* compare different representation of trees in C++ 
-* convert runtime tree structurs to compile time tree structurs and compare the performance
+## Goals
+* use modern C++ futures to make GP more easily accessible with C++. 
 
 # Install
 
