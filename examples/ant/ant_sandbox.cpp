@@ -313,7 +313,7 @@ struct AntNodesDef {
         NodeDesT{
             "p2"sv,
             [](NodeVectorType<ContexType> const& n,
-               typename NodeVectorType<ContexType>::size_type currentNodePos,
+               SizeT currentNodePos,
                ContexType& c) {
               for (auto childIdx :
                    getChildrenIndex<ContexType, 2>(n, currentNodePos))
