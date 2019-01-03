@@ -250,14 +250,16 @@ std::vector<typename Node<ContexType>::SizeType> makeParentMatrix(
   using SizeT = typename ipt::Node<ContexType>::SizeType;
   auto const kParentNotSet = std::numeric_limits<SizeT>::max();
   std::vector<SizeT> parents(tree.size(), kParentNotSet);
+  
+  auto getChildrenCount = [&tree](SizeT index) mutable -> SizeT& { return tree[index].childrenCount; };
 
   SizeT riStart = tree.size() - 1;
-  while (tree[0].childrenCount != 0) {
+  while (getChildrenCount(0) != 0) {
     SizeT ri = riStart;
     riStart = tree.size() - 1;
     for (; ri > 1; --ri) {
-      if (tree[ri].childrenCount == 0 &&
-          (tree[ri - 1].childrenCount != 0 ||
+      if (getChildrenCount(ri) == 0 &&
+        (getChildrenCount(ri - 1) != 0 ||
            parents[ri - 1] != kParentNotSet) &&
           parents[ri] == kParentNotSet) {
         break;
@@ -266,16 +268,38 @@ std::vector<typename Node<ContexType>::SizeType> makeParentMatrix(
 
     SizeT sri = ri - 1;
     for (; sri >= 0; --sri) {
-      if (tree[sri].childrenCount != 0) {
-        tree[sri].childrenCount -= 1;
+      if (getChildrenCount(sri) != 0) {
+        getChildrenCount(sri) -= 1;
         parents[ri] = sri;
-        if (tree[sri].childrenCount == 0) riStart = sri;
+        if (getChildrenCount(sri) == 0) riStart = sri;
         break;
       }
     }
   }
   return parents;
 }
+
+template <typename ContexType>
+void makeChildrenCountMatrix(
+  NodeVectorType<ContexType>& tree) {
+  using SizeT = typename ipt::Node<ContexType>::SizeType;
+
+  std::vector<SizeT> parents{makeParentMatrix(tree)};
+  
+  auto getChildrenCount = [&tree](SizeT index) mutable -> SizeT& { return tree[index].childrenCount; };
+  
+  for(int i = 1; i < tree.size(); ++i) {
+    int s = i;
+    tree[s] = 0;
+    while(true){
+      s = parents[s];
+      tree[s].childrenCount += 1;
+      if(s == 0)
+        break;
+    }
+  }
+
+  }
 
 }  // namespace ipt
 
@@ -359,45 +383,31 @@ int main(int argc, char* argv[]) {
   //
   //
   // char const* p = "m l m if l l p3 m if l p3 m if";
-  char const* p = "l l m m m p3 p3 l m p2 if";
+//   char const* p = "l l m m m p3 p3 l m p2 if";
+  char const* p = "if p2 m l p3 p3 m m m l l";
   //   auto optAnt2 = gpm::factory<ant::NodesVariant>(gpm::RPNTokenCursor{p});
 
-  auto rpnTokenCursor = gpm::RPNTokenCursor{p};
+  auto pnTokenCursor = gpm::PNTokenCursor{p};
 
   using ContexT = decltype(antBoardSim);
 
   //   auto nodes = ipt::IptAntNodesDef<ContexT>::get();
   auto tree =
-      ipt::factory<ContexT, iptexample::AntNodesDef<ContexT>>(rpnTokenCursor);
+  ipt::factory<ContexT, iptexample::AntNodesDef<ContexT>>(pnTokenCursor);
 
   auto parents = ipt::makeParentMatrix<ContexT>(tree);
-  //   using SizeT = ipt::Node<ContexT>::SizeType;
-  //   auto const kParentNotSet = std::numeric_limits<SizeT>::max();
-  //   std::vector<SizeT> parents(tree.size(), kParentNotSet);
-  //
-  //
-  //   int riStart = tree.size() - 1;
-  //   while(tree[0].childrenCount != 0){
-  //     int ri = riStart;
-  //     riStart = tree.size() - 1;
-  //     for(; ri > 1; --ri){
-  //       if(tree[ri].childrenCount == 0 && (tree[ri-1].childrenCount != 0 ||
-  //       parents[ri-1] != kParentNotSet) && parents[ri] == kParentNotSet){
-  //         break;
-  //       }
-  //     }
-  //
-  //     int sri = ri - 1;
-  //     for(; sri >= 0; --sri){
-  //       if(tree[sri].childrenCount != 0){
-  //         tree[sri].childrenCount -= 1;
-  //         parents[ri] = sri;
-  //         if(tree[sri].childrenCount == 0)
-  //           riStart = sri;
-  //         break;
-  //       }
-  //     }
-  //
+
+  
+  std::vector<std::size_t> childrenCount(tree.size(), 0);
+  for(int i = 1; i < tree.size(); ++i) {
+    int s = i;
+    while(true){
+      s = parents[s];
+      childrenCount[s] += 1;
+      if(s == 0)
+        break;
+    }
+  }
 
   for (auto& n : tree) {
     fmt::print(
@@ -419,69 +429,12 @@ int main(int argc, char* argv[]) {
   }
   fmt::print("\n");
 
-  // //
-  // //     }
-  //   }
 
-  //   SizeT cursor = 0;
-  //   while(tree[cursor].childrenCount != 0){
-  //     parents[cursor+1] = cursor;
-  //     childProcessed[cursor] = 1;
-  //     cursor += 1;
-  //   }
-  //
-  // //     while(true){
-  //       auto candidate = parents[cursor];
-  //
-  //       if(tree[candidate].childrenCount > 1 && childProcessed[candidate] <
-  //       tree[candidate].childrenCount){
-  //         auto subCursor = candidate;
-  //
-  //         while(parents[++subCursor] != kParentNotSet){}
-  //
-  //         parents[subCursor] = candidate;
-  //         childProcessed[candidate] += 1;
-  // //         while(tree[subCursor].childrenCount != 0){
-  // //           parents[subCursor+1] = subCursor;
-  // //           childProcessed[subCursor] = 1;
-  // //           subCursor += 1;
-  // //         }
-  //
-  //       }
-  //
-  // //     }
-
-  /*
-    if(b[0].childrenCount > 0){
-      parents[1] = 0;
-      if(b[1].childrenCount > 0)
-        parents[2] = 1;
-    }
-
-    std::vector<std::size_t> sizeInfo(b.size(), 0);
-    struct Branch {
-      std::size_t pos;
-      std::size_t childNumber;
-    };
-    std::stack<Branch> branchesTodo;
-
-
-    std::size_t cur = 0;
-    while(true){
-      if(b[cur].childrenCount == 0){
-        for(auto p: parents)
-          sizeInfo[p] += 1;
-        if(branchesTodo.size() == 0)
-          break;
-      }
-      else {
-        for(int i = 1; i < b[cur].childrenCount; ++i){
-          branchesTodo.push(Branch{cur, b[cur].childrenCount - 1 - i});
-        }
-        cur++;
-      }
-
-    }*/
+  for (auto& n : childrenCount) {
+    fmt::print("{:>4}", n);
+  }
+  fmt::print("\n");
+  
 
   std::cout << tree.size() << "\n";
 }
