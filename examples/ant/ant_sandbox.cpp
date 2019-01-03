@@ -287,23 +287,28 @@ struct AntNodesDef {
     using namespace ipt;
     using namespace std::literals;
     using NodeDesT = NodeDescription<ContexType>;
+    using NodeVectorT = NodeVectorType<ContexType>;
+    using SizeT = typename NodeVectorType<ContexType>::size_type;
+    using ChildrenNT = SizeT;
+    
+    
     return std::array{
         NodeDesT{"m"sv,
-                 [](NodeVectorType<ContexType> const&,
-                    typename NodeVectorType<ContexType>::size_type,
+                 [](NodeVectorT const&,
+                    SizeT,
                     ContexType& c) { c.move(); },
-                 0},
+                 ChildrenNT{0}},
         NodeDesT{"l"sv,
-                 [](NodeVectorType<ContexType> const&,
-                    typename NodeVectorType<ContexType>::size_type,
+                 [](NodeVectorT const&,
+                    SizeT,
                     ContexType& c) { c.left(); },
-                 0},
+                 ChildrenNT{0}},
 
         NodeDesT{"r"sv,
-                 [](NodeVectorType<ContexType> const&,
-                    typename NodeVectorType<ContexType>::size_type,
+                 [](NodeVectorT const&,
+                    SizeT,
                     ContexType& c) { c.right(); },
-                 0},
+                 ChildrenNT{0}},
 
         NodeDesT{
             "p2"sv,
@@ -317,18 +322,18 @@ struct AntNodesDef {
             2},
         NodeDesT{
             "p3"sv,
-            [](NodeVectorType<ContexType> const& n,
-               typename NodeVectorType<ContexType>::size_type currentNodePos,
+            [](NodeVectorT const& n,
+               SizeT currentNodePos,
                ContexType& c) {
               for (auto childIdx :
                    getChildrenIndex<ContexType, 3>(n, currentNodePos))
                 n[childIdx].behavior(n, childIdx, c);
             },
-            3},
+            ChildrenNT{3}},
         NodeDesT{
             "if"sv,
-            [](NodeVectorType<ContexType> const& n,
-               typename NodeVectorType<ContexType>::size_type currentNodePos,
+            [](NodeVectorT const& n,
+               SizeT currentNodePos,
                ContexType& c) {
               auto childIdxArray =
                   getChildrenIndex<ContexType, 2>(n, currentNodePos);
@@ -336,7 +341,7 @@ struct AntNodesDef {
               auto childIdx = childIdxArray[c.is_food_in_front() ? 0 : 1];
               n[childIdx].behavior(n, childIdx, c);
             },
-            2}
+            ChildrenNT{2}}
 
     };
   }
