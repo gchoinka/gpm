@@ -12,6 +12,7 @@
 #include <string_view>
 #include <vector>
 
+#include <boost/algorithm/string/join.hpp>
 #include <boost/program_options.hpp>
 
 #include <gpm/gpm.hpp>
@@ -219,15 +220,71 @@ struct NodeDescriptionMapBilder {
   }
 };
 
+template <typename ContexType>
+std::vector<typename Node<ContexType>::SizeType> makeParentMatrix(
+    NodeVectorType<ContexType>& tree) {
+  using SizeT = typename ipt::Node<ContexType>::SizeType;
+  auto const kParentNotSet = 666; //std::numeric_limits<SizeT>::max();
+  std::vector<SizeT> parents(tree.size(), kParentNotSet);
+
+  auto getChildrenCount = [&tree](SizeT index) mutable -> SizeT& {
+    return tree[index].childrenCount;
+  };
+
+  SizeT riStart = tree.size() - 1;
+  while (getChildrenCount(0) != 0) {
+    SizeT ri = riStart;
+    riStart = tree.size() - 1;
+    for (; ri > 1; --ri) {
+      if (getChildrenCount(ri) == 0 &&
+          (getChildrenCount(ri - 1) != 0 || parents[ri - 1] != kParentNotSet) &&
+          parents[ri] == kParentNotSet) {
+        break;
+      }
+    }
+
+    SizeT sri = ri - 1;
+    for (; sri >= 0; --sri) {
+      if (getChildrenCount(sri) != 0) {
+        getChildrenCount(sri) -= 1;
+        parents[ri] = sri;
+        if (getChildrenCount(sri) == 0) riStart = sri;
+        break;
+      }
+    }
+  }
+  parents[0] = 0;
+  return parents;
+}
+
+template <typename ContexType>
+void setChildrenCount(NodeVectorType<ContexType>& tree) {
+  using SizeT = typename ipt::Node<ContexType>::SizeType;
+
+  std::vector<SizeT> parents{makeParentMatrix(tree)};
+
+  auto getChildrenCount = [&tree](SizeT index) mutable -> SizeT& {
+    return tree[index].childrenCount;
+  };
+
+  for (SizeT i = 1; i < tree.size(); ++i) {
+    SizeT cursor = i;
+    getChildrenCount(cursor) = 0;
+    do {
+      cursor = parents[cursor];
+      getChildrenCount(cursor) += 1;
+    } while (cursor != 0);
+  }
+}
+
 }  // namespace detail
 
-template <typename ContexType, typename GetNodesDefType,
-          typename CursorTypeType>
-NodeVectorType<ContexType> factory(CursorTypeType tokenCursorType) {
+template <typename ContexType, typename GetNodesDefType, typename CursorType>
+NodeVectorType<ContexType> factory(CursorType tokenCursorType) {
   NodeVectorType<ContexType> nodeVector;
-  detail::FactoryMapBuilder<ContexType, GetNodesDefType,
-                            CursorTypeType>::factory(tokenCursorType,
-                                                     nodeVector);
+  detail::FactoryMapBuilder<ContexType, GetNodesDefType, CursorType>::factory(
+      tokenCursorType, nodeVector);
+  detail::setChildrenCount(nodeVector);
   return nodeVector;
 }
 
@@ -244,63 +301,6 @@ NodeDescription<ContexType> getNodeDescription(
       ContexType, GetNodesDefType>::getNodeDescription(behavior);
 }
 
-template <typename ContexType>
-std::vector<typename Node<ContexType>::SizeType> makeParentMatrix(
-    NodeVectorType<ContexType>& tree) {
-  using SizeT = typename ipt::Node<ContexType>::SizeType;
-  auto const kParentNotSet = std::numeric_limits<SizeT>::max();
-  std::vector<SizeT> parents(tree.size(), kParentNotSet);
-  
-  auto getChildrenCount = [&tree](SizeT index) mutable -> SizeT& { return tree[index].childrenCount; };
-
-  SizeT riStart = tree.size() - 1;
-  while (getChildrenCount(0) != 0) {
-    SizeT ri = riStart;
-    riStart = tree.size() - 1;
-    for (; ri > 1; --ri) {
-      if (getChildrenCount(ri) == 0 &&
-        (getChildrenCount(ri - 1) != 0 ||
-           parents[ri - 1] != kParentNotSet) &&
-          parents[ri] == kParentNotSet) {
-        break;
-      }
-    }
-
-    SizeT sri = ri - 1;
-    for (; sri >= 0; --sri) {
-      if (getChildrenCount(sri) != 0) {
-        getChildrenCount(sri) -= 1;
-        parents[ri] = sri;
-        if (getChildrenCount(sri) == 0) riStart = sri;
-        break;
-      }
-    }
-  }
-  return parents;
-}
-
-template <typename ContexType>
-void makeChildrenCountMatrix(
-  NodeVectorType<ContexType>& tree) {
-  using SizeT = typename ipt::Node<ContexType>::SizeType;
-
-  std::vector<SizeT> parents{makeParentMatrix(tree)};
-  
-  auto getChildrenCount = [&tree](SizeT index) mutable -> SizeT& { return tree[index].childrenCount; };
-  
-  for(int i = 1; i < tree.size(); ++i) {
-    int s = i;
-    tree[s] = 0;
-    while(true){
-      s = parents[s];
-      tree[s].childrenCount += 1;
-      if(s == 0)
-        break;
-    }
-  }
-
-  }
-
 }  // namespace ipt
 
 namespace iptexample {
@@ -314,58 +314,43 @@ struct AntNodesDef {
     using NodeVectorT = NodeVectorType<ContexType>;
     using SizeT = typename NodeVectorType<ContexType>::size_type;
     using ChildrenNT = SizeT;
-    
-    
+
     return std::array{
         NodeDesT{"m"sv,
-                 [](NodeVectorT const&,
-                    SizeT,
-                    ContexType& c) { c.move(); },
+                 [](NodeVectorT const&, SizeT, ContexType& c) { c.move(); },
                  ChildrenNT{0}},
         NodeDesT{"l"sv,
-                 [](NodeVectorT const&,
-                    SizeT,
-                    ContexType& c) { c.left(); },
+                 [](NodeVectorT const&, SizeT, ContexType& c) { c.left(); },
                  ChildrenNT{0}},
 
         NodeDesT{"r"sv,
-                 [](NodeVectorT const&,
-                    SizeT,
-                    ContexType& c) { c.right(); },
+                 [](NodeVectorT const&, SizeT, ContexType& c) { c.right(); },
                  ChildrenNT{0}},
 
-        NodeDesT{
-            "p2"sv,
-            [](NodeVectorType<ContexType> const& n,
-               SizeT currentNodePos,
-               ContexType& c) {
-              for (auto childIdx :
-                   getChildrenIndex<ContexType, 2>(n, currentNodePos))
-                n[childIdx].behavior(n, childIdx, c);
-            },
-            2},
-        NodeDesT{
-            "p3"sv,
-            [](NodeVectorT const& n,
-               SizeT currentNodePos,
-               ContexType& c) {
-              for (auto childIdx :
-                   getChildrenIndex<ContexType, 3>(n, currentNodePos))
-                n[childIdx].behavior(n, childIdx, c);
-            },
-            ChildrenNT{3}},
-        NodeDesT{
-            "if"sv,
-            [](NodeVectorT const& n,
-               SizeT currentNodePos,
-               ContexType& c) {
-              auto childIdxArray =
-                  getChildrenIndex<ContexType, 2>(n, currentNodePos);
+        NodeDesT{"p2"sv,
+                 [](NodeVectorType<ContexType> const& n, SizeT currentNodePos,
+                    ContexType& c) {
+                   for (auto childIdx :
+                        getChildrenIndex<ContexType, 2>(n, currentNodePos))
+                     n[childIdx].behavior(n, childIdx, c);
+                 },
+                 2},
+        NodeDesT{"p3"sv,
+                 [](NodeVectorT const& n, SizeT currentNodePos, ContexType& c) {
+                   for (auto childIdx :
+                        getChildrenIndex<ContexType, 3>(n, currentNodePos))
+                     n[childIdx].behavior(n, childIdx, c);
+                 },
+                 ChildrenNT{3}},
+        NodeDesT{"if"sv,
+                 [](NodeVectorT const& n, SizeT currentNodePos, ContexType& c) {
+                   auto childIdxArray =
+                       getChildrenIndex<ContexType, 2>(n, currentNodePos);
 
-              auto childIdx = childIdxArray[c.is_food_in_front() ? 0 : 1];
-              n[childIdx].behavior(n, childIdx, c);
-            },
-            ChildrenNT{2}}
+                   auto childIdx = childIdxArray[c.is_food_in_front() ? 0 : 1];
+                   n[childIdx].behavior(n, childIdx, c);
+                 },
+                 ChildrenNT{2}}
 
     };
   }
@@ -385,34 +370,61 @@ int main(int argc, char* argv[]) {
   //   auto optAnt =
   //       gpm::factory<ant::NodesVariant>(gpm::RPNTokenCursor{optimalAntRPNdef});
   auto antBoardSim = getAntBoardSim(cliArgs.boarddef.c_str());
+  using ContexT = decltype(antBoardSim);
   //
   //
   // char const* p = "m l m if l l p3 m if l p3 m if";
-//   char const* p = "l l m m m p3 p3 l m p2 if";
-  char const* p = "if p2 m l p3 p3 m m m l l";
-  //   auto optAnt2 = gpm::factory<ant::NodesVariant>(gpm::RPNTokenCursor{p});
-
-  auto pnTokenCursor = gpm::PNTokenCursor{p};
-
-  using ContexT = decltype(antBoardSim);
-
-  //   auto nodes = ipt::IptAntNodesDef<ContexT>::get();
-  auto tree =
-  ipt::factory<ContexT, iptexample::AntNodesDef<ContexT>>(pnTokenCursor);
-
-  auto parents = ipt::makeParentMatrix<ContexT>(tree);
+  //   char const* p = "l l m m m p3 p3 l m p2 if";
 
   
-  std::vector<std::size_t> childrenCount(tree.size(), 0);
-  for(int i = 1; i < tree.size(); ++i) {
-    int s = i;
-    while(true){
-      s = parents[s];
-      childrenCount[s] += 1;
-      if(s == 0)
-        break;
+  auto vecToStr = [](auto const& vec, std::string delim) {
+    std::string s;
+    std::string d;
+    for (auto& v : vec) {
+      s += fmt::format("{:>4}", v) += d;
+      d = delim;
     }
+    return s;
+  };
+
+  {
+    auto pnTokenCursor = gpm::PNTokenCursor{"if p2 m l p3 p3 m m m l l"};
+    auto tree =
+        ipt::factory<ContexT, iptexample::AntNodesDef<ContexT>>(pnTokenCursor);
+
+    for (auto& n : tree) {
+      n.childrenCount =
+      ipt::getNodeDescription<ContexT, iptexample::AntNodesDef<ContexT>>(
+        n.behavior)
+      .childrenCount;
+    }
+    auto parents = ipt::detail::makeParentMatrix(tree);
+    std::vector<std::size_t> expected{0, 0, 1, 1, 0, 4, 5, 5, 5, 4, 4};
+
+    auto s1 = vecToStr(parents, "");
+    auto s2 = vecToStr(expected, "");
+
+    if(s1 != s2)
+      fmt::print("\n{}\n{}\n", s1, s2);
   }
+
+  
+  auto pnTokenCursor = gpm::PNTokenCursor{"if m p3 l if m p3 l l if m l m"};
+
+  auto tree =
+      ipt::factory<ContexT, iptexample::AntNodesDef<ContexT>>(pnTokenCursor);
+
+  for (auto& n : tree) {
+    n.childrenCount =
+        ipt::getNodeDescription<ContexT, iptexample::AntNodesDef<ContexT>>(
+            n.behavior)
+            .childrenCount;
+  }
+
+  for (std::size_t i = 0; i < tree.size(); ++i) {
+    fmt::print("{:>4}", i);
+  }
+  fmt::print("\n");
 
   for (auto& n : tree) {
     fmt::print(
@@ -426,20 +438,10 @@ int main(int argc, char* argv[]) {
     fmt::print("{:>4}", n.childrenCount);
   }
   fmt::print("\n");
+
+  auto parents = ipt::detail::makeParentMatrix(tree);
   for (auto& n : parents) {
-    if (n > parents.size())
-      fmt::print("{:>4}", -1);
-    else
-      fmt::print("{:>4}", n);
+    fmt::print("{:>4}", n < parents.size() ? n : 100);
   }
   fmt::print("\n");
-
-
-  for (auto& n : childrenCount) {
-    fmt::print("{:>4}", n);
-  }
-  fmt::print("\n");
-  
-
-  std::cout << tree.size() << "\n";
 }
