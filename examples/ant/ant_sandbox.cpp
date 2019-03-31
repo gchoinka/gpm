@@ -220,12 +220,11 @@ struct NodeDescriptionMapBilder {
   }
 };
 
-
 template <typename ContexType>
 std::vector<typename Node<ContexType>::SizeType> makeParentMatrix(
     NodeVectorType<ContexType>& tree) {
   using SizeT = typename ipt::Node<ContexType>::SizeType;
-  auto const kParentNotSet = 666; //std::numeric_limits<SizeT>::max();
+  auto const kParentNotSet = 666;  // std::numeric_limits<SizeT>::max();
   std::vector<SizeT> parents(tree.size(), kParentNotSet);
 
   auto getChildrenCount = [&tree](SizeT index) mutable -> SizeT& {
@@ -236,18 +235,18 @@ std::vector<typename Node<ContexType>::SizeType> makeParentMatrix(
   while (getChildrenCount(0) != 0) {
     SizeT ri = nextParentSearchPos;
     for (; ri > 1; --ri) {
-      if (getChildrenCount(ri) == 0 &&  
-          getChildrenCount(ri - 1) != 0) {
+      if (getChildrenCount(ri) == 0 && getChildrenCount(ri - 1) != 0) {
         break;
       }
     }
-    
+
     SizeT parentPos = ri - 1;
-    for(SizeT i = parentPos + 1; i < tree.size() && getChildrenCount(parentPos) != 0; ++i) {
-        if(getChildrenCount(i) == 0 && parents[i] == kParentNotSet){
-            getChildrenCount(parentPos) -= 1;
-            parents[i] = parentPos;
-        }
+    for (SizeT i = parentPos + 1;
+         i < tree.size() && getChildrenCount(parentPos) != 0; ++i) {
+      if (getChildrenCount(i) == 0 && parents[i] == kParentNotSet) {
+        getChildrenCount(parentPos) -= 1;
+        parents[i] = parentPos;
+      }
     }
     nextParentSearchPos = parentPos;
   }
@@ -354,9 +353,12 @@ struct AntNodesDef {
   }
 };
 
-template<typename ContexT>
-bool test_parentMatrix(const char * antDef, std::vector<std::size_t> const & expected){
+enum class TestState { Success, Fail };
 
+template <typename ContexT, typename OutputFunctionT>
+bool test_parentMatrix(const char* antDef,
+                       std::vector<std::size_t> const& expected,
+                       OutputFunctionT out) {
   auto vecToStr = [](auto const& vec, std::string delim) {
     std::string s;
     std::string d;
@@ -367,27 +369,42 @@ bool test_parentMatrix(const char * antDef, std::vector<std::size_t> const & exp
     return s;
   };
 
-    auto pnTokenCursor = gpm::PNTokenCursor{antDef};
-    auto tree =
-        ipt::factory<ContexT, iptexample::AntNodesDef<ContexT>>(pnTokenCursor);
+  auto pnTokenCursor = gpm::PNTokenCursor{antDef};
+  auto tree =
+      ipt::factory<ContexT, iptexample::AntNodesDef<ContexT>>(pnTokenCursor);
 
-    for (auto& n : tree) {
-      n.childrenCount =
-      ipt::getNodeDescription<ContexT, iptexample::AntNodesDef<ContexT>>(
-        n.behavior)
-      .childrenCount;
-    }
-    auto parents = ipt::detail::makeParentMatrix(tree);
+  std::string treeStringWithPadding;
+  std::string childCount;
+  std::string nodeIndex;
+  int i = 0;
+  for (auto& n : tree) {
+    n.childrenCount =
+        ipt::getNodeDescription<ContexT, iptexample::AntNodesDef<ContexT>>(
+            n.behavior)
+            .childrenCount;
+    treeStringWithPadding += fmt::format(
+        "{:>4}",
+        ipt::getNodeDescription<ContexT, iptexample::AntNodesDef<ContexT>>(
+            n.behavior)
+            .name);
+    childCount += fmt::format(
+        "{:>4}",
+        ipt::getNodeDescription<ContexT, iptexample::AntNodesDef<ContexT>>(
+            n.behavior)
+            .childrenCount);
+    nodeIndex += fmt::format("{:>4}", i++);
+  }
+  auto parents = ipt::detail::makeParentMatrix(tree);
 
-    auto s1 = vecToStr(parents, "");
-    auto s2 = vecToStr(expected, "");
+  auto s1 = vecToStr(parents, "");
+  auto s2 = vecToStr(expected, "");
 
-    if(s1 != s2){
-      fmt::print("\n{}\n{}\n", s1, s2);
-      return false;
-    } else {
-      return true;
-    }
+  out(fmt::format(
+          "\n{} : index\n{} : node names\n{} : node child count (1th "
+          "level)\n{} : parents index\n{} : expexted parents index (manual)\n",
+          nodeIndex, treeStringWithPadding, childCount, s1, s2),
+      s1 != s2 ? TestState::Fail : TestState::Success);
+  return (s1 == s2);
 }
 
 }  // namespace iptexample
@@ -406,7 +423,17 @@ int main(int argc, char* argv[]) {
   auto antBoardSim = getAntBoardSim(cliArgs.boarddef.c_str());
   using ContexT = decltype(antBoardSim);
 
-  
-  iptexample::test_parentMatrix<ContexT>("if p2 m l p3 p3 m m m l l", {0, 0, 1, 1, 0, 4, 5, 5, 5, 4, 4});
-  iptexample::test_parentMatrix<ContexT>("if m p3 l if m p3 l l if m l m", {0, 0, 0, 2, 2, 4, 4, 6, 6, 6, 9, 9, 2});
+  iptexample::test_parentMatrix<ContexT>(
+      "if p2 m l p3 p3 m m m l l", {0, 0, 1, 1, 0, 4, 5, 5, 5, 4, 4},
+      [](std::string const& s, iptexample::TestState /*ts*/) {
+        std::cout << s;
+      });
+  iptexample::test_parentMatrix<ContexT>(
+      "if m p3 l if m p3 l l if m l m", {0, 0, 0, 2, 2, 4, 4, 6, 6, 6, 9, 9, 2},
+      [](std::string const& s, iptexample::TestState /*ts*/) {
+        std::cout << s;
+      });
+  // iptexample::test_parentMatrix<ContexT>("if m p2 r p2 if if m r p3 l l if m
+  // r m",
+  //                                         { });
 }
