@@ -255,6 +255,43 @@ std::vector<typename Node<ContexType>::SizeType> makeParentMatrix(
 }
 
 template <typename ContexType>
+std::tuple<std::vector<typename Node<ContexType>::SizeType>, std::vector<typename Node<ContexType>::SizeType>> makeChildCountMatrix(
+    NodeVectorType<ContexType>& tree) {
+  using SizeT = typename ipt::Node<ContexType>::SizeType;
+  auto const kParentNotSet = 666;  // std::numeric_limits<SizeT>::max();
+  std::vector<SizeT> parents(tree.size(), kParentNotSet);
+
+  auto getChildrenCount = [&tree](SizeT index) mutable -> SizeT& {
+    return tree[index].childrenCount;
+  };
+
+  SizeT nextParentSearchPos = tree.size() - 2;
+  while (getChildrenCount(0) != 0) {
+    SizeT ri = nextParentSearchPos;
+    for (; ri > 1; --ri) {
+      if (getChildrenCount(ri) == 0 && getChildrenCount(ri - 1) != 0) {
+        break;
+      }
+    }
+
+    SizeT parentPos = ri - 1;
+    for (SizeT i = parentPos + 1;
+         i < tree.size() && getChildrenCount(parentPos) != 0; ++i) {
+      if (getChildrenCount(i) == 0 && parents[i] == kParentNotSet) {
+        getChildrenCount(parentPos) -= 1;
+        parents[i] = parentPos;
+      }
+    }
+    nextParentSearchPos = parentPos;
+  }
+  parents[0] = 0;
+
+  std::vector<SizeT> childCountAllLevel(tree.size(), kParentNotSet);
+  return std::make_tuple(parents, childCountAllLevel);
+}
+
+
+template <typename ContexType>
 void setChildrenCount(NodeVectorType<ContexType>& tree) {
   using SizeT = typename ipt::Node<ContexType>::SizeType;
 
@@ -359,12 +396,10 @@ template <typename ContexT, typename OutputFunctionT>
 bool test_parentMatrix(const char* antDef,
                        std::vector<std::size_t> const& expected,
                        OutputFunctionT out) {
-  auto vecToStr = [](auto const& vec, std::string delim) {
+  auto vecToStr = [](auto const& vec) {
     std::string s;
-    std::string d;
     for (auto& v : vec) {
-      s += fmt::format("{:>4}", v) += d;
-      d = delim;
+      s += fmt::format("{:>4}", v);
     }
     return s;
   };
@@ -394,17 +429,18 @@ bool test_parentMatrix(const char* antDef,
             .childrenCount);
     nodeIndex += fmt::format("{:>4}", i++);
   }
-  auto parents = ipt::detail::makeParentMatrix(tree);
+  auto [parents, childCoundAllLevel] = ipt::detail::makeChildCountMatrix(tree);
 
-  auto s1 = vecToStr(parents, "");
-  auto s2 = vecToStr(expected, "");
+  auto parentsAsStr = vecToStr(parents);
+  auto expectedAsStr = vecToStr(expected);
+  auto childCoundAllLevelStr = vecToStr(childCoundAllLevel);
 
   out(fmt::format(
           "\n{} : index\n{} : node names\n{} : node child count (1th "
-          "level)\n{} : parents index\n{} : expexted parents index (manual)\n",
-          nodeIndex, treeStringWithPadding, childCount, s1, s2),
-      s1 != s2 ? TestState::Fail : TestState::Success);
-  return (s1 == s2);
+          "level)\n{} : parents index\n{} : expexted parents index (manual)\n{} : child count all level\n",
+          nodeIndex, treeStringWithPadding, childCount, parentsAsStr, expectedAsStr, childCoundAllLevelStr),
+      parentsAsStr != expectedAsStr ? TestState::Fail : TestState::Success);
+  return (parentsAsStr == expectedAsStr);
 }
 
 }  // namespace iptexample
