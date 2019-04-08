@@ -41,6 +41,9 @@ decltype(auto) getAntBoardSim(char const* filename) {
           max_steps, max_food, sim::Pos2d{0, 0}, sim::Direction::east,
           [filename](auto& board) {
             std::ifstream boardFile(filename);
+            if (!boardFile)
+              throw std::runtime_error{std::string{"cant' open the file >>"} +
+                                       filename + "<<"};
             size_t x = 0;
             for (std::string line; std::getline(boardFile, line);) {
               if (line.size() != board[x].size())
@@ -53,7 +56,7 @@ decltype(auto) getAntBoardSim(char const* filename) {
               ++x;
             }
             if (x != board.size())
-              throw std::runtime_error{"not enoth lines int the file."};
+              throw std::runtime_error{"not enoth lines in the file."};
           }};
   return antSim;
 }
@@ -251,12 +254,14 @@ std::vector<typename Node<ContexType>::SizeType> makeParentMatrix(
     nextParentSearchPos = parentPos;
   }
   parents[0] = 0;
+
   return parents;
 }
 
 template <typename ContexType>
-std::tuple<std::vector<typename Node<ContexType>::SizeType>, std::vector<typename Node<ContexType>::SizeType>> makeChildCountMatrix(
-    NodeVectorType<ContexType>& tree) {
+std::tuple<std::vector<typename Node<ContexType>::SizeType>,
+           std::vector<typename Node<ContexType>::SizeType>>
+makeChildCountMatrix(NodeVectorType<ContexType>& tree) {
   using SizeT = typename ipt::Node<ContexType>::SizeType;
   auto const kParentNotSet = 666;  // std::numeric_limits<SizeT>::max();
   std::vector<SizeT> parents(tree.size(), kParentNotSet);
@@ -286,10 +291,12 @@ std::tuple<std::vector<typename Node<ContexType>::SizeType>, std::vector<typenam
   }
   parents[0] = 0;
 
-  std::vector<SizeT> childCountAllLevel(tree.size(), kParentNotSet);
+  std::vector<SizeT> childCountAllLevel(tree.size(), 0);
+  for (auto i = tree.size() - 1; i > 0; --i) {
+    childCountAllLevel[parents[i]] += 1 + childCountAllLevel[i];
+  }
   return std::make_tuple(parents, childCountAllLevel);
 }
-
 
 template <typename ContexType>
 void setChildrenCount(NodeVectorType<ContexType>& tree) {
@@ -335,7 +342,7 @@ NodeDescription<ContexType> getNodeDescription(
       ContexType, GetNodesDefType>::getNodeDescription(behavior);
 }
 
-}  // namespace ipt
+} // namespace ipt
 
 namespace iptexample {
 
@@ -435,15 +442,16 @@ bool test_parentMatrix(const char* antDef,
   auto expectedAsStr = vecToStr(expected);
   auto childCoundAllLevelStr = vecToStr(childCoundAllLevel);
 
-  out(fmt::format(
-          "\n{} : index\n{} : node names\n{} : node child count (1th "
-          "level)\n{} : parents index\n{} : expexted parents index (manual)\n{} : child count all level\n",
-          nodeIndex, treeStringWithPadding, childCount, parentsAsStr, expectedAsStr, childCoundAllLevelStr),
+  out(fmt::format("\n{} : index\n{} : node names\n{} : node child count (1th "
+                  "level)\n{} : parents index\n{} : expexted parents index "
+                  "(manual)\n{} : child count all level\n",
+                  nodeIndex, treeStringWithPadding, childCount, parentsAsStr,
+                  expectedAsStr, childCoundAllLevelStr),
       parentsAsStr != expectedAsStr ? TestState::Fail : TestState::Success);
   return (parentsAsStr == expectedAsStr);
 }
 
-}  // namespace iptexample
+} // namespace iptexample
 
 int main(int argc, char* argv[]) {
   auto cliArgsOutcome = handleCLI(argc, argv);
