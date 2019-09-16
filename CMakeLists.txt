@@ -8,13 +8,11 @@
 
 cmake_minimum_required(VERSION 3.12.1)
 
-include("cmake/HunterGate.cmake")
-HunterGate(
-    URL "https://github.com/ruslo/hunter/archive/v0.23.44.tar.gz"
-    SHA1 "c4cfcc0cd39fdae8de08f6205b7f34cab4a7ba79"
-)
-
 project(gpm VERSION 0.1.0 LANGUAGES CXX)
+
+
+include("pmm.cmake")
+pmm(VCPKG REVISION 2019.08 REQUIRES fmt spdlog boost)
 
 include("cmake/CompilerSettings.cmake")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -27,27 +25,21 @@ option(GPM_CXX_COLORED_OUTPUT "Always produce ANSI-colored output (GNU/Clang onl
 option(GPM_BUILD_WPROFILER "Enable to build with profiler (search for depandencies in system libgoogle-perftools-dev)" OFF)
 
 
+# program_options fmt spdlog catch2 benchmark
 
 
-hunter_add_package(Boost COMPONENTS program_options)
 set(BOOST_MIN_VERSION "1.68.0") 
 find_package(Boost ${BOOST_MIN_VERSION} COMPONENTS program_options REQUIRED)
-
-hunter_add_package(fmt)
 find_package(fmt CONFIG REQUIRED)
-
-hunter_add_package(spdlog)
 find_package(spdlog CONFIG REQUIRED)
 
 
 if(${GPM_BUILD_TESTS})
-    hunter_add_package(Catch)
     find_package(Catch2 CONFIG REQUIRED)
     enable_testing()
 endif()
 
 if(${GPM_BUILD_BENCHMARK})
-    hunter_add_package(benchmark)
     find_package(benchmark CONFIG REQUIRED)
 endif()
 
