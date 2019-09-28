@@ -12,7 +12,7 @@ project(gpm VERSION 0.1.0 LANGUAGES CXX)
 
 
 include("pmm.cmake")
-pmm(VERBOSE VCPKG REVISION 2019.08 REQUIRES fmt spdlog boost catch2 benchmark)
+pmm(VERBOSE VCPKG REVISION 2019.08 REQUIRES fmt spdlog boost catch benchmark)
 
 include("cmake/CompilerSettings.cmake")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -35,7 +35,7 @@ find_package(spdlog CONFIG REQUIRED)
 
 
 if(${GPM_BUILD_TESTS})
-    find_package(Catch2 CONFIG REQUIRED)
+    find_package(Catch CONFIG REQUIRED)
     enable_testing()
 endif()
 
